@@ -4,6 +4,7 @@ import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.bid.dto.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.CreateBidResponse;
 import com.example.budongbudong.domain.bid.service.BidService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class BidContainer {
      * 입찰 등록
      */
     @PostMapping("/auctions/{auctionId}")
-    public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(@RequestBody CreateBidRequest request, @PathVariable Long auctionId) {
+    public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(@Valid @RequestBody CreateBidRequest request, @PathVariable Long auctionId) {
 
         CreateBidResponse response = bidService.createBid(request, auctionId);
 
