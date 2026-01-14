@@ -1,6 +1,8 @@
 package com.example.budongbudong.common.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,6 +12,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
+@Component
 public class ApiExplorer {
 
     @Value("${API_SERVICE_KEY}")
@@ -30,7 +34,7 @@ public class ApiExplorer {
         conn.setRequestProperty("Content-type", "application/xml");
 
         // 7. 통신 응답 코드 확인.
-        System.out.println("Response code: " + conn.getResponseCode());
+        log.info("Response code: " + conn.getResponseCode());
 
         // 8. 전달받은 데이터를 BufferedReader 객체로 저장.
         BufferedReader rd;
