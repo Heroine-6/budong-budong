@@ -28,6 +28,7 @@ public class BidService {
      */
     public CreateBidResponse createBid(CreateBidRequest request, Long auctionId) {
 
+        // TODO: 임의로 auctionId 값을 userId로 사용 중
         User user = userRepository.findById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -56,8 +57,6 @@ public class BidService {
         }
 
         Bid bid = new Bid(user, auction, bidPrice);
-        bid.markAsHighest();
-        bid.changeStatus(BidStatus.WINNING);
 
         Bid savedBid = bidRepository.save(bid);
 
