@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name="images")
+@Table(name="property_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PropertyImage extends BaseEntity {
