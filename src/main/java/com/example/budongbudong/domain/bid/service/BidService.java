@@ -42,11 +42,6 @@ public class BidService {
         }
 
         Long bidPrice = request.getPrice();
-
-        if (bidPrice == null || bidPrice <= 0) {
-            throw new CustomException(ErrorCode.INVALID_BID_PRICE);
-        }
-
         Bid highestBid = bidRepository.findHighestBidByAuctionId(auctionId).orElse(null);
 
         if (highestBid != null && bidPrice <= highestBid.getPrice()) {
