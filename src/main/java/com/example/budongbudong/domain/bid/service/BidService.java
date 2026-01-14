@@ -7,6 +7,7 @@ import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.CreateBidResponse;
+import com.example.budongbudong.domain.bid.dto.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
@@ -15,6 +16,8 @@ import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -58,5 +61,21 @@ public class BidService {
         Bid savedBid = bidRepository.save(bid);
 
         return CreateBidResponse.from(savedBid);
+    }
+
+    /**
+     * 입찰 내역 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ReadAllBidsResponse> readAllBids(Long auctionId) {
+
+        auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        return bidRepository.findAllByAuctionIdOrderByCreatedAtDesc(auctionId)
+                .stream()
+                .map(ReadAllBidsResponse::from)
+                .toList();
+
     }
 }

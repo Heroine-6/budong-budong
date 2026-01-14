@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface BidRepository extends JpaRepository<Bid, Long> {
 
@@ -16,4 +17,6 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
           and b.isDeleted = false
     """)
     Optional<Bid> findHighestBidByAuctionId(Long auctionId);
+
+    List<Bid> findAllByAuctionIdOrderByCreatedAtDesc(Long auctionId);
 }
