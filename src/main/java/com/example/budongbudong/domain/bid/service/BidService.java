@@ -14,6 +14,7 @@ import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,7 @@ public class BidService {
     /**
      * 입찰 등록
      */
+    @Transactional
     public CreateBidResponse createBid(CreateBidRequest request, Long auctionId) {
 
         // TODO: 임의로 auctionId 값을 userId로 사용 중
