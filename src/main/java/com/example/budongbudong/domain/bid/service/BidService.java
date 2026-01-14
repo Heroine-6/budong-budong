@@ -5,14 +5,18 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.dto.CreateBidRequest;
-import com.example.budongbudong.domain.bid.dto.CreateBidResponse;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
+import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,5 +62,29 @@ public class BidService {
         Bid savedBid = bidRepository.save(bid);
 
         return CreateBidResponse.from(savedBid);
+    }
+
+    /**
+     * 입찰 내역 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ReadAllBidsResponse> readAllBids(Long auctionId, Pageable pageable) {
+
+        auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        return bidRepository.findAllByAuctionId(auctionId, pageable)
+                .map(ReadAllBidsResponse::from);
+
+    }
+
+    /**
+     * 내 입찰 내역 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ReadMyBidsResponse> readMyBids(Long userId, Pageable pageable) {
+
+        return bidRepository.findMyBidsPage(userId, pageable)
+                .map(ReadMyBidsResponse::from);
     }
 }
