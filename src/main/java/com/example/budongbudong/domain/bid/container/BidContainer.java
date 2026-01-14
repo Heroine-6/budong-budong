@@ -1,5 +1,6 @@
 package com.example.budongbudong.domain.bid.container;
 
+import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.bid.dto.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.CreateBidResponse;
@@ -7,6 +8,10 @@ import com.example.budongbudong.domain.bid.dto.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.service.BidService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,9 +46,18 @@ public class BidContainer {
      * 입찰 내역 조회
      */
     @GetMapping("/auctions/{auctionId}")
-    public ResponseEntity<GlobalResponse<List<ReadAllBidsResponse>>> readAllBids(@PathVariable Long auctionId) {
+    public ResponseEntity<GlobalResponse<CustomPageResponse<ReadAllBidsResponse>>> readAllBids(
+            @PathVariable Long auctionId,
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable) {
 
-        List<ReadAllBidsResponse> response = bidService.readAllBids(auctionId);
+        Page<ReadAllBidsResponse> page = bidService.readAllBids(auctionId, pageable);
+
+        CustomPageResponse<ReadAllBidsResponse> response = CustomPageResponse.from(page);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

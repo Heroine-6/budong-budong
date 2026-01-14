@@ -14,6 +14,8 @@ import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,15 +69,13 @@ public class BidService {
      * 입찰 내역 조회
      */
     @Transactional(readOnly = true)
-    public List<ReadAllBidsResponse> readAllBids(Long auctionId) {
+    public Page<ReadAllBidsResponse> readAllBids(Long auctionId, Pageable pageable) {
 
         auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
 
-        return bidRepository.findAllByAuctionIdOrderByCreatedAtDesc(auctionId)
-                .stream()
-                .map(ReadAllBidsResponse::from)
-                .toList();
+        return bidRepository.findAllByAuctionId(auctionId, pageable)
+                .map(ReadAllBidsResponse::from);
 
     }
 }

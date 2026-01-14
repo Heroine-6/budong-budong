@@ -1,11 +1,12 @@
 package com.example.budongbudong.domain.bid.repository;
 
 import com.example.budongbudong.domain.bid.entity.Bid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
-import java.util.List;
 
 public interface BidRepository extends JpaRepository<Bid, Long> {
 
@@ -18,5 +19,5 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     """)
     Optional<Bid> findHighestBidByAuctionId(Long auctionId);
 
-    List<Bid> findAllByAuctionIdOrderByCreatedAtDesc(Long auctionId);
+    Page<Bid> findAllByAuctionId(Long auctionId, Pageable pageable);
 }
