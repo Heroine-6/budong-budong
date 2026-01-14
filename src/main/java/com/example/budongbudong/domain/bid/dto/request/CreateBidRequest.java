@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.bid.dto;
+package com.example.budongbudong.domain.bid.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
