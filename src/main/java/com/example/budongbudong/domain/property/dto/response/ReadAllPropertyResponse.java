@@ -26,15 +26,16 @@ public class ReadAllPropertyResponse {
 
     public static ReadAllPropertyResponse from(Property property) {
 
-        List<PropertyImageResponse> images = property.getPropertyImageList() == null
-                ? List.of()
-                :property.getPropertyImageList().stream()
+        List<PropertyImageResponse> images = property.getPropertyImageList() != null
+                ? property.getPropertyImageList().stream()
                 .map(PropertyImageResponse::from)
-                .toList();
+                .toList()
+                :List.of();
 
-        AuctionResponse auction = property.getAuction() == null
-                ? null
-                : AuctionResponse.from(property.getAuction());
+        AuctionResponse auction = property.getAuction() != null
+                ? AuctionResponse.from(property.getAuction())
+                : null;
+
         return  new ReadAllPropertyResponse(
                 property.getId(),
                 property.getName(),
