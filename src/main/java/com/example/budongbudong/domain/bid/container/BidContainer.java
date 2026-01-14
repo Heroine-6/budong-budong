@@ -52,8 +52,8 @@ public class BidContainer {
                     size = 10,
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
-            ) Pageable pageable) {
-
+            ) Pageable pageable
+    ) {
         Page<ReadAllBidsResponse> page = bidService.readAllBids(auctionId, pageable);
 
         CustomPageResponse<ReadAllBidsResponse> response = CustomPageResponse.from(page);
@@ -79,8 +79,8 @@ public class BidContainer {
                     size = 10,
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
-            ) Pageable pageable) {
-
+            ) Pageable pageable
+    ) {
         Page<ReadMyBidsResponse> page = bidService.readMyBids(userId, pageable);
 
         CustomPageResponse<ReadMyBidsResponse> response = CustomPageResponse.from(page);
