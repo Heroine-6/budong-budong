@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.property.service;
 
 import com.example.budongbudong.common.response.CustomPageResponse;
-import com.example.budongbudong.domain.property.dto.PropertyResponse;
+import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,10 +16,19 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
 
     @Transactional(readOnly = true)
-    public CustomPageResponse<PropertyResponse> getAllPropertyList(Pageable pageable) {
+    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(Pageable pageable) {
 
         Page<Property> propertyPage = propertyRepository.findAll(pageable);
-        Page<PropertyResponse> response = propertyPage.map(PropertyResponse::from);
+        Page<ReadAllPropertyResponse> response = propertyPage.map(ReadAllPropertyResponse::from);
+        return CustomPageResponse.from(response);
+    }
+
+    @Transactional(readOnly = true)
+    public CustomPageResponse<ReadAllPropertyResponse> getMyPropertyList(Long userId, Pageable pageable) {
+
+        Page<Property> propertyPage = propertyRepository.findAllByUserId(userId, pageable);
+        Page<ReadAllPropertyResponse> response = propertyPage.map(ReadAllPropertyResponse::from);
+
         return CustomPageResponse.from(response);
     }
 }
