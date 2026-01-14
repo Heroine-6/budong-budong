@@ -32,8 +32,29 @@ public class Bid extends BaseEntity {
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private BidStatus status;
+    private BidStatus status = BidStatus.PLACED;
 
     @Column(name = "is_highest", nullable = false)
     private boolean isHighest = false;
+
+    public Bid(User user, Auction auction, Long price) {
+        this.user = user;
+        this.auction = auction;
+        this.price = price;
+        this.status = BidStatus.WINNING;
+        this.isHighest = true;
+    }
+
+    public void markAsHighest() {
+        this.isHighest = true;
+    }
+
+    public void unmarkHighest() {
+        this.isHighest = false;
+    }
+
+    public void changeStatus(BidStatus status) {
+        this.status = status;
+    }
+
 }
