@@ -43,7 +43,7 @@ public class Property extends BaseEntity {
     @Column(name = "type", length = 50, nullable = false)
     private PropertyType type;
 
-    @Column(name = "bulit_year",nullable = false)
+    @Column(name = "built_year",nullable = false)
     private LocalDateTime builtYear;
 
     @Column(name = "description", columnDefinition = "TEXT")
