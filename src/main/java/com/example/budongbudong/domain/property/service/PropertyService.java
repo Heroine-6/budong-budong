@@ -28,6 +28,7 @@ public class PropertyService {
 
         Page<Property> propertyPage = propertyRepository.findAllByUserId(userId, pageable);
         Page<ReadAllPropertyResponse> response = propertyPage.map(ReadAllPropertyResponse::from);
+
         return CustomPageResponse.from(response);
     }
 }
