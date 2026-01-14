@@ -2,9 +2,9 @@ package com.example.budongbudong.domain.bid.container;
 
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
-import com.example.budongbudong.domain.bid.dto.CreateBidRequest;
-import com.example.budongbudong.domain.bid.dto.CreateBidResponse;
-import com.example.budongbudong.domain.bid.dto.ReadAllBidsResponse;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
+import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.service.BidService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
