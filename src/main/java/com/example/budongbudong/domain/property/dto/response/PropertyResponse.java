@@ -7,7 +7,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.List;
 
 @Getter
@@ -20,10 +21,10 @@ public class PropertyResponse {
     private final int totalFloor;
     private final int roomCount;
     private final PropertyType type;
-    private final LocalDateTime builtYear;
+    private final Year builtYear;
     private final String description;
     private final Long price;
-    private final LocalDateTime migrateDate;
+    private final LocalDate migrateDate;
     private final BigDecimal supplyArea;
     private final BigDecimal privateArea;
     private final List<PropertyImageResponse> images;

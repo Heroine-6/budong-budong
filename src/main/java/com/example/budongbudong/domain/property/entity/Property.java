@@ -11,7 +11,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class Property extends BaseEntity {
     private PropertyType type;
 
     @Column(name = "built_year",nullable = false)
-    private LocalDateTime builtYear;
+    private Year builtYear;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -54,7 +55,7 @@ public class Property extends BaseEntity {
     private Long price;
 
     @Column(name = "migrate_date", nullable = false)
-    private LocalDateTime migrateDate;
+    private LocalDate migrateDate;
 
     @Column(name = "supply_area", precision = 10, scale=2 ,nullable = false)
     private BigDecimal supplyArea;
