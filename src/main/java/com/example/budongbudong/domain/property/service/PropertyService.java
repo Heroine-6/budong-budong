@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PropertyService {
@@ -42,7 +44,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public CustomPageResponse<ReadAllPropertyResponse> getMyPropertyList(Long userId, Pageable pageable) {
 
-        Page<Property> propertyPage = propertyRepository.findAllByUserId(userId, pageable);
+        Page<Property> propertyPage = propertyRepository.findAllByUserIdAndIsDeletedFalse(userId, pageable);
         Page<ReadAllPropertyResponse> response = propertyPage.map(property -> {
 
             Auction auction = auctionRepository.findByPropertyId(property.getId()).orElse(null);
@@ -57,7 +59,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public ReadPropertyResponse getProperty(Long propertyId) {
 
-        Property property = propertyRepository.findByIdWithImages(propertyId)
+        Property property = propertyRepository.findByIdWithImagesAndNotDeleted(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
         Auction auction = auctionRepository.findByPropertyId(propertyId).orElse(null);
@@ -69,7 +71,7 @@ public class PropertyService {
     @Transactional
     public void updateProperty(Long propertyId, UpdatePropertyRequest request) {
 
-        Property property = propertyRepository.findByIdWithImages(propertyId)
+        Property property = propertyRepository.findByIdWithImagesAndNotDeleted(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
         property.update(
@@ -77,5 +79,20 @@ public class PropertyService {
                 request.getMigrateDate(),
                 request.getDescription()
         );
+    }
+
+    @Transactional
+    public void deleteProperty(Long propertyId) {
+
+        Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+
+        boolean hasNonScheduledAuction = auctionRepository.existsByPropertyIdAndStatusNotIn(propertyId, List.of(AuctionStatus.SCHEDULED, AuctionStatus.CANCELLED));
+
+        if (hasNonScheduledAuction) {
+            throw new CustomException(ErrorCode.PROPERTY_CANNOT_DELETE);
+        }
+
+        property.softDelete();
     }
 }
