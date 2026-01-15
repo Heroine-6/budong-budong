@@ -38,6 +38,7 @@ public class PropertyService {
 
     @Transactional
     public void createProperty(CreatePropertyRequestDTO request, List<MultipartFile> images, Long userId) {
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
