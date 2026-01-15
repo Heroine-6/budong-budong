@@ -31,8 +31,14 @@ public enum ErrorCode {
     INVALID_PASSWORD(400, "비밀번호가 유효하지 않습니다."),
     VALIDATION_ERROR(400, "입력값이 유효하지 않습니다."),
     INVALID_BID_PRICE(400, "입찰 금액이 올바르지 않습니다."),
+    INVALID_REQUEST(400, "입력값 형식 오류"),
     INVALID_AUCTION_PERIOD(400, "경매 기간이 유효하지 않습니다."),
     PROPERTY_CANNOT_DELETE(400, "경매 시작 전 상태에서만 매물을 삭제할 수 있습니다."),
+
+    //------500-----------------------
+    FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
+    FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
+
     ;
     private final int status;
     private final String message;

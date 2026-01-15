@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.property.service;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
@@ -12,19 +13,41 @@ import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResp
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
+import com.example.budongbudong.domain.propertyimage.service.PropertyImageService;
+import com.example.budongbudong.domain.user.entity.User;
+import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PropertyService {
+
     private final PropertyRepository propertyRepository;
+    private final UserRepository userRepository;
+    private final PropertyImageService propertyImageService;
     private final AuctionRepository auctionRepository;
+
+    @Transactional
+    public void createProperty(CreatePropertyRequestDTO request, List<MultipartFile> images, Long userId) {
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        Property property = request.toEntity(user);
+
+        propertyRepository.save(property);
+
+        propertyImageService.saveImages(property, images);
+    }
 
     @Transactional(readOnly = true)
     public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(Pageable pageable) {
