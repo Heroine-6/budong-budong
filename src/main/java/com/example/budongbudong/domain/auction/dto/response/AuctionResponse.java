@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.auction.dto;
+package com.example.budongbudong.domain.auction.dto.response;
 
 import com.example.budongbudong.domain.auction.entity.Auction;
 import lombok.Getter;

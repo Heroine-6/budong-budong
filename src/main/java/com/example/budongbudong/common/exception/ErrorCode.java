@@ -8,6 +8,7 @@ public enum ErrorCode {
     USER_ALREADY_EXISTS(409, "이미 존재하는 사용자 이메일입니다."),
     AUCTION_ALREADY_EXISTS(409, "이미 경매가 진행중인 매물입니다."),
     BID_PRICE_TOO_LOW(409, "입찰가는 현재 최고가보다 높아야 합니다."),
+    AUCTION_INVALID_STATUS_FOR_CANCEL(409, "경매 시작 전 상태에서만 경매를 취소할 수 있습니다."),
 
     //------404-----------------------
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다."),
