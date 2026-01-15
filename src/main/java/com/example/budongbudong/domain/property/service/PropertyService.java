@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PropertyService {
@@ -85,7 +87,7 @@ public class PropertyService {
         Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
-        boolean hasNonScheduledAuction = auctionRepository.existsByPropertyIdAndStatusNot(propertyId, AuctionStatus.SCHEDULED);
+        boolean hasNonScheduledAuction = auctionRepository.existsByPropertyIdAndStatusNotIn(propertyId, List.of(AuctionStatus.SCHEDULED, AuctionStatus.CANCELLED));
 
         if (hasNonScheduledAuction) {
             throw new CustomException(ErrorCode.PROPERTY_CANNOT_DELETE);

@@ -12,5 +12,5 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     Optional<Auction> findByPropertyId(Long propertyId);
 
-    boolean existsByPropertyIdAndStatusNot(Long propertyId, AuctionStatus auctionStatus);
+    boolean existsByPropertyIdAndStatusNotIn(Long propertyId, Iterable<AuctionStatus> statuses);
 }
