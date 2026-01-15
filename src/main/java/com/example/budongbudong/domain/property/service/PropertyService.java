@@ -78,4 +78,19 @@ public class PropertyService {
                 request.getDescription()
         );
     }
+
+    @Transactional
+    public void deleteProperty(Long propertyId) {
+
+        Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+
+        boolean hasNonScheduledAuction = auctionRepository.existsByPropertyIdAndStatusNot(propertyId, AuctionStatus.SCHEDULED);
+
+        if (hasNonScheduledAuction) {
+            throw new CustomException(ErrorCode.PROPERTY_CANNOT_DELETE);
+        }
+
+        property.softDelete();
+    }
 }

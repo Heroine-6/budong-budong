@@ -19,4 +19,6 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
     Optional<Property> findByIdWithImages(@Param("propertyId") Long propertyId);
 
     Page<Property> findAllByUserId(Long userId, Pageable pageable);
+
+    Optional<Property> findByIdAndIsDeletedFalse(Long propertyId);
 }

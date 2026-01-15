@@ -24,4 +24,7 @@ public abstract class BaseEntity {
     @Column(name="is_deleted", nullable = false)
     private Boolean isDeleted=false;
 
+    public void softDelete() {
+        this.isDeleted = true;
+    }
 }

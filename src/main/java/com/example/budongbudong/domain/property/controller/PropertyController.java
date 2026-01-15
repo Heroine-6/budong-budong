@@ -78,4 +78,18 @@ public class PropertyController {
                         null
                 ));
     }
+
+    @DeleteMapping("/{propertyId}")
+    public ResponseEntity<GlobalResponse<Void>> deleteProperty(@PathVariable Long propertyId) {
+
+        propertyService.deleteProperty(propertyId);
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(GlobalResponse.success(
+                        true,
+                        "매물이 성공적으로 삭제되었습니다.",
+                        null
+                ));
+    }
 }
