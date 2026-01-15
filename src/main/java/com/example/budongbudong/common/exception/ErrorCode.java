@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum ErrorCode {
     //------409-----------------------
     USER_ALREADY_EXISTS(409, "이미 존재하는 사용자 이메일입니다."),
+    AUCTION_ALREADY_EXISTS(409, "이미 경매가 진행중인 매물입니다."),
     BID_PRICE_TOO_LOW(409, "입찰가는 현재 최고가보다 높아야 합니다."),
 
     //------404-----------------------
@@ -30,6 +31,8 @@ public enum ErrorCode {
     VALIDATION_ERROR(400, "입력값이 유효하지 않습니다."),
     INVALID_BID_PRICE(400, "입찰 금액이 올바르지 않습니다."),
     INVALID_REQUEST(400, "입력값 형식 오류"),
+    INVALID_AUCTION_PERIOD(400, "경매 기간이 유효하지 않습니다."),
+    PROPERTY_CANNOT_DELETE(400, "경매 시작 전 상태에서만 매물을 삭제할 수 있습니다."),
 
     //------500-----------------------
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),

@@ -20,7 +20,7 @@ public class Auction extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;
 
@@ -36,5 +36,20 @@ public class Auction extends BaseEntity {
 
     @Column(name = "ended_at", nullable = false)
     private LocalDateTime endedAt;
+
+    public static Auction create(
+            Property property,
+            Long startPrice,
+            LocalDateTime startedAt,
+            LocalDateTime endedAt
+    ) {
+        Auction auction = new Auction();
+        auction.property = property;
+        auction.startPrice = startPrice;
+        auction.status = AuctionStatus.SCHEDULED;
+        auction.startedAt = startedAt;
+        auction.endedAt = endedAt;
+        return auction;
+    }
 
 }

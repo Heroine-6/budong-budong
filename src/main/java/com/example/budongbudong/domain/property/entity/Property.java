@@ -74,8 +74,6 @@ public class Property extends BaseEntity {
     @OneToOne(mappedBy = "property", fetch = FetchType.LAZY)
     private Auction auction;
 
-    //객체 생성 편의성을 위한 Builder
-    //내부적으로 이 생성자 사용중
     @Builder
     public Property(String name, String address, int floor, int totalFloor, int roomCount,
                     PropertyType type, Year builtYear, String description, Long price,
@@ -98,5 +96,19 @@ public class Property extends BaseEntity {
 
     public void addImage(PropertyImage image) {
         this.propertyImageList.add(image);
+    }
+
+    public void update(Long price, LocalDate migrateDate, String description) {
+        if (price != null) {
+            this.price = price;
+        }
+
+        if (migrateDate != null) {
+            this.migrateDate = migrateDate;
+        }
+
+        if (description != null) {
+            this.description = description;
+        }
     }
 }
