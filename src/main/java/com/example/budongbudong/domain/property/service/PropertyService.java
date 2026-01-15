@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.property.service;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.auction.dto.AuctionResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
@@ -63,5 +64,18 @@ public class PropertyService {
         AuctionStatus auctionStatus = (auction != null) ? auction.getStatus() : null;
 
         return ReadPropertyResponse.from(property, auctionStatus);
+    }
+
+    @Transactional
+    public void updateProperty(Long propertyId, UpdatePropertyRequest request) {
+
+        Property property = propertyRepository.findByIdWithImages(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+
+        property.update(
+                request.getPrice(),
+                request.getMigrateDate(),
+                request.getDescription()
+        );
     }
 }

@@ -2,9 +2,11 @@ package com.example.budongbudong.domain.property.controller;
 
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.service.PropertyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -60,6 +62,20 @@ public class PropertyController {
                         true,
                         "매물 정보가 성공적으로 조회되었습니다.",
                         response
+                ));
+    }
+
+    @PatchMapping("/{propertyId}")
+    public ResponseEntity<GlobalResponse<Void>> updateProperty(@Valid @RequestBody UpdatePropertyRequest request, @PathVariable Long propertyId) {
+
+        propertyService.updateProperty(propertyId, request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(GlobalResponse.success(
+                        true,
+                        "매물 정보가 성공적으로 수정되었습니다.",
+                        null
                 ));
     }
 }

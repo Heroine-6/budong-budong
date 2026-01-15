@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.property.entity;
 
 import com.example.budongbudong.common.entity.BaseEntity;
+import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.user.entity.User;
@@ -69,4 +70,17 @@ public class Property extends BaseEntity {
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
     private List<PropertyImage> propertyImageList = new ArrayList<>();
 
+    public void update(Long price, LocalDate migrateDate, String description) {
+        if (price != null) {
+            this.price = price;
+        }
+
+        if (migrateDate != null) {
+            this.migrateDate = migrateDate;
+        }
+
+        if (description != null) {
+            this.description = description;
+        }
+    }
 }
