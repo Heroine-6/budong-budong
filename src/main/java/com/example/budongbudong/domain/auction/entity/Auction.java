@@ -37,4 +37,19 @@ public class Auction extends BaseEntity {
     @Column(name = "ended_at", nullable = false)
     private LocalDateTime endedAt;
 
+    public static Auction create(
+            Property property,
+            Long startPrice,
+            LocalDateTime startedAt,
+            LocalDateTime endedAt
+    ) {
+        Auction auction = new Auction();
+        auction.property = property;
+        auction.startPrice = startPrice;
+        auction.status = AuctionStatus.SCHEDULED;
+        auction.startedAt = startedAt;
+        auction.endedAt = endedAt;
+        return auction;
+    }
+
 }
