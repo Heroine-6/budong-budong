@@ -52,4 +52,7 @@ public class Auction extends BaseEntity {
         return auction;
     }
 
+    public void updateStatus(AuctionStatus auctionStatus) {
+        this.status = auctionStatus;
+    }
 }
