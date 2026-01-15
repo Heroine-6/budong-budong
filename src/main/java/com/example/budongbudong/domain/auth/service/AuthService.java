@@ -9,7 +9,6 @@ import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
 import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse signIn(@Valid SignInRequest request) {
+    public AuthResponse signIn(SignInRequest request) {
         String userEmail = request.getEmail();
         String rawPassword = request.getPassword();
 
