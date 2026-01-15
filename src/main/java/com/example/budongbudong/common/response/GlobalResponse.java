@@ -25,8 +25,9 @@ public class GlobalResponse<T> {
     public static <T> GlobalResponse<T> success(boolean success, String message, T data) {
         return new GlobalResponse<>(success, message, data); //204 는 data null로 넣어주세요.
     }
+
     //예외처리시
-    public static GlobalResponse<Void> exception(boolean success, ErrorCode errorCode) {
-        return new GlobalResponse<>(success, errorCode.getMessage(), null);
+    public static <T> GlobalResponse<T> exception(boolean success, ErrorCode errorCode, T data) {
+        return new GlobalResponse<>(success, errorCode.getMessage(), data);
     }
 }

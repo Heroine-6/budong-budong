@@ -5,9 +5,10 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.dto.CreateBidRequest;
-import com.example.budongbudong.domain.bid.dto.CreateBidResponse;
-import com.example.budongbudong.domain.bid.dto.ReadAllBidsResponse;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
+import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
@@ -75,5 +76,15 @@ public class BidService {
         return bidRepository.findAllByAuctionId(auctionId, pageable)
                 .map(ReadAllBidsResponse::from);
 
+    }
+
+    /**
+     * 내 입찰 내역 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ReadMyBidsResponse> readMyBids(Long userId, Pageable pageable) {
+
+        return bidRepository.findMyBidsPage(userId, pageable)
+                .map(ReadMyBidsResponse::from);
     }
 }

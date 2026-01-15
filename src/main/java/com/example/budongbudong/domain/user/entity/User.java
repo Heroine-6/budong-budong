@@ -35,4 +35,22 @@ public class User extends BaseEntity {
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.GENERAL;
+
+    public static User create(
+            String email,
+            String name,
+            String password,
+            String phone,
+            String address,
+            UserRole role
+    ) {
+        User user = new User();
+        user.email = email;
+        user.name = name;
+        user.password = password;
+        user.phone = phone;
+        user.address = address;
+        user.role = role;
+        return user;
+    }
 }
