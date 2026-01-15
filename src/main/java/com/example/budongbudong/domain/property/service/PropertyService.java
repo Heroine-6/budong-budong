@@ -1,7 +1,10 @@
 package com.example.budongbudong.domain.property.service;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
+import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,5 +33,14 @@ public class PropertyService {
         Page<ReadAllPropertyResponse> response = propertyPage.map(ReadAllPropertyResponse::from);
 
         return CustomPageResponse.from(response);
+    }
+
+    @Transactional(readOnly = true)
+    public ReadPropertyResponse getProperty(Long propertyId) {
+
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+
+        return ReadPropertyResponse.from(property);
     }
 }
