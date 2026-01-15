@@ -3,8 +3,9 @@ package com.example.budongbudong.domain.auth.service;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.utils.JwtUtil;
-import com.example.budongbudong.domain.user.dto.request.SignUpRequest;
-import com.example.budongbudong.domain.user.dto.response.SignUpResponse;
+import com.example.budongbudong.domain.auth.dto.request.SignInRequest;
+import com.example.budongbudong.domain.auth.dto.request.SignUpRequest;
+import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
 import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
@@ -22,7 +23,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     @Transactional
-    public SignUpResponse signUp(SignUpRequest request) {
+    public AuthResponse signUp(SignUpRequest request) {
 
         String userEmail = request.getEmail();
 
@@ -43,7 +44,28 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getName(), userEmail, user.getRole().name(),user.getId());
 
-        return new SignUpResponse(token);
+        return new AuthResponse(token);
+    }
+
+    @Transactional
+    public AuthResponse signIn(SignInRequest request) {
+        String userEmail = request.getEmail();
+        String rawPassword = request.getPassword();
+
+        User user = userRepository.findByEmail(userEmail).orElseThrow(
+                () -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getIsDeleted()) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+
+        String token = jwtUtil.generateToken(user.getName(), user.getEmail(), user.getRole().name(),user.getId());
+
+        return new AuthResponse(token);
     }
 }
 

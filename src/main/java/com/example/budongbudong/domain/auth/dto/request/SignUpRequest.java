@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.user.dto.request;
+package com.example.budongbudong.domain.auth.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;
