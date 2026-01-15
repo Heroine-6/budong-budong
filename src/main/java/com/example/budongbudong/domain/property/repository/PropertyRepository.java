@@ -12,13 +12,14 @@ import java.util.Optional;
 public interface PropertyRepository extends JpaRepository<Property,Long> {
 
     @Query("""
-    select p from Property p
+    select distinct p from Property p
     left join fetch p.propertyImageList pi
     where p.id = :propertyId
+    and p.isDeleted = false
     """)
-    Optional<Property> findByIdWithImages(@Param("propertyId") Long propertyId);
+    Optional<Property> findByIdWithImagesAndNotDeleted(@Param("propertyId") Long propertyId);
 
-    Page<Property> findAllByUserId(Long userId, Pageable pageable);
+    Page<Property> findAllByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
 
     Optional<Property> findByIdAndIsDeletedFalse(Long propertyId);
 }

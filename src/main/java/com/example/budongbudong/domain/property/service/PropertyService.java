@@ -42,7 +42,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public CustomPageResponse<ReadAllPropertyResponse> getMyPropertyList(Long userId, Pageable pageable) {
 
-        Page<Property> propertyPage = propertyRepository.findAllByUserId(userId, pageable);
+        Page<Property> propertyPage = propertyRepository.findAllByUserIdAndIsDeletedFalse(userId, pageable);
         Page<ReadAllPropertyResponse> response = propertyPage.map(property -> {
 
             Auction auction = auctionRepository.findByPropertyId(property.getId()).orElse(null);
@@ -57,7 +57,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public ReadPropertyResponse getProperty(Long propertyId) {
 
-        Property property = propertyRepository.findByIdWithImages(propertyId)
+        Property property = propertyRepository.findByIdWithImagesAndNotDeleted(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
         Auction auction = auctionRepository.findByPropertyId(propertyId).orElse(null);
@@ -69,7 +69,7 @@ public class PropertyService {
     @Transactional
     public void updateProperty(Long propertyId, UpdatePropertyRequest request) {
 
-        Property property = propertyRepository.findByIdWithImages(propertyId)
+        Property property = propertyRepository.findByIdWithImagesAndNotDeleted(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
         property.update(
