@@ -4,6 +4,7 @@ import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -28,10 +29,11 @@ public class ReadPropertyResponse {
     private final LocalDate migratedDate;
     private final String description;
     private final PropertyType type;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuctionStatus status;
     private final List<String> images;
 
-    public static ReadPropertyResponse from(Property property) {
+    public static ReadPropertyResponse from(Property property,AuctionStatus auctionStatus) {
         return new ReadPropertyResponse(
                 property.getName(),
                 property.getAddress(),
@@ -45,7 +47,7 @@ public class ReadPropertyResponse {
                 property.getMigrateDate(),
                 property.getDescription(),
                 property.getType(),
-                property.getAuction().getStatus(),
+                auctionStatus,
                 property.getPropertyImageList().stream()
                         .map(PropertyImage::getImageUrl)
                         .toList()

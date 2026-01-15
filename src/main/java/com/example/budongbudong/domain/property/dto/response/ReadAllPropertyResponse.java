@@ -4,6 +4,7 @@ import com.example.budongbudong.domain.auction.dto.AuctionResponse;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.propertyimage.dto.PropertyImageResponse;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -22,19 +23,16 @@ public class ReadAllPropertyResponse {
     private final BigDecimal supplyArea;
     private final BigDecimal privateArea;
     private final List<PropertyImageResponse> images;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuctionResponse auction;
 
-    public static ReadAllPropertyResponse from(Property property) {
+    public static ReadAllPropertyResponse from(Property property, AuctionResponse auction) {
 
         List<PropertyImageResponse> images = property.getPropertyImageList() != null
                 ? property.getPropertyImageList().stream()
                 .map(PropertyImageResponse::from)
                 .toList()
                 :List.of();
-
-        AuctionResponse auction = property.getAuction() != null
-                ? AuctionResponse.from(property.getAuction())
-                : null;
 
         return  new ReadAllPropertyResponse(
                 property.getId(),

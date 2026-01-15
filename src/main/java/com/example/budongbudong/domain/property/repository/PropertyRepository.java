@@ -14,7 +14,6 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
     @Query("""
     select p from Property p
     left join fetch p.propertyImageList pi
-    left join fetch p.auction a
     where p.id = :propertyId
     """)
     Optional<Property> findByIdWithImages(@Param("propertyId") Long propertyId);
