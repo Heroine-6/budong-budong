@@ -27,10 +27,10 @@ public class AuctionController {
     }
 
     @PatchMapping("/{auctionId}")
-    public ResponseEntity<GlobalResponse<CancelAuctionResponse>> updateAuctionStatus(@PathVariable Long auctionId, @AuthenticationPrincipal AuthUser authUser) {
+    public ResponseEntity<GlobalResponse<CancelAuctionResponse>> cancelAuction(@PathVariable Long auctionId, @AuthenticationPrincipal AuthUser authUser) {
 
         CancelAuctionResponse response = auctionService.cancelAuction(auctionId, authUser.getUserId());
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "경매 상태 변 성공", response));
+        return ResponseEntity.ok(GlobalResponse.success(true, "경매 상태 변경 성공", response));
     }
 }
