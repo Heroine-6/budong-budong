@@ -1,7 +1,6 @@
 package com.example.budongbudong.domain.property.entity;
 
 import com.example.budongbudong.common.entity.BaseEntity;
-import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.user.entity.User;
@@ -70,6 +69,4 @@ public class Property extends BaseEntity {
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
     private List<PropertyImage> propertyImageList = new ArrayList<>();
 
-    @OneToOne(mappedBy = "property", fetch = FetchType.LAZY)
-    private Auction auction;
 }
