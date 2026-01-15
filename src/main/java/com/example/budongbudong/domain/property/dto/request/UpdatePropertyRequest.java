@@ -1,7 +1,6 @@
 package com.example.budongbudong.domain.property.dto.request;
 
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
