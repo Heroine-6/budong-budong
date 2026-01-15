@@ -42,7 +42,8 @@ public class User extends BaseEntity {
             String password,
             String phone,
             String address,
-            UserRole role) {
+            UserRole role
+    ) {
         User user = new User();
         user.email = email;
         user.name = name;
