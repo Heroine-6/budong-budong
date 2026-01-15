@@ -70,9 +70,6 @@ public class Property extends BaseEntity {
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
     private List<PropertyImage> propertyImageList = new ArrayList<>();
 
-    @OneToOne(mappedBy = "property", fetch = FetchType.LAZY)
-    private Auction auction;
-
     public void update(Long price, LocalDate migrateDate, String description) {
         if (price != null) {
             this.price = price;

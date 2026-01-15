@@ -4,6 +4,10 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
+import com.example.budongbudong.domain.auction.dto.AuctionResponse;
+import com.example.budongbudong.domain.auction.entity.Auction;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.entity.Property;
@@ -18,12 +22,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PropertyService {
     private final PropertyRepository propertyRepository;
+    private final AuctionRepository auctionRepository;
 
     @Transactional(readOnly = true)
     public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(Pageable pageable) {
 
         Page<Property> propertyPage = propertyRepository.findAll(pageable);
-        Page<ReadAllPropertyResponse> response = propertyPage.map(ReadAllPropertyResponse::from);
+        Page<ReadAllPropertyResponse> response = propertyPage.map(property -> {
+
+            Auction auction = auctionRepository.findByPropertyId(property.getId()).orElse(null);
+            AuctionResponse auctionResponse = (auction != null) ? AuctionResponse.from(auction) : null;
+
+            return ReadAllPropertyResponse.from(property, auctionResponse);
+        });
+
         return CustomPageResponse.from(response);
     }
 
@@ -31,7 +43,13 @@ public class PropertyService {
     public CustomPageResponse<ReadAllPropertyResponse> getMyPropertyList(Long userId, Pageable pageable) {
 
         Page<Property> propertyPage = propertyRepository.findAllByUserId(userId, pageable);
-        Page<ReadAllPropertyResponse> response = propertyPage.map(ReadAllPropertyResponse::from);
+        Page<ReadAllPropertyResponse> response = propertyPage.map(property -> {
+
+            Auction auction = auctionRepository.findByPropertyId(property.getId()).orElse(null);
+            AuctionResponse auctionResponse = (auction != null) ? AuctionResponse.from(auction) : null;
+
+            return ReadAllPropertyResponse.from(property, auctionResponse);
+        });
 
         return CustomPageResponse.from(response);
     }
@@ -42,7 +60,10 @@ public class PropertyService {
         Property property = propertyRepository.findByIdWithImages(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
-        return ReadPropertyResponse.from(property);
+        Auction auction = auctionRepository.findByPropertyId(propertyId).orElse(null);
+        AuctionStatus auctionStatus = (auction != null) ? auction.getStatus() : null;
+
+        return ReadPropertyResponse.from(property, auctionStatus);
     }
 
     @Transactional

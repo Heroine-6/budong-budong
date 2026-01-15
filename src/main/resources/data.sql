@@ -67,8 +67,8 @@ VALUES
     (7, 380000000, 'OPEN', DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_ADD(NOW(), INTERVAL 1 DAY), NOW(), false),
 
     (8, 600000000, 'CLOSED', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY), NOW(), false),
-    (9, 180000000, 'CLOSED', DATE_SUB(NOW(), INTERVAL 9 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY), NOW(), false),
-    (10,230000000, 'CLOSED', DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(), false);
+    (9, 180000000, 'CLOSED', DATE_SUB(NOW(), INTERVAL 9 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY), NOW(), false);
+#     (10,230000000, 'CLOSED', DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(), false);
 
 
 -- =========================
@@ -93,10 +93,10 @@ VALUES
 (2, 8, 620000000, 'LOST', false, NOW(), false),
 
 (3, 9, 210000000, 'WON', true, NOW(), false),
-(4, 9, 200000000, 'LOST', false, NOW(), false),
+(4, 9, 200000000, 'LOST', false, NOW(), false);
 
-(5,10, 260000000, 'WON', true, NOW(), false),
-(6,10, 250000000, 'LOST', false, NOW(), false);
+# (5,10, 260000000, 'WON', true, NOW(), false),
+# (6,10, 250000000, 'LOST', false, NOW(), false);
 
 -- =========================
 -- Auction_winners
@@ -105,5 +105,5 @@ INSERT INTO auction_winners
 (auction_id, user_id, price, created_at, is_deleted)
 VALUES
     (8, 1, 650000000, NOW(), false),
-    (9, 3, 210000000, NOW(), false),
-    (10,5, 260000000, NOW(), false);
+    (9, 3, 210000000, NOW(), false);
+#     (10,5, 260000000, NOW(), false);
