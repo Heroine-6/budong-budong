@@ -3,8 +3,10 @@ package com.example.budongbudong.domain.auction.service;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
+import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
+import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
@@ -22,6 +24,7 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final PropertyRepository propertyRepository;
+    private final BidRepository bidRepository;
 
     /**
      * 경매 등록
@@ -83,5 +86,25 @@ public class AuctionService {
         auction.updateStatus(AuctionStatus.CANCELLED);
 
         return CancelAuctionResponse.from(auction);
+    }
+
+    @Transactional(readOnly = true)
+    public AuctionInfoResponse getAuctionInfo(Long auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        // 최고 입찰가
+        Long highestPrice = bidRepository.findHighestPriceByAuctionId(auctionId)
+                .orElse(auction.getStartPrice());
+
+        // 총 입찰자 수
+        Long totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
+
+        return new AuctionInfoResponse(
+                auction.getStartPrice(),
+                highestPrice,
+                totalBidders,
+                auction.getEndedAt()
+        );
     }
 }
