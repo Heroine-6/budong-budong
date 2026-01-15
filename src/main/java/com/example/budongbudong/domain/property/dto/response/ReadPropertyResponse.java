@@ -3,12 +3,14 @@ package com.example.budongbudong.domain.property.dto.response;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
+import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.List;
 
 @Getter
 @RequiredArgsConstructor
@@ -27,6 +29,7 @@ public class ReadPropertyResponse {
     private final String description;
     private final PropertyType type;
     private final AuctionStatus status;
+    private final List<String> images;
 
     public static ReadPropertyResponse from(Property property) {
         return new ReadPropertyResponse(
@@ -42,7 +45,10 @@ public class ReadPropertyResponse {
                 property.getMigrateDate(),
                 property.getDescription(),
                 property.getType(),
-                property.getAuction().getStatus()
+                property.getAuction().getStatus(),
+                property.getPropertyImageList().stream()
+                        .map(PropertyImage::getImageUrl)
+                        .toList()
         );
     }
 }

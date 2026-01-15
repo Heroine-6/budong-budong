@@ -38,7 +38,7 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public ReadPropertyResponse getProperty(Long propertyId) {
 
-        Property property = propertyRepository.findById(propertyId)
+        Property property = propertyRepository.findByIdWithImages(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
         return ReadPropertyResponse.from(property);
