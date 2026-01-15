@@ -23,6 +23,7 @@ public class AuthService {
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
+
         String userEmail = request.getEmail();
 
         if (userRepository.existsByEmail(userEmail)) {
