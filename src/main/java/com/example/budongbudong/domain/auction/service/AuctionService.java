@@ -5,23 +5,30 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
+import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.bid.entity.Bid;
+import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final PropertyRepository propertyRepository;
+    private final BidRepository bidRepository;
 
     /**
      * 경매 등록
@@ -37,7 +44,7 @@ public class AuctionService {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
-        if(!userId.equals(property.getUser().getId())){
+        if (!userId.equals(property.getUser().getId())) {
             throw new CustomException(ErrorCode.USER_NOT_MATCH);
         }
 
@@ -72,7 +79,7 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
 
-        if(!userId.equals(auction.getProperty().getUser().getId())){
+        if (!userId.equals(auction.getProperty().getUser().getId())) {
             throw new CustomException(ErrorCode.USER_NOT_MATCH);
         }
 
@@ -83,5 +90,40 @@ public class AuctionService {
         auction.updateStatus(AuctionStatus.CANCELLED);
 
         return CancelAuctionResponse.from(auction);
+    }
+
+    /**
+     * 경쟁 정보 및 통계 조회
+     * 총 입찰자 수, 총 입찰 횟수, 가격 상승 금액, 최근 입찰 시간
+     */
+    @Transactional(readOnly = true)
+    public GetStatisticsResponse getAuctionStatistics(Long auctionId) {
+
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        int totalBidderCount = bidRepository.countTotalBidders(auctionId);
+
+        List<Bid> bidList = bidRepository.findAllByAuctionOrderByPriceDesc(auction);
+        Bid highestBid = bidList.get(0);
+
+        int totalBidCount = bidList.size();
+
+        long priceIncrease = 0L;
+
+        if (totalBidCount == 1L) {
+            priceIncrease = highestBid.getPrice() - auction.getStartPrice();
+        }
+        if (totalBidCount > 1L) {
+            priceIncrease = highestBid.getPrice() - bidList.get(1).getPrice();
+        }
+
+        return GetStatisticsResponse.from(
+                auctionId,
+                totalBidderCount,
+                totalBidCount,
+                priceIncrease,
+                highestBid.getCreatedAt()
+        );
     }
 }
