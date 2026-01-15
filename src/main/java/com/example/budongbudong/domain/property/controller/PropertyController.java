@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -63,10 +64,10 @@ public class PropertyController {
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
             )
-            Pageable pageable
+            Pageable pageable,
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        //TODO 시큐리티 구현 후 AuthUser의 id로 수정 예정
-        CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getMyPropertyList(7L,pageable);
+        CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getMyPropertyList(authUser.getUserId(), pageable);
         return ResponseEntity.ok(response);
     }
 
