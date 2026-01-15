@@ -72,4 +72,18 @@ public class Property extends BaseEntity {
 
     @OneToOne(mappedBy = "property", fetch = FetchType.LAZY)
     private Auction auction;
+
+    public void update(Long price, LocalDate migrateDate, String description) {
+        if (price != null) {
+            this.price = price;
+        }
+
+        if (migrateDate != null) {
+            this.migrateDate = migrateDate;
+        }
+
+        if (description != null) {
+            this.description = description;
+        }
+    }
 }
