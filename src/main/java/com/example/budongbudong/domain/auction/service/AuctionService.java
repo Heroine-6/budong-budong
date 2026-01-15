@@ -23,7 +23,7 @@ public class AuctionService {
     private final PropertyRepository propertyRepository;
 
     /**
-     * 매물 등록
+     * 경매 등록
      */
     @Transactional
     public CreateAuctionResponse createAuction(CreateAuctionRequest request) {
