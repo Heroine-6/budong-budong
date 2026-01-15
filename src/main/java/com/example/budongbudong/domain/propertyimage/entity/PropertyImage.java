@@ -4,6 +4,7 @@ import com.example.budongbudong.common.entity.BaseEntity;
 import com.example.budongbudong.domain.property.entity.Property;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,4 +24,10 @@ public class PropertyImage extends BaseEntity {
 
     @Column(name = "image_url",nullable = false,length = 255)
     private String imageUrl;
+
+    @Builder
+    public PropertyImage(Property property, String imageUrl) {
+        this.property = property;
+        this.imageUrl = imageUrl;
+    }
 }
