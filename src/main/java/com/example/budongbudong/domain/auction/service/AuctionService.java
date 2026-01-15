@@ -27,7 +27,7 @@ public class AuctionService {
      * 경매 등록
      */
     @Transactional
-    public CreateAuctionResponse createAuction(CreateAuctionRequest request) {
+    public CreateAuctionResponse createAuction(CreateAuctionRequest request, Long userId) {
 
         Long propertyId = request.getPropertyId();
         Long startPrice = request.getStartPrice();
@@ -36,6 +36,10 @@ public class AuctionService {
 
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+
+        if(!userId.equals(property.getUser().getId())){
+            throw new CustomException(ErrorCode.USER_NOT_MATCH);
+        }
 
         Auction auction = auctionRepository.findByPropertyId(propertyId).orElse(null);
 
@@ -63,12 +67,16 @@ public class AuctionService {
      * 경매 상태 변경 (취소)
      */
     @Transactional
-    public CancelAuctionResponse cancelAuction(Long auctionId) {
+    public CancelAuctionResponse cancelAuction(Long auctionId, Long userId) {
 
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
 
-        if (auction.getStatus().equals(AuctionStatus.SCHEDULED)) {
+        if(!userId.equals(auction.getProperty().getUser().getId())){
+            throw new CustomException(ErrorCode.USER_NOT_MATCH);
+        }
+
+        if (!auction.getStatus().equals(AuctionStatus.SCHEDULED)) {
             throw new CustomException(ErrorCode.AUCTION_INVALID_STATUS_FOR_CANCEL);
         }
 
