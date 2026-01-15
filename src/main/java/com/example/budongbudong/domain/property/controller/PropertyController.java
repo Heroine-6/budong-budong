@@ -7,7 +7,6 @@ import com.example.budongbudong.domain.property.dto.request.CreatePropertyReques
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
-import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.service.PropertyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,7 +31,7 @@ public class PropertyController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GlobalResponse<Void>> createProperty(
-            @ModelAttribute CreatePropertyRequestDTO request,
+            @Valid @ModelAttribute CreatePropertyRequestDTO request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal AuthUser authUser
     ) {
