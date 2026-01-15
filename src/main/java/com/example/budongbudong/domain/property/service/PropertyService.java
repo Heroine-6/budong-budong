@@ -5,7 +5,7 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
-import com.example.budongbudong.domain.auction.dto.AuctionResponse;
+import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
