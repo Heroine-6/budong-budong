@@ -1,14 +1,19 @@
 package com.example.budongbudong.domain.property.service;
 
+import com.example.budongbudong.common.api.AptItem;
+import com.example.budongbudong.common.api.AptMapper;
+import com.example.budongbudong.common.api.AptResponse;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.common.api.AptClient;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.entity.Property;
@@ -18,6 +23,7 @@ import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,14 +41,23 @@ public class PropertyService {
     private final UserRepository userRepository;
     private final PropertyImageService propertyImageService;
     private final AuctionRepository auctionRepository;
+    private final AptClient aptClient;
+
+    @Value("${external.api.service-key}")
+    private String serviceKey;
+
 
     @Transactional
     public void createProperty(CreatePropertyRequestDTO request, List<MultipartFile> images, Long userId) {
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Property property = request.toEntity(user);
+
+        CreateApiResponse apiInfo = fetchApiInfo(request);
+
+        property.applyApiInfo(apiInfo);
 
         propertyRepository.save(property);
 
@@ -117,5 +132,24 @@ public class PropertyService {
         }
 
         property.softDelete();
+    }
+
+    private CreateApiResponse fetchApiInfo(CreatePropertyRequestDTO request) {
+
+        AptResponse response = aptClient.getApt(
+                serviceKey,
+                request.lawdCd(),
+                request.dealYmd(),
+                1,
+                30
+        );
+
+        List<AptItem> items = response.response().body().items().item();
+
+        if (items == null || items.isEmpty()) {
+            throw new CustomException(ErrorCode.EXTERNAL_API_FAILED);
+        }
+
+        return AptMapper.toCreateApiResponse(items.get(0), request.address());
     }
 }

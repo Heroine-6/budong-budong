@@ -25,3 +25,6 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+external:
+  api:
+    service-key: ${API_SERVICE_KEY}
