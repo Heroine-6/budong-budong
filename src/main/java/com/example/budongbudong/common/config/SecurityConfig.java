@@ -135,7 +135,7 @@ public class SecurityConfig {
         auth.requestMatchers(HttpMethod.POST, "/api/v1/auctions")
             .hasRole(UserRole.SELLER.name())
 
-            .requestMatchers(HttpMethod.PATCH, "/api/v1/auctions/*/status")
+            .requestMatchers(HttpMethod.PATCH, "/api/v1/auctions/*")
             .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
             .requestMatchers(
