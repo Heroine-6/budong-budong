@@ -1,4 +1,4 @@
-package com.example.budongbudong.common.util;
+package com.example.budongbudong.common.utils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
