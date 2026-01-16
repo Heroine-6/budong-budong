@@ -16,7 +16,7 @@ public enum ErrorCode {
     PROPERTY_NOT_FOUND(404, "존재하지 않는 매물입니다."),
 
     //------403-----------------------
-    USER_NOT_MATCH(403, "접근 권한이 없습니다"),
+    USER_NOT_MATCH(403, "소유자만 접근 가능합니다."),
     PASSWORD_NOT_MATCH(403, "비밀번호가 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다"),
     AUCTION_NOT_OPEN(403, "현재 입찰이 불가능한 경매입니다."),
