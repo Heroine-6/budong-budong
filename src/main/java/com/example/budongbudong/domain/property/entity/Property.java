@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.property.entity;
 
 import com.example.budongbudong.common.entity.BaseEntity;
+import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.user.entity.User;
@@ -140,5 +141,12 @@ public class Property extends BaseEntity {
         if (description != null) {
             this.description = description;
         }
+    }
+
+    public void applyApiInfo(CreateApiResponse api) {
+        this.name = api.name();
+        this.price = api.price();
+        this.privateArea = api.privateArea();
+        this.builtYear = api.builtYear();
     }
 }

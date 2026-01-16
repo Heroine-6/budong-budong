@@ -1,14 +1,19 @@
 package com.example.budongbudong.domain.property.service;
 
+import com.example.budongbudong.domain.property.client.AptItem;
+import com.example.budongbudong.domain.property.client.AptMapper;
+import com.example.budongbudong.domain.property.client.AptResponse;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
-import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
+import com.example.budongbudong.domain.property.client.AptClient;
+import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.entity.Property;
@@ -18,6 +23,7 @@ import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,15 +41,28 @@ public class PropertyService {
     private final UserRepository userRepository;
     private final PropertyImageService propertyImageService;
     private final AuctionRepository auctionRepository;
+    private final AptClient aptClient;
+
+    @Value("${external.api.service-key}")
+    private String serviceKey;
+
 
     @Transactional
-    public void createProperty(CreatePropertyRequestDTO request, List<MultipartFile> images, Long userId) {
-        
+    public void createProperty(CreatePropertyRequest request, List<MultipartFile> images, Long userId) {
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        // 입력 받은 값을 통해 엔티티 생성
         Property property = request.toEntity(user);
 
+        // 외부 API에서 받은 값
+        CreateApiResponse apiInfo = fetchApiInfo(request);
+
+        // 외부 API에서 받은 값 엔티티에 저장
+        property.applyApiInfo(apiInfo);
+
+        // DB에 저장
         propertyRepository.save(property);
 
         propertyImageService.saveImages(property, images);
@@ -117,5 +136,27 @@ public class PropertyService {
         }
 
         property.softDelete();
+    }
+
+    private CreateApiResponse fetchApiInfo(CreatePropertyRequest request) {
+
+        // aptClient를 통해 외부 API 요청 (전체 응답 형식)
+        AptResponse response = aptClient.getApt(
+                serviceKey,
+                request.lawdCd(),
+                request.dealYmd(),
+                1,
+                30
+        );
+
+        // 전체 응답 중 필요한 값만 꺼내 저장
+        List<AptItem> items = response.response().body().items().item();
+
+        if (items == null || items.isEmpty()) {
+            throw new CustomException(ErrorCode.EXTERNAL_API_FAILED);
+        }
+
+        // aptMapper를 통해 필요한 형태의 값으로 변환하여 반환
+        return AptMapper.toCreateApiResponse(items.get(0), request.address());
     }
 }

@@ -24,6 +24,16 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springCloudVersion', "2025.0.1")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -40,6 +50,11 @@ dependencies {
     implementation "io.jsonwebtoken:jjwt-api:0.12.5"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:0.12.5"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:0.12.5"
+
+    // feign client
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 
     //swagger ui "반드시" 코끼리 클릭 후 -> http://localhost:8080/swagger-ui/index.html 들어가면 웹으로 api 확인 가능
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15"

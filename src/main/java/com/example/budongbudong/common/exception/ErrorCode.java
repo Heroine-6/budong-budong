@@ -14,6 +14,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다."),
     AUCTION_NOT_FOUND(404, "존재하지 않는 경매입니다."),
     PROPERTY_NOT_FOUND(404, "존재하지 않는 매물입니다."),
+    EXTERNAL_API_FAILED(404, "해당 정보가 없습니다."),
 
     //------403-----------------------
     USER_NOT_MATCH(403, "소유자만 접근 가능합니다."),
