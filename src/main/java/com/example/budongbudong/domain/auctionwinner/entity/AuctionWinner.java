@@ -23,10 +23,18 @@ public class AuctionWinner extends BaseEntity {
     @JoinColumn(name = "auction_id", nullable = false)
     private Auction auction;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false)
     private Long price;
+
+    public static AuctionWinner create(Auction auction, User user, Long price){
+        AuctionWinner winner = new AuctionWinner();
+        winner.auction = auction;
+        winner.user = user;
+        winner.price = price;
+        return  winner;
+    }
 }
