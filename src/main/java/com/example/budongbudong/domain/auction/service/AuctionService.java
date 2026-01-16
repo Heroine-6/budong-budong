@@ -106,7 +106,7 @@ public class AuctionService {
                 .orElse(auction.getStartPrice());
 
         // 총 입찰자 수
-        Long totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
+        int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
 
         return new AuctionInfoResponse(
                 auction.getStartPrice(),
