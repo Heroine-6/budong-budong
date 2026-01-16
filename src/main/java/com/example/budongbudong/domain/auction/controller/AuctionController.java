@@ -6,7 +6,9 @@ import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
 import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
+import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
 import com.example.budongbudong.domain.auction.service.AuctionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +22,7 @@ public class AuctionController {
     private final AuctionService auctionService;
 
     @PostMapping
-    public ResponseEntity<GlobalResponse<CreateAuctionResponse>> createAuction(@RequestBody CreateAuctionRequest request, @AuthenticationPrincipal AuthUser authUser) {
+    public ResponseEntity<GlobalResponse<CreateAuctionResponse>> createAuction(@Valid @RequestBody CreateAuctionRequest request, @AuthenticationPrincipal AuthUser authUser) {
 
         CreateAuctionResponse response = auctionService.createAuction(request, authUser.getUserId());
 
@@ -41,5 +43,13 @@ public class AuctionController {
         AuctionInfoResponse response = auctionService.getAuctionInfo(auctionId);
 
         return ResponseEntity.ok(GlobalResponse.success(true, "입찰 정보 조회 성공", response));
+    }
+
+    @GetMapping("/{auctionId}/statistics")
+    public ResponseEntity<GlobalResponse<GetStatisticsResponse>> getAuctionStatistics(@PathVariable Long auctionId) {
+
+        GetStatisticsResponse response = auctionService.getAuctionStatistics(auctionId);
+
+        return ResponseEntity.ok(GlobalResponse.success(true, "경쟁 정보 및 통계 조회 성공", response));
     }
 }
