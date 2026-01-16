@@ -32,10 +32,9 @@ public class BidService {
      * 입찰 등록
      */
     @Transactional
-    public CreateBidResponse createBid(CreateBidRequest request, Long auctionId) {
+    public CreateBidResponse createBid(CreateBidRequest request, Long auctionId, Long userId) {
 
-        // TODO: 임의로 auctionId 값을 userId로 사용 중
-        User user = userRepository.findById(auctionId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Auction auction = auctionRepository.findById(auctionId)

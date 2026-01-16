@@ -30,9 +30,12 @@ public class BidController {
      * 입찰 등록
      */
     @PostMapping("/auctions/{auctionId}")
-    public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(@Valid @RequestBody CreateBidRequest request, @PathVariable Long auctionId) {
-
-        CreateBidResponse response = bidService.createBid(request, auctionId);
+    public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(
+            @Valid @RequestBody CreateBidRequest request,
+            @PathVariable Long auctionId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        CreateBidResponse response = bidService.createBid(request, auctionId, authUser.getUserId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
