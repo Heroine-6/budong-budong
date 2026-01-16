@@ -1,12 +1,12 @@
 package com.example.budongbudong.domain.property.service;
 
-import com.example.budongbudong.common.api.AptItem;
-import com.example.budongbudong.common.api.AptMapper;
-import com.example.budongbudong.common.api.AptResponse;
+import com.example.budongbudong.domain.property.client.AptItem;
+import com.example.budongbudong.domain.property.client.AptMapper;
+import com.example.budongbudong.domain.property.client.AptResponse;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
-import com.example.budongbudong.common.api.AptClient;
+import com.example.budongbudong.domain.property.client.AptClient;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
@@ -53,12 +53,16 @@ public class PropertyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        // 입력 받은 값을 통해 엔티티 생성
         Property property = request.toEntity(user);
 
+        // 외부 API에서 받은 값
         CreateApiResponse apiInfo = fetchApiInfo(request);
 
+        // 외부 API에서 받은 값 엔티티에 저장
         property.applyApiInfo(apiInfo);
 
+        // DB에 저장
         propertyRepository.save(property);
 
         propertyImageService.saveImages(property, images);
@@ -136,6 +140,7 @@ public class PropertyService {
 
     private CreateApiResponse fetchApiInfo(CreatePropertyRequest request) {
 
+        // aptClient를 통해 외부 API 요청 (전체 응답 형식)
         AptResponse response = aptClient.getApt(
                 serviceKey,
                 request.lawdCd(),
@@ -144,12 +149,14 @@ public class PropertyService {
                 30
         );
 
+        // 전체 응답 중 필요한 값만 꺼내 저장
         List<AptItem> items = response.response().body().items().item();
 
         if (items == null || items.isEmpty()) {
             throw new CustomException(ErrorCode.EXTERNAL_API_FAILED);
         }
 
+        // aptMapper를 통해 필요한 형태의 값으로 변환하여 반환
         return AptMapper.toCreateApiResponse(items.get(0), request.address());
     }
 }

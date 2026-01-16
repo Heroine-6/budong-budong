@@ -1,4 +1,4 @@
-package com.example.budongbudong.common.api;
+package com.example.budongbudong.domain.property.client;
 
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 
@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 public class AptMapper {
 
+    // 필요한 형태의 값으로 변환
     public static CreateApiResponse toCreateApiResponse(AptItem item, String requestAddress) {
         return new CreateApiResponse(
                 item.aptNm(),
@@ -16,6 +17,7 @@ public class AptMapper {
         );
     }
 
+    // 매매가를 숫자로 파싱 가능하도록 변환
     private static Long parseDealAmount(String dealAmount) {
         if (dealAmount == null) return null;
         String normalized = dealAmount.replace(",", "").replace(" ", "");
@@ -23,6 +25,7 @@ public class AptMapper {
         return Long.parseLong(normalized);
     }
 
+    // 전용 면적을 BigDecimal로 변환
     private static BigDecimal parseArea(String area) {
         if (area == null || area.isBlank()) return null;
         return new BigDecimal(area.trim());

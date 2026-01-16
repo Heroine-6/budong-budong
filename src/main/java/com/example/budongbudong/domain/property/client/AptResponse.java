@@ -1,4 +1,4 @@
-package com.example.budongbudong.common.api;
+package com.example.budongbudong.domain.property.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

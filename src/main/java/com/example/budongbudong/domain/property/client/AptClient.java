@@ -1,4 +1,4 @@
-package com.example.budongbudong.common.api;
+package com.example.budongbudong.domain.property.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
