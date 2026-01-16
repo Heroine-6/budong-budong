@@ -1,5 +1,6 @@
 package com.example.budongbudong.domain.bid.controller;
 
+import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,9 +30,12 @@ public class BidController {
      * 입찰 등록
      */
     @PostMapping("/auctions/{auctionId}")
-    public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(@Valid @RequestBody CreateBidRequest request, @PathVariable Long auctionId) {
-
-        CreateBidResponse response = bidService.createBid(request, auctionId);
+    public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(
+            @Valid @RequestBody CreateBidRequest request,
+            @PathVariable Long auctionId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        CreateBidResponse response = bidService.createBid(request, auctionId, authUser.getUserId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -70,10 +75,9 @@ public class BidController {
     /**
      * 내 입찰 내역 조회
      */
-    // TODO: 임의로 userId 받는 중
     @GetMapping("/my/{userId}")
     public ResponseEntity<GlobalResponse<CustomPageResponse<ReadMyBidsResponse>>> readMyBids(
-            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser authUser,
             @PageableDefault(
                     page = 0,
                     size = 10,
@@ -81,7 +85,7 @@ public class BidController {
                     direction = Sort.Direction.DESC
             ) Pageable pageable
     ) {
-        Page<ReadMyBidsResponse> page = bidService.readMyBids(userId, pageable);
+        Page<ReadMyBidsResponse> page = bidService.readMyBids(authUser.getUserId(), pageable);
 
         CustomPageResponse<ReadMyBidsResponse> response = CustomPageResponse.from(page);
 
