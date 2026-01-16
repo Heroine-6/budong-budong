@@ -111,7 +111,10 @@ public class PropertyService {
     }
 
     @Transactional
-    public void updateProperty(Long propertyId, UpdatePropertyRequest request) {
+    public void updateProperty(Long propertyId, UpdatePropertyRequest request, Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Property property = propertyRepository.findByIdWithImagesAndNotDeleted(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
@@ -124,7 +127,10 @@ public class PropertyService {
     }
 
     @Transactional
-    public void deleteProperty(Long propertyId) {
+    public void deleteProperty(Long propertyId, Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));

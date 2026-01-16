@@ -97,9 +97,13 @@ public class PropertyController {
     }
 
     @PatchMapping("/{propertyId}")
-    public ResponseEntity<GlobalResponse<Void>> updateProperty(@Valid @RequestBody UpdatePropertyRequest request, @PathVariable Long propertyId) {
+    public ResponseEntity<GlobalResponse<Void>> updateProperty(
+            @Valid @RequestBody UpdatePropertyRequest request,
+            @PathVariable Long propertyId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
 
-        propertyService.updateProperty(propertyId, request);
+        propertyService.updateProperty(propertyId, request, authUser.getUserId());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -111,9 +115,9 @@ public class PropertyController {
     }
 
     @DeleteMapping("/{propertyId}")
-    public ResponseEntity<GlobalResponse<Void>> deleteProperty(@PathVariable Long propertyId) {
+    public ResponseEntity<GlobalResponse<Void>> deleteProperty(@PathVariable Long propertyId, @AuthenticationPrincipal AuthUser authUser) {
 
-        propertyService.deleteProperty(propertyId);
+        propertyService.deleteProperty(propertyId, authUser.getUserId());
 
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
