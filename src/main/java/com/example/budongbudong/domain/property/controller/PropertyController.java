@@ -3,12 +3,18 @@ package com.example.budongbudong.domain.property.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.service.PropertyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -23,6 +29,18 @@ import org.springframework.web.bind.annotation.*;
 public class PropertyController {
 
     private final PropertyService propertyService;
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GlobalResponse<Void>> createProperty(
+            @Valid @ModelAttribute CreatePropertyRequestDTO request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        propertyService.createProperty(request, images, authUser.getUserId());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(GlobalResponse.success(true, "매물 등록 성공", null));
+    }
 
     @GetMapping
     public ResponseEntity<CustomPageResponse<ReadAllPropertyResponse>> getAllPropertyList(

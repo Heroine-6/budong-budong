@@ -6,6 +6,7 @@ import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -101,6 +102,30 @@ public class Property extends BaseEntity {
         property.user = user;
 
         return property;
+    }
+
+    @Builder
+    public Property(String name, String address, int floor, int totalFloor, int roomCount,
+                    PropertyType type, Year builtYear, String description, Long price,
+                    LocalDate migrateDate, BigDecimal supplyArea, BigDecimal privateArea,
+                    User user) {
+        this.name = name;
+        this.address = address;
+        this.floor = floor;
+        this.totalFloor = totalFloor;
+        this.roomCount = roomCount;
+        this.type = type;
+        this.builtYear = builtYear;
+        this.description = description;
+        this.price = price;
+        this.migrateDate = migrateDate;
+        this.supplyArea = supplyArea;
+        this.privateArea = privateArea;
+        this.user = user;
+    }
+
+    public void addImage(PropertyImage image) {
+        this.propertyImageList.add(image);
     }
 
     public void update(Long price, LocalDate migrateDate, String description) {

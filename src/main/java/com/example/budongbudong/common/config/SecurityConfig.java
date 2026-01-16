@@ -101,7 +101,8 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/signin").permitAll();
+                .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/signin").permitAll()
+                .requestMatchers("/uploads/**").permitAll();
     }
 
     private void propertyAuth(
