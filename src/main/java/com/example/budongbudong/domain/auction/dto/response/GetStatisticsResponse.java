@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
-import static com.example.budongbudong.common.util.TimeFormatUtil.formatTime;
+import static com.example.budongbudong.common.utils.TimeFormatUtil.formatTime;
 
 @Getter
 @RequiredArgsConstructor
