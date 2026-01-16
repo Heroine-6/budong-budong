@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.bid.container;
+package com.example.budongbudong.domain.bid.controller;
 
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/bids")
-public class BidContainer {
+public class BidController {
 
     private final BidService bidService;
 
