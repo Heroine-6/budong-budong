@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.auction.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
+import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
@@ -34,6 +35,14 @@ public class AuctionController {
         CancelAuctionResponse response = auctionService.cancelAuction(auctionId, authUser.getUserId());
 
         return ResponseEntity.ok(GlobalResponse.success(true, "경매 상태 변경 성공", response));
+    }
+
+    @GetMapping("/{auctionId}/info")
+    public ResponseEntity<GlobalResponse<AuctionInfoResponse>> getAuctionInfo(@PathVariable Long auctionId) {
+
+        AuctionInfoResponse response = auctionService.getAuctionInfo(auctionId);
+
+        return ResponseEntity.ok(GlobalResponse.success(true, "입찰 정보 조회 성공", response));
     }
 
     @GetMapping("/{auctionId}/statistics")
