@@ -7,7 +7,7 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.api.AptClient;
-import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
+import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.entity.Auction;
@@ -48,7 +48,7 @@ public class PropertyService {
 
 
     @Transactional
-    public void createProperty(CreatePropertyRequestDTO request, List<MultipartFile> images, Long userId) {
+    public void createProperty(CreatePropertyRequest request, List<MultipartFile> images, Long userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -134,7 +134,7 @@ public class PropertyService {
         property.softDelete();
     }
 
-    private CreateApiResponse fetchApiInfo(CreatePropertyRequestDTO request) {
+    private CreateApiResponse fetchApiInfo(CreatePropertyRequest request) {
 
         AptResponse response = aptClient.getApt(
                 serviceKey,

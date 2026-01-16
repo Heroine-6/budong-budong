@@ -3,7 +3,7 @@ package com.example.budongbudong.domain.property.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
-import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequestDTO;
+import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
@@ -31,7 +31,7 @@ public class PropertyController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GlobalResponse<Void>> createProperty(
-            @Valid @ModelAttribute CreatePropertyRequestDTO request,
+            @Valid @ModelAttribute CreatePropertyRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal AuthUser authUser
     ) {

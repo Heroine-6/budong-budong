@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record CreatePropertyRequestDTO(
+public record CreatePropertyRequest(
 
         @NotBlank(message = "지역번호는 필수입니다.")
         String lawdCd,
