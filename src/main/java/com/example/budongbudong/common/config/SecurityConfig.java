@@ -101,7 +101,14 @@ public class SecurityConfig {
     ) {
         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/signin").permitAll()
-                .requestMatchers("/uploads/**").permitAll();
+                .requestMatchers("/uploads/**").permitAll()
+
+                // Swagger / OpenAPI 허용
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**"
+                ).permitAll();
     }
 
     private void propertyAuth(
