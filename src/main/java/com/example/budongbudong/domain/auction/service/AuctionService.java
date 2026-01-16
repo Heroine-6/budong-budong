@@ -105,10 +105,11 @@ public class AuctionService {
         int totalBidderCount = bidRepository.countTotalBidders(auctionId);
 
         List<Bid> bidList = bidRepository.findAllByAuctionOrderByPriceDesc(auction);
-        Bid highestBid = bidList.get(0);
+
+        Bid highestBid = (bidList.isEmpty()) ? null : bidList.get(0);
+        LocalDateTime createdAt = (highestBid == null) ? null : highestBid.getCreatedAt();
 
         int totalBidCount = bidList.size();
-
         long priceIncrease = 0L;
 
         if (totalBidCount == 1L) {
@@ -123,7 +124,7 @@ public class AuctionService {
                 totalBidderCount,
                 totalBidCount,
                 priceIncrease,
-                highestBid.getCreatedAt()
+                createdAt
         );
     }
 }
