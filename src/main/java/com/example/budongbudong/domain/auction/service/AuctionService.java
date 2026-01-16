@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.auction.service;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
+import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
@@ -90,6 +91,29 @@ public class AuctionService {
         auction.updateStatus(AuctionStatus.CANCELLED);
 
         return CancelAuctionResponse.from(auction);
+    }
+
+    /**
+     * 입찰 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public AuctionInfoResponse getAuctionInfo(Long auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        // 최고 입찰가
+        Long highestPrice = bidRepository.findHighestPriceByAuctionId(auctionId)
+                .orElse(auction.getStartPrice());
+
+        // 총 입찰자 수
+        int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
+
+        return new AuctionInfoResponse(
+                auction.getStartPrice(),
+                highestPrice,
+                totalBidders,
+                auction.getEndedAt()
+        );
     }
 
     /**
