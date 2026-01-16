@@ -32,6 +32,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -93,7 +94,7 @@ public class SecurityConfig {
         GlobalResponse<Void> body =
                 GlobalResponse.exception(false, errorCode, null);
 
-        new ObjectMapper().writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), body);
     }
 
     private void commonAuth(

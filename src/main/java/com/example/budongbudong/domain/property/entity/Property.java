@@ -69,6 +69,40 @@ public class Property extends BaseEntity {
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
     private List<PropertyImage> propertyImageList = new ArrayList<>();
 
+    public static Property create(
+            String name,
+            String address,
+            int floor,
+            int totalFloor,
+            int roomCount,
+            PropertyType type,
+            Year builtYear,
+            String description,
+            Long price,
+            LocalDate migrateDate,
+            BigDecimal supplyArea,
+            BigDecimal privateArea,
+            User user
+    ) {
+        Property property = new Property();
+
+        property.name = name;
+        property.address = address;
+        property.floor = floor;
+        property.totalFloor = totalFloor;
+        property.roomCount = roomCount;
+        property.type = type;
+        property.builtYear = builtYear;
+        property.description = description;
+        property.price = price;
+        property.migrateDate = migrateDate;
+        property.supplyArea = supplyArea;
+        property.privateArea = privateArea;
+        property.user = user;
+
+        return property;
+    }
+
     public void update(Long price, LocalDate migrateDate, String description) {
         if (price != null) {
             this.price = price;
