@@ -4,19 +4,24 @@ import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @RequiredArgsConstructor
 public class PropertyImageResponse {
 
-    private final Long id;
     private final String imageUrl;
 
     public static PropertyImageResponse from(PropertyImage image) {
         return new PropertyImageResponse(
-                image.getId(),
                 image.getImageUrl()
+        );
+    }
+
+    /**
+     * QueryDsl용 (대표 이미지)
+     */
+    public static PropertyImageResponse from(String imageUrl) {
+        return new PropertyImageResponse(
+                imageUrl
         );
     }
 }

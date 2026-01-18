@@ -71,16 +71,8 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(Pageable pageable) {
 
-        Page<Property> propertyPage = propertyRepository.findAll(pageable);
-        Page<ReadAllPropertyResponse> response = propertyPage.map(property -> {
-
-            Auction auction = auctionRepository.findByPropertyId(property.getId()).orElse(null);
-            AuctionResponse auctionResponse = (auction != null) ? AuctionResponse.from(auction) : null;
-
-            return ReadAllPropertyResponse.from(property, auctionResponse);
-        });
-
-        return CustomPageResponse.from(response);
+        Page<ReadAllPropertyResponse> page = propertyRepository.findAllProperties(pageable);
+        return CustomPageResponse.from(page);
     }
 
     @Transactional(readOnly = true)
