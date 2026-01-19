@@ -22,7 +22,7 @@ public class SmsService {
 
     private final SmsUtil smsUtil;
     private final DefaultMessageService messageService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Value("${coolsms.from-number}")
     private String fromNumber;
