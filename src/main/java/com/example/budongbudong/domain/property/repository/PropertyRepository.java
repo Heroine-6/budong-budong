@@ -1,5 +1,7 @@
 package com.example.budongbudong.domain.property.repository;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.property.entity.Property;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,4 +24,19 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     Page<Property> findAllByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
 
     Optional<Property> findByIdAndIsDeletedFalse(Long propertyId);
+
+    default Property getByIdOrThrow(Long propertyId) {
+        return findById(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+    }
+
+    default Property getByIdWithImagesAndNotDeletedOrThrow(Long propertyId) {
+        return findByIdWithImagesAndNotDeleted(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+    }
+
+    default Property getByIdAndNotDeletedOrThrow(Long propertyId) {
+        return findByIdAndIsDeletedFalse(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+    }
 }
