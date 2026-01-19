@@ -92,7 +92,7 @@ public class SecurityConfig {
         response.setContentType("application/json;charset=UTF-8");
 
         GlobalResponse<Void> body =
-                GlobalResponse.exception(false, errorCode, null);
+                GlobalResponse.exception(errorCode, null);
 
         objectMapper.writeValue(response.getWriter(), body);
     }
