@@ -66,4 +66,9 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     int countTotalBidders(Long auctionId);
 
     List<Bid> findAllByAuctionOrderByPriceDesc(Auction auction);
+
+    default long getHighestPriceOrStartPrice(Long auctionId, long startPrice) {
+        return findHighestPriceByAuctionId(auctionId)
+                .orElse(startPrice);
+    }
 }
