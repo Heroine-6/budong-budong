@@ -1,5 +1,7 @@
 package com.example.budongbudong.domain.bid.repository;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.bid.entity.Bid;
 import org.springframework.data.domain.Page;
@@ -66,4 +68,19 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     int countTotalBidders(Long auctionId);
 
     List<Bid> findAllByAuctionOrderByPriceDesc(Auction auction);
+
+    default long getHighestPriceOrStartPrice(Long auctionId, long startPrice) {
+        return findHighestPriceByAuctionId(auctionId)
+                .orElse(startPrice);
+    }
+
+    default Bid findHighestBidOrNull(Long auctionId) {
+        return findHighestBidByAuctionId(auctionId).orElse(null);
+    }
+
+    default void validateBidPriceHigherThanCurrentOrThrow(Long bidPrice, Bid highestBid) {
+        if (highestBid != null && bidPrice <= highestBid.getPrice()) {
+            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
+        }
+    }
 }

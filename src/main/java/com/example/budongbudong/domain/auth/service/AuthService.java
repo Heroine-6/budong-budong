@@ -27,9 +27,7 @@ public class AuthService {
 
         String userEmail = request.getEmail();
 
-        if (userRepository.existsByEmail(userEmail)) {
-            throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
-        }
+        userRepository.validateEmailNotExists(userEmail);
 
         User user = User.create(
                 userEmail,
@@ -49,15 +47,11 @@ public class AuthService {
 
     @Transactional
     public AuthResponse signIn(SignInRequest request) {
+
         String userEmail = request.getEmail();
         String rawPassword = request.getPassword();
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow(
-                () -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        if (user.getIsDeleted()) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
+        User user = userRepository.getActiveUserByEmailOrThrow(userEmail);
 
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
