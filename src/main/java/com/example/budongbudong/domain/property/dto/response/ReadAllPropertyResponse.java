@@ -25,6 +25,7 @@ public class ReadAllPropertyResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuctionResponse auction;
 
+    //TODO 내 목록조회도 QueryDsl 사용시 제거 가능
     public static ReadAllPropertyResponse from(Property property, AuctionResponse auction) {
 
         // thumbnailImage 없음
@@ -60,26 +61,4 @@ public class ReadAllPropertyResponse {
                 auction
         );
     }
-
-    /**
-     *  QueryDsl 조회 결과 기반 응답 DTO
-     * */
-    public static ReadAllPropertyResponse of (
-            ReadAllPropertyDto dto,
-            AuctionResponse auction
-    ) {
-        return new ReadAllPropertyResponse(
-                dto.getPropertyId(),
-                dto.getName(),
-                dto.getAddress(),
-                dto.getType(),
-                dto.getDescription(),
-                dto.getSupplyArea(),
-                dto.getPrivateArea(),
-                dto.getThumbnailUrl(),
-                auction
-        );
-    }
-
-
 }
