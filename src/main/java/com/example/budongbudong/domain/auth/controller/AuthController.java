@@ -2,9 +2,12 @@ package com.example.budongbudong.domain.auth.controller;
 
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.auth.dto.request.SignInRequest;
+import com.example.budongbudong.domain.auth.dto.request.SmsSendRequest;
+import com.example.budongbudong.domain.auth.dto.request.SmsVerifyRequest;
 import com.example.budongbudong.domain.auth.service.AuthService;
 import com.example.budongbudong.domain.auth.dto.request.SignUpRequest;
 import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
+import com.example.budongbudong.domain.auth.service.SmsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,21 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final SmsService smsService;
+
+    @PostMapping("/send")
+    public ResponseEntity<GlobalResponse<Void>> send(@RequestBody SmsSendRequest request) {
+
+        smsService.sendAuthCode(request.toNumber());
+
+        return GlobalResponse.ok(null);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<GlobalResponse<Void>> verify(@RequestBody SmsVerifyRequest request) {
+        authService.verifyAuthCode(request.toNumber(), request.code());
+        return GlobalResponse.ok(null);
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<GlobalResponse<AuthResponse>> signUp(@Valid @RequestBody SignUpRequest request) {

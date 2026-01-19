@@ -25,6 +25,7 @@ public enum ErrorCode {
     //------401-----------------------
     LOGIN_REQUIRED(401, "로그인한 유저만 사용할 수 있는 기능입니다"),
     LOGIN_UNAUTHORIZED(401, "아이디 또는 비밀번호가 올바르지 않습니다."),
+    SMS_VERIFICATION_REQUIRED(401, "휴대전화 인증을 먼저 완료해주세요."),
 
     //------400-----------------------
     INVALID_EMAIL_FORMAT(400, "이메일 형식이 올바르지 않습니다."),
@@ -39,6 +40,7 @@ public enum ErrorCode {
     //------500-----------------------
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
     FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
+    SMS_SEND_FAILED(500, "문자 전송에 실패했습니다."),
 
     ;
     private final int status;
