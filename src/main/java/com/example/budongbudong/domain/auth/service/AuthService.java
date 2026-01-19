@@ -82,9 +82,14 @@ public class AuthService {
         String redisKey = "SMS:AUTH:" + toNumber;
         String storedCode = redisTemplate.opsForValue().get(redisKey);
 
-        if (storedCode == null || !storedCode.equals(inputCode)) {
-            throw new CustomException(ErrorCode.SMS_SEND_FAILED);
+        if (storedCode == null) {
+            throw new CustomException(ErrorCode.SMS_CODE_EXPIRED);
         }
+
+        if (!storedCode.equals(inputCode)) {
+            throw new CustomException(ErrorCode.SMS_CODE_MISMATCH);
+        }
+
 
         redisTemplate.delete(redisKey);
 

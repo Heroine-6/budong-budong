@@ -36,11 +36,13 @@ public enum ErrorCode {
     INVALID_REQUEST(400, "입력값 형식 오류"),
     INVALID_AUCTION_PERIOD(400, "경매 기간이 유효하지 않습니다."),
     PROPERTY_CANNOT_DELETE(400, "경매 시작 전 상태에서만 매물을 삭제할 수 있습니다."),
+    SMS_CODE_EXPIRED(400, "인증번호가 만료되었습니다."),
+    SMS_CODE_MISMATCH(400, "인증번호가 올바르지 않습니다."),
+
 
     //------500-----------------------
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
     FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
-    SMS_SEND_FAILED(500, "문자 전송에 실패했습니다."),
 
     ;
     private final int status;
