@@ -70,11 +70,10 @@ public class BidController {
                     size = 10,
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
-            ) Pageable pageable
+            ) Pageable pageable,
+            @RequestParam(required = false) String status
     ) {
-        Page<ReadMyBidsResponse> page = bidService.readMyBids(authUser.getUserId(), pageable);
-
-        CustomPageResponse<ReadMyBidsResponse> response = CustomPageResponse.from(page);
+        CustomPageResponse<ReadMyBidsResponse> response = bidService.readMyBids(authUser.getUserId(), status, pageable);
 
         return GlobalResponse.ok(response);
     }
