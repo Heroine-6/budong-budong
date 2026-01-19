@@ -32,7 +32,7 @@ public class ReadAllPropertyDto {
      *
      * <p>
      * {@link QueryProjection}을 사용해 Q클래스를 생성하며,
-     * Querydsl 조회 결과를 타입 안정성 있게 매핑하기 위한 생성자이다.
+     * Querydsl 조회 결과를 타입 안정성 있게 매핑하기 위한 생성자
      * </p>
      * */
     @QueryProjection
