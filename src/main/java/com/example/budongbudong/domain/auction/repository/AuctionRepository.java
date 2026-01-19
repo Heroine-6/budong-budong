@@ -66,4 +66,25 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             throw new CustomException(ErrorCode.AUCTION_NOT_FOUND);
         }
     }
+
+    default Auction findByPropertyIdOrNull(Long propertyId) {
+        return findByPropertyId(propertyId).orElse(null);
+    }
+
+    default AuctionStatus findStatusByPropertyIdOrNull(Long propertyId) {
+        Auction auction = findByPropertyIdOrNull(propertyId);
+        return (auction == null) ? null : auction.getStatus();
+    }
+
+    default void validatePropertyDeletableOrThrow(Long propertyId) {
+        boolean hasNonDeletableAuction =
+                existsByPropertyIdAndStatusNotIn(
+                        propertyId,
+                        List.of(AuctionStatus.SCHEDULED, AuctionStatus.CANCELLED)
+                );
+
+        if (hasNonDeletableAuction) {
+            throw new CustomException(ErrorCode.PROPERTY_CANNOT_DELETE);
+        }
+    }
 }

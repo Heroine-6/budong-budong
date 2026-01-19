@@ -29,4 +29,14 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
         return findById(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
     }
+
+    default Property getByIdWithImagesAndNotDeletedOrThrow(Long propertyId) {
+        return findByIdWithImagesAndNotDeleted(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+    }
+
+    default Property getByIdAndNotDeletedOrThrow(Long propertyId) {
+        return findByIdAndIsDeletedFalse(propertyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+    }
 }
