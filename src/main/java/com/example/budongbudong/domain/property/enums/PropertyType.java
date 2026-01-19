@@ -1,7 +1,13 @@
 package com.example.budongbudong.domain.property.enums;
 
 public enum PropertyType {
-    APARTMENT,
-    VILLA,
-    OFFICETEL
+    APARTMENT("아파트"),
+    VILLA("빌라"),
+    OFFICETEL("오피스텔");
+
+    private final String description;
+
+    PropertyType(String description) {
+        this.description = description;
+    }
 }
