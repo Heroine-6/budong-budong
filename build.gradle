@@ -63,6 +63,12 @@ dependencies {
 
     //swagger ui "반드시" 코끼리 클릭 후 -> http://localhost:8080/swagger-ui/index.html 들어가면 웹으로 api 확인 가능
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15"
+
+    // CoolSMS
+    implementation 'net.nurigo:sdk:4.3.0'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {
