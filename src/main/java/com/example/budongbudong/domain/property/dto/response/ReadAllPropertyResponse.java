@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.property.dto.response;
 
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
-import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.propertyimage.dto.PropertyImageResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -32,9 +32,9 @@ public class ReadAllPropertyResponse {
                 ? property.getPropertyImageList().stream()
                 .map(PropertyImageResponse::from)
                 .toList()
-                :List.of();
+                : List.of();
 
-        return  new ReadAllPropertyResponse(
+        return new ReadAllPropertyResponse(
                 property.getId(),
                 property.getName(),
                 property.getAddress(),

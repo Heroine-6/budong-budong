@@ -1,6 +1,6 @@
 package com.example.budongbudong.domain.property.dto.response;
 
-import com.example.budongbudong.domain.property.entity.Property;
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.propertyimage.dto.PropertyImageResponse;
 import lombok.Getter;
@@ -29,13 +29,13 @@ public class PropertyResponse {
     private final BigDecimal privateArea;
     private final List<PropertyImageResponse> images;
 
-    public static PropertyResponse from(Property property){
+    public static PropertyResponse from(Property property) {
 
         List<PropertyImageResponse> images = property.getPropertyImageList() == null
                 ? List.of()
-                :property.getPropertyImageList().stream()
-                        .map(PropertyImageResponse::from)
-                        .toList();
+                : property.getPropertyImageList().stream()
+                .map(PropertyImageResponse::from)
+                .toList();
 
         return new PropertyResponse(
                 property.getId(),

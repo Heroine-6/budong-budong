@@ -1,9 +1,6 @@
-package com.example.budongbudong.domain.bid.entity;
+package com.example.budongbudong.common.entity;
 
-import com.example.budongbudong.common.entity.BaseEntity;
-import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
-import com.example.budongbudong.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

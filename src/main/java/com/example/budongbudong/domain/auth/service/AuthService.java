@@ -1,12 +1,12 @@
 package com.example.budongbudong.domain.auth.service;
 
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.utils.JwtUtil;
 import com.example.budongbudong.domain.auth.dto.request.SignInRequest;
 import com.example.budongbudong.domain.auth.dto.request.SignUpRequest;
 import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
-import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getName(), userEmail, user.getRole().name(),user.getId());
+        String token = jwtUtil.generateToken(user.getName(), userEmail, user.getRole().name(), user.getId());
 
         return new AuthResponse(token);
     }
@@ -57,7 +57,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 
-        String token = jwtUtil.generateToken(user.getName(), user.getEmail(), user.getRole().name(),user.getId());
+        String token = jwtUtil.generateToken(user.getName(), user.getEmail(), user.getRole().name(), user.getId());
 
         return new AuthResponse(token);
     }

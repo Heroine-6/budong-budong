@@ -1,10 +1,8 @@
 package com.example.budongbudong.domain.propertyimage.dto;
 
-import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
+import com.example.budongbudong.common.entity.PropertyImage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Getter
 @RequiredArgsConstructor

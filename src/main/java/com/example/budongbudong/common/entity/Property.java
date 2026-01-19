@@ -1,10 +1,7 @@
-package com.example.budongbudong.domain.property.entity;
+package com.example.budongbudong.common.entity;
 
-import com.example.budongbudong.common.entity.BaseEntity;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
-import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import com.example.budongbudong.domain.property.enums.PropertyType;
-import com.example.budongbudong.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -46,7 +43,7 @@ public class Property extends BaseEntity {
     @Column(name = "type", length = 50, nullable = false)
     private PropertyType type;
 
-    @Column(name = "built_year",nullable = false)
+    @Column(name = "built_year", nullable = false)
     private Year builtYear;
 
     @Column(name = "description", columnDefinition = "TEXT")
@@ -58,10 +55,10 @@ public class Property extends BaseEntity {
     @Column(name = "migrate_date", nullable = false)
     private LocalDate migrateDate;
 
-    @Column(name = "supply_area", precision = 10, scale=2 ,nullable = false)
+    @Column(name = "supply_area", precision = 10, scale = 2, nullable = false)
     private BigDecimal supplyArea;
 
-    @Column(name = "private_area", precision = 10, scale=2 ,nullable = false)
+    @Column(name = "private_area", precision = 10, scale = 2, nullable = false)
     private BigDecimal privateArea;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -70,6 +67,26 @@ public class Property extends BaseEntity {
 
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
     private List<PropertyImage> propertyImageList = new ArrayList<>();
+
+    @Builder
+    public Property(String name, String address, int floor, int totalFloor, int roomCount,
+                    PropertyType type, Year builtYear, String description, Long price,
+                    LocalDate migrateDate, BigDecimal supplyArea, BigDecimal privateArea,
+                    User user) {
+        this.name = name;
+        this.address = address;
+        this.floor = floor;
+        this.totalFloor = totalFloor;
+        this.roomCount = roomCount;
+        this.type = type;
+        this.builtYear = builtYear;
+        this.description = description;
+        this.price = price;
+        this.migrateDate = migrateDate;
+        this.supplyArea = supplyArea;
+        this.privateArea = privateArea;
+        this.user = user;
+    }
 
     public static Property create(
             String name,
@@ -103,26 +120,6 @@ public class Property extends BaseEntity {
         property.user = user;
 
         return property;
-    }
-
-    @Builder
-    public Property(String name, String address, int floor, int totalFloor, int roomCount,
-                    PropertyType type, Year builtYear, String description, Long price,
-                    LocalDate migrateDate, BigDecimal supplyArea, BigDecimal privateArea,
-                    User user) {
-        this.name = name;
-        this.address = address;
-        this.floor = floor;
-        this.totalFloor = totalFloor;
-        this.roomCount = roomCount;
-        this.type = type;
-        this.builtYear = builtYear;
-        this.description = description;
-        this.price = price;
-        this.migrateDate = migrateDate;
-        this.supplyArea = supplyArea;
-        this.privateArea = privateArea;
-        this.user = user;
     }
 
     public void addImage(PropertyImage image) {

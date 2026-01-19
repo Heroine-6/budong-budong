@@ -1,15 +1,15 @@
 package com.example.budongbudong.domain.bid.service;
 
-import com.example.budongbudong.domain.auction.entity.Auction;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Bid;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
-import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

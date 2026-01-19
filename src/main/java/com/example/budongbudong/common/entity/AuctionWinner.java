@@ -1,9 +1,6 @@
-package com.example.budongbudong.domain.auctionwinner.entity;
+package com.example.budongbudong.common.entity;
 
 
-import com.example.budongbudong.common.entity.BaseEntity;
-import com.example.budongbudong.domain.auction.entity.Auction;
-import com.example.budongbudong.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,11 +27,11 @@ public class AuctionWinner extends BaseEntity {
     @Column(nullable = false)
     private Long price;
 
-    public static AuctionWinner create(Auction auction, User user, Long price){
+    public static AuctionWinner create(Auction auction, User user, Long price) {
         AuctionWinner winner = new AuctionWinner();
         winner.auction = auction;
         winner.user = user;
         winner.price = price;
-        return  winner;
+        return winner;
     }
 }

@@ -1,5 +1,8 @@
 package com.example.budongbudong.domain.auction.service;
 
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Bid;
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
@@ -7,12 +10,9 @@ import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
-import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

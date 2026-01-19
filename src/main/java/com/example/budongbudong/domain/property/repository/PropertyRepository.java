@@ -1,8 +1,8 @@
 package com.example.budongbudong.domain.property.repository;
 
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.domain.property.entity.Property;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
