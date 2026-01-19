@@ -22,7 +22,7 @@ public class AuthController {
     private final SmsService smsService;
 
     @PostMapping("/send")
-    public ResponseEntity<GlobalResponse<Void>> send(@RequestBody SmsSendRequest request) {
+    public ResponseEntity<GlobalResponse<Void>> sendAuthCode(@RequestBody SmsSendRequest request) {
 
         smsService.sendAuthCode(request.toNumber());
 
@@ -30,8 +30,10 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<GlobalResponse<Void>> verify(@RequestBody SmsVerifyRequest request) {
+    public ResponseEntity<GlobalResponse<Void>> verifyAuthCode(@RequestBody SmsVerifyRequest request) {
+
         authService.verifyAuthCode(request.toNumber(), request.code());
+
         return GlobalResponse.ok(null);
     }
 
