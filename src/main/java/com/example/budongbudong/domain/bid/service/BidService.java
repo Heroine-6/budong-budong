@@ -34,22 +34,14 @@ public class BidService {
     @Transactional
     public CreateBidResponse createBid(CreateBidRequest request, Long auctionId, Long userId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.getByIdOrThrow(userId);
 
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
-
-        if (auction.getStatus() != AuctionStatus.OPEN) {
-            throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
-        }
+        Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
 
         Long bidPrice = request.getPrice();
-        Bid highestBid = bidRepository.findHighestBidByAuctionId(auctionId).orElse(null);
+        Bid highestBid = bidRepository.findHighestBidOrNull(auctionId);
 
-        if (highestBid != null && bidPrice <= highestBid.getPrice()) {
-            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
-        }
+        bidRepository.validateBidPriceHigherThanCurrentOrThrow(bidPrice, highestBid);
 
         if (highestBid != null) {
             highestBid.unmarkHighest();
@@ -69,8 +61,7 @@ public class BidService {
     @Transactional(readOnly = true)
     public Page<ReadAllBidsResponse> readAllBids(Long auctionId, Pageable pageable) {
 
-        auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+        auctionRepository.validateExistsOrThrow(auctionId);
 
         return bidRepository.findAllByAuctionId(auctionId, pageable)
                 .map(ReadAllBidsResponse::from);

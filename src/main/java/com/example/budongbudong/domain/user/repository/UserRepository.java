@@ -29,4 +29,9 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
         return user;
     }
+
+    default User getByIdOrThrow(Long userId) {
+        return findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
 }

@@ -49,6 +49,21 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         if (auction != null && auction.getStatus() != AuctionStatus.CANCELLED) {
             throw new CustomException(ErrorCode.AUCTION_ALREADY_EXISTS);
         }
+    }
 
+    default Auction getOpenAuctionOrThrow(Long auctionId) {
+        Auction auction = getByIdOrThrow(auctionId);
+
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
+        }
+
+        return auction;
+    }
+
+    default void validateExistsOrThrow(Long auctionId) {
+        if (!existsById(auctionId)) {
+            throw new CustomException(ErrorCode.AUCTION_NOT_FOUND);
+        }
     }
 }
