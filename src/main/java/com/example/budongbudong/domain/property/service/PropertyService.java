@@ -13,6 +13,7 @@ import com.example.budongbudong.domain.property.client.AptClient;
 import com.example.budongbudong.domain.property.client.AptItem;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
+import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
@@ -69,9 +70,21 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(Pageable pageable) {
+    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(
+            SearchPropertyCond cond,
+            Pageable pageable
+    ) {
+        long start = System.currentTimeMillis();
+        Long min = cond.getMinPrice();
+        Long max = cond.getMaxPrice();
+        if(min != null && max != null && min > max) {
+            throw new CustomException(ErrorCode.INVALID_PRICE_RANGE);
+        }
 
-        Page<ReadAllPropertyResponse> page = propertyRepository.findAllProperties(pageable);
+        Page<ReadAllPropertyResponse> page = propertyRepository.searchProperties(cond, pageable);
+
+        long end = System.currentTimeMillis();
+        log.info("[매물 검색] 실행시간:{}, cond={}", end - start, cond);
         return CustomPageResponse.from(page);
     }
 

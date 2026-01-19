@@ -1,16 +1,22 @@
 package com.example.budongbudong.domain.property.repository;
 
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.QReadAllPropertyDto;
 import com.example.budongbudong.domain.property.dto.ReadAllPropertyDto;
+import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
+import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.List;
 
 import static com.example.budongbudong.common.entity.QAuction.auction;
@@ -25,14 +31,32 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
     private final JPAQueryFactory queryFactory;
 
     /**
-     * 매물 목록을 페이징 조회
-     * - 대표 이미지(1장), 경매 정보까지 함께 조회
+     * 매물 목록 검색
+     * - 대표 이미지(1장), 경매 정보까지 함께 조회, 검색
      * - Querydsl DTO Projection 기반
      */
     @Override
-    public Page<ReadAllPropertyResponse> findAllProperties(Pageable pageable) {
+    public Page<ReadAllPropertyResponse> searchProperties(SearchPropertyCond cond, Pageable pageable) {
 
         BooleanExpression baseCondition = property.isDeleted.isFalse();
+        BooleanExpression auctionExistsWhenStatus = cond.getStatus() != null ? auction.id.isNotNull():null;
+        BooleanExpression[] condList = {
+                baseCondition,
+                nameContains(cond.getName()),
+                typeEq(cond.getType()),
+                addressContains(cond.getAddress()),
+                minPriceGoe(cond.getMinPrice()),
+                maxPriceLoe(cond.getMaxPrice()),
+                migrateDateGoeFrom(cond.getMigrateDate()),
+                builtYearFrom(cond.getBuiltYear()),
+                auctionExistsWhenStatus
+        };
+
+        BooleanExpression joinCondition = auction.property.id.eq(property.id);
+        if (cond.getStatus() != null) {
+            joinCondition = joinCondition.and(auction.status.eq(cond.getStatus()));
+        }
+
         var thumbnailSubquery =
                 JPAExpressions
                         .select(propertyImage.imageUrl)
@@ -64,8 +88,9 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                         thumbnailSubquery
                 ))
                 .from(property)
-                .leftJoin(auction).on(auction.property.id.eq(property.id))
-                .where(baseCondition)
+                .leftJoin(auction)
+                .on(joinCondition)
+                .where(condList)
                 .orderBy(property.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -79,10 +104,39 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                 queryFactory
                         .select(property.count())
                         .from(property)
-                        .where(baseCondition)
+                        .leftJoin(auction).on(joinCondition)
+                        .where(condList)
                         .fetchFirst();
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    private BooleanExpression nameContains(String name) {
+        return StringUtils.hasText(name) ? property.name.contains(name) : null;
+    }
+
+    private BooleanExpression typeEq(PropertyType type) {
+        return type != null ? property.type.eq(type) : null;
+    }
+
+    private BooleanExpression addressContains(String address) {
+        return StringUtils.hasText(address) ?  property.address.contains(address) : null;
+    }
+
+    private BooleanExpression minPriceGoe(Long minPrice) {
+        return minPrice != null ? property.price.goe(minPrice) : null;
+    }
+
+    private BooleanExpression maxPriceLoe(Long maxPrice) {
+        return maxPrice != null ? property.price.loe(maxPrice) : null;
+    }
+
+    private BooleanExpression migrateDateGoeFrom(LocalDate migrateDate) {
+        return migrateDate != null ? property.migrateDate.goe(migrateDate) : null;
+    }
+
+    private BooleanExpression builtYearFrom (Year builtYear) {
+        return builtYear != null ? property.builtYear.goe(builtYear) : null;
     }
 
     /**

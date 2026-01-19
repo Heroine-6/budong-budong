@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.property.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
@@ -41,6 +42,7 @@ public class PropertyController {
 
     @GetMapping
     public ResponseEntity<GlobalResponse<CustomPageResponse<ReadAllPropertyResponse>>> getAllPropertyList(
+            @ModelAttribute SearchPropertyCond cond,
             @PageableDefault(
                     page = 0,
                     size = 10,
@@ -49,7 +51,7 @@ public class PropertyController {
             )
             Pageable pageable
     ) {
-        CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(pageable);
+        CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(cond,pageable);
         return GlobalResponse.ok(response);
     }
 
