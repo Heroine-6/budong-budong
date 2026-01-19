@@ -1,8 +1,8 @@
 package com.example.budongbudong.domain.propertyimage.service;
 
+import com.example.budongbudong.common.entity.Property;
+import com.example.budongbudong.common.entity.PropertyImage;
 import com.example.budongbudong.common.storage.StorageService;
-import com.example.budongbudong.domain.property.entity.Property;
-import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import com.example.budongbudong.domain.propertyimage.repository.PropertyImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

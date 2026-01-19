@@ -1,9 +1,9 @@
 package com.example.budongbudong.domain.property.dto.response;
 
+import com.example.budongbudong.common.entity.Property;
+import com.example.budongbudong.common.entity.PropertyImage;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
-import com.example.budongbudong.domain.propertyimage.entity.PropertyImage;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class ReadPropertyResponse {
     private final AuctionStatus status;
     private final List<String> images;
 
-    public static ReadPropertyResponse from(Property property,AuctionStatus auctionStatus) {
+    public static ReadPropertyResponse from(Property property, AuctionStatus auctionStatus) {
         return new ReadPropertyResponse(
                 property.getName(),
                 property.getAddress(),

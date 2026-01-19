@@ -1,10 +1,12 @@
 package com.example.budongbudong.domain.auction.repository;
 
+import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -31,11 +33,11 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     @Modifying
     @Query("""
-        update Auction a
-        set a.status = 'CLOSED'
-        where a.id = :auctionId
-        and a.status = 'OPEN'
-    """)
+                update Auction a
+                set a.status = 'CLOSED'
+                where a.id = :auctionId
+                and a.status = 'OPEN'
+            """)
     int closeIfOpen(@Param("auctionId") Long auctionId);
 
     default Auction getByIdOrThrow(Long auctionId) {

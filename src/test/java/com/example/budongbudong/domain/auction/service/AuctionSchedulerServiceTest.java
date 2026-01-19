@@ -1,13 +1,13 @@
 package com.example.budongbudong.domain.auction.service;
 
-import com.example.budongbudong.domain.auction.entity.Auction;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Property;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
-import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Year;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 

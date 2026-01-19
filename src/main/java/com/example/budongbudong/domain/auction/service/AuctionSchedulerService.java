@@ -1,11 +1,11 @@
 package com.example.budongbudong.domain.auction.service;
 
-import com.example.budongbudong.domain.auction.entity.Auction;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.AuctionWinner;
+import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.auctionwinner.entity.AuctionWinner;
 import com.example.budongbudong.domain.auctionwinner.repository.AuctionWinnerRepository;
-import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +58,7 @@ public class AuctionSchedulerService {
             int updatedAuctionNum = auctionRepository.closeIfOpen(auction.getId());
             log.info("auctionId={}, closeIfOpen updated={}", auction.getId(), updatedAuctionNum);
 
-            if(updatedAuctionNum == 0){
+            if (updatedAuctionNum == 0) {
                 continue;
             }
 
@@ -69,7 +69,7 @@ public class AuctionSchedulerService {
 
             Optional<Bid> highestBid = bidRepository.findTopByAuctionOrderByPriceDescCreatedAtAsc(auction);
 
-            if(highestBid.isPresent()){
+            if (highestBid.isPresent()) {
                 Bid bid = highestBid.get();
 
                 auctionWinnerRepository.save(
