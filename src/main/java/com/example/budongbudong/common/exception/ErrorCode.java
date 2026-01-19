@@ -27,6 +27,7 @@ public enum ErrorCode {
     LOGIN_UNAUTHORIZED(401, "아이디 또는 비밀번호가 올바르지 않습니다."),
 
     //------400-----------------------
+    INVALID_ADDRESS(400, "주소에서 지역코드를 찾을 수 없습니다."),
     INVALID_EMAIL_FORMAT(400, "이메일 형식이 올바르지 않습니다."),
     INVALID_PASSWORD_FORMAT(400, "비밀번호 형식이 올바르지 않습니다."),
     INVALID_PASSWORD(400, "비밀번호가 유효하지 않습니다."),
