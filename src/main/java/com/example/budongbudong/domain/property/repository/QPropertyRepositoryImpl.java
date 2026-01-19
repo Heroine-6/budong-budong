@@ -13,9 +13,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.example.budongbudong.domain.auction.entity.QAuction.auction;
-import static com.example.budongbudong.domain.property.entity.QProperty.property;
-import static com.example.budongbudong.domain.propertyimage.entity.QPropertyImage.propertyImage;
+import static com.example.budongbudong.common.entity.QAuction.auction;
+import static com.example.budongbudong.common.entity.QProperty.property;
+import static com.example.budongbudong.common.entity.QPropertyImage.propertyImage;
+
 
 @Repository
 @RequiredArgsConstructor
