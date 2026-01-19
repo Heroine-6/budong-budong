@@ -25,11 +25,6 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     Optional<Property> findByIdAndIsDeletedFalse(Long propertyId);
 
-    default Property getByIdOrThrow(Long propertyId) {
-        return findById(propertyId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
-    }
-
     default Property getByIdWithImagesAndNotDeletedOrThrow(Long propertyId) {
         return findByIdWithImagesAndNotDeleted(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
