@@ -1,12 +1,10 @@
 package com.example.budongbudong.domain.property.service;
 
-import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
-import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.property.client.AptClient;
@@ -23,7 +21,6 @@ import com.example.budongbudong.domain.propertyimage.service.PropertyImageServic
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,11 +75,8 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public CustomPageResponse<ReadAllPropertyResponse> getMyPropertyList(Long userId, Pageable pageable) {
 
-        Page<Property> propertyPage = propertyRepository.findAllByUserIdAndIsDeletedFalse(userId, pageable);
-
-        Page<ReadAllPropertyResponse> response = getReadAllPropertyResponses(propertyPage);
-
-        return CustomPageResponse.from(response);
+        Page<ReadAllPropertyResponse> page = propertyRepository.findAllMyProperties(userId, pageable);
+        return CustomPageResponse.from(page);
     }
 
     @Transactional(readOnly = true)
@@ -143,14 +137,4 @@ public class PropertyService {
         return AptMapper.toCreateApiResponse(items.get(0), request.address());
     }
 
-    private @NonNull Page<ReadAllPropertyResponse> getReadAllPropertyResponses(Page<Property> propertyPage) {
-
-        return propertyPage.map(property -> {
-
-            Auction auction = auctionRepository.findByPropertyIdOrNull(property.getId());
-            AuctionResponse auctionResponse = (auction != null) ? AuctionResponse.from(auction) : null;
-
-            return ReadAllPropertyResponse.from(property, auctionResponse);
-        });
-    }
 }
