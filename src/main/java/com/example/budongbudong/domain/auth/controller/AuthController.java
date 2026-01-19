@@ -22,7 +22,7 @@ public class AuthController {
 
         AuthResponse response = authService.signUp(request);
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "회원가입 성공", response));
+        return GlobalResponse.ok(response);
     }
 
     @PostMapping("/signin")
@@ -30,6 +30,6 @@ public class AuthController {
 
         AuthResponse response = authService.signIn(request);
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "로그인 성공", response));
+        return GlobalResponse.ok(response);
     }
 }

@@ -18,7 +18,6 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,8 +36,7 @@ public class PropertyController {
     ) {
         propertyService.createProperty(request, images, authUser.getUserId());
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(GlobalResponse.success(true, "매물 등록 성공", null));
+        return GlobalResponse.created(null);
     }
 
     @GetMapping
@@ -52,13 +50,7 @@ public class PropertyController {
             Pageable pageable
     ) {
         CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(pageable);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(GlobalResponse.success(
-                        true,
-                        "매물 목록 조회 성공",
-                        response
-                ));
+        return GlobalResponse.ok(response);
     }
 
     @GetMapping("/my")
@@ -73,13 +65,7 @@ public class PropertyController {
             @AuthenticationPrincipal AuthUser authUser
     ) {
         CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getMyPropertyList(authUser.getUserId(), pageable);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(GlobalResponse.success(
-                        true,
-                        "내 매물 목록 조회 성공",
-                        response
-                ));
+        return GlobalResponse.ok(response);
     }
 
     @GetMapping("/{propertyId}")
@@ -87,13 +73,7 @@ public class PropertyController {
 
         ReadPropertyResponse response = propertyService.getProperty(propertyId);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(GlobalResponse.success(
-                        true,
-                        "매물 정보가 성공적으로 조회되었습니다.",
-                        response
-                ));
+        return GlobalResponse.ok(response);
     }
 
     @PatchMapping("/{propertyId}")
@@ -105,13 +85,7 @@ public class PropertyController {
 
         propertyService.updateProperty(propertyId, request, authUser.getUserId());
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(GlobalResponse.success(
-                        true,
-                        "매물 정보가 성공적으로 수정되었습니다.",
-                        null
-                ));
+        return GlobalResponse.noContent();
     }
 
     @DeleteMapping("/{propertyId}")
@@ -119,12 +93,6 @@ public class PropertyController {
 
         propertyService.deleteProperty(propertyId, authUser.getUserId());
 
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .body(GlobalResponse.success(
-                        true,
-                        "매물이 성공적으로 삭제되었습니다.",
-                        null
-                ));
+        return GlobalResponse.noContent();
     }
 }

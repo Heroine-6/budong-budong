@@ -3,6 +3,8 @@ package com.example.budongbudong.common.response;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 
@@ -22,12 +24,24 @@ public class GlobalResponse<T> {
     }
 
     //성공시
-    public static <T> GlobalResponse<T> success(boolean success, String message, T data) {
-        return new GlobalResponse<>(success, message, data); //204 는 data null로 넣어주세요.
+    public static <T> GlobalResponse<T> success( T data) {
+        return new GlobalResponse<>(true, null, data); //204 는 data null로 넣어주세요.
     }
 
     //예외처리시
-    public static <T> GlobalResponse<T> exception(boolean success, ErrorCode errorCode, T data) {
-        return new GlobalResponse<>(success, errorCode.getMessage(), data);
+    public static <T> GlobalResponse<T> exception( ErrorCode errorCode, T data) {
+        return new GlobalResponse<>(false, errorCode.getMessage(), data);
+    }
+
+    public static <T> ResponseEntity<GlobalResponse<T>> ok(T data) {
+        return ResponseEntity.ok(success(data));
+    }
+
+    public static <T> ResponseEntity<GlobalResponse<T>> created(T data) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(success(data));
+    }
+
+    public static <T> ResponseEntity<GlobalResponse<T>> noContent() {
+        return ResponseEntity.noContent().build();
     }
 }
