@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.bid.service;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
@@ -69,9 +70,9 @@ public class BidService {
      * 내 입찰 내역 조회
      */
     @Transactional(readOnly = true)
-    public Page<ReadMyBidsResponse> readMyBids(Long userId, Pageable pageable) {
+    public CustomPageResponse<ReadMyBidsResponse> readMyBids(Long userId, String status, Pageable pageable) {
 
-        return bidRepository.findMyBidsPage(userId, pageable)
-                .map(ReadMyBidsResponse::from);
+        Page<ReadMyBidsResponse> page = bidRepository.findMyBids(userId, status, pageable);
+        return CustomPageResponse.from(page);
     }
 }
