@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<GlobalResponse<Void>> handleException(CustomException e) {
         log.error("예외 발생. ", e);
-        GlobalResponse<Void> response = GlobalResponse.exception(false, e.getErrorCode(), null);
+        GlobalResponse<Void> response = GlobalResponse.exception( e.getErrorCode(), null);
         return ResponseEntity.status(e.getErrorCode().getStatus()).body(response);
     }
 
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
                         .toList();
         ErrorCode errorCode = ErrorCode.VALIDATION_ERROR;
         GlobalResponse<List<ValidationErrorResponse>> response =
-                GlobalResponse.exception(false,errorCode, errors);
+                GlobalResponse.exception(errorCode, errors);
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 }
