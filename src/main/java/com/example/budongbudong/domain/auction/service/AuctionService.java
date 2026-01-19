@@ -43,7 +43,7 @@ public class AuctionService {
         LocalDateTime startedAt = request.getStartedAt();
         LocalDateTime endedAt = request.getEndedAt();
 
-        Property property = propertyRepository.getByIdOrThrow(request.getPropertyId());
+        Property property = propertyRepository.getByIdAndNotDeletedOrThrow(propertyId);
 
         if (!userId.equals(property.getUser().getId())) {
             throw new CustomException(ErrorCode.USER_NOT_MATCH);
