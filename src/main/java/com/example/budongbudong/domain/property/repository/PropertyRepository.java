@@ -9,14 +9,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface PropertyRepository extends JpaRepository<Property,Long> {
+public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     @Query("""
-    select distinct p from Property p
-    left join fetch p.propertyImageList pi
-    where p.id = :propertyId
-    and p.isDeleted = false
-    """)
+            select distinct p from Property p
+            left join fetch p.propertyImageList pi
+            where p.id = :propertyId
+            and p.isDeleted = false
+            """)
     Optional<Property> findByIdWithImagesAndNotDeleted(@Param("propertyId") Long propertyId);
 
     Page<Property> findAllByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);

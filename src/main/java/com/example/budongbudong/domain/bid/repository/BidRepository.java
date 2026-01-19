@@ -43,20 +43,20 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
 
     // 최고 입찰가 조회 (논리 삭제 제외)
     @Query("""
-        select max(b.price)
-        from Bid b
-        where b.auction.id = :auctionId
-          and b.isDeleted = false
-    """)
+                select max(b.price)
+                from Bid b
+                where b.auction.id = :auctionId
+                  and b.isDeleted = false
+            """)
     Optional<Long> findHighestPriceByAuctionId(@Param("auctionId") Long auctionId);
 
     // 총 입찰자 수 (논리 삭제 제외)
     @Query("""
-        select count(distinct b.user.id)
-        from Bid b
-        where b.auction.id = :auctionId
-          and b.isDeleted = false
-    """)
+                select count(distinct b.user.id)
+                from Bid b
+                where b.auction.id = :auctionId
+                  and b.isDeleted = false
+            """)
     int countDistinctBiddersByAuctionId(@Param("auctionId") Long auctionId);
 
     @Query("""
