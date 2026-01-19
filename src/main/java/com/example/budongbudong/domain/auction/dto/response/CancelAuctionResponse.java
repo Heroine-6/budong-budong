@@ -1,6 +1,6 @@
 package com.example.budongbudong.domain.auction.dto.response;
 
-import com.example.budongbudong.domain.auction.entity.Auction;
+import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

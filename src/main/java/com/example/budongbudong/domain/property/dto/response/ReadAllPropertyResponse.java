@@ -1,5 +1,6 @@
 package com.example.budongbudong.domain.property.dto.response;
 
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.property.dto.ReadAllPropertyDto;
 import com.example.budongbudong.domain.property.entity.Property;

@@ -1,18 +1,15 @@
 package com.example.budongbudong.domain.bid.service;
 
-import com.example.budongbudong.common.exception.CustomException;
-import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.domain.auction.entity.Auction;
-import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Bid;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
-import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.user.entity.User;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,22 +31,14 @@ public class BidService {
     @Transactional
     public CreateBidResponse createBid(CreateBidRequest request, Long auctionId, Long userId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.getByIdOrThrow(userId);
 
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
-
-        if (auction.getStatus() != AuctionStatus.OPEN) {
-            throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
-        }
+        Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
 
         Long bidPrice = request.getPrice();
-        Bid highestBid = bidRepository.findHighestBidByAuctionId(auctionId).orElse(null);
+        Bid highestBid = bidRepository.findHighestBidOrNull(auctionId);
 
-        if (highestBid != null && bidPrice <= highestBid.getPrice()) {
-            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
-        }
+        bidRepository.validateBidPriceHigherThanCurrentOrThrow(bidPrice, highestBid);
 
         if (highestBid != null) {
             highestBid.unmarkHighest();
@@ -69,8 +58,7 @@ public class BidService {
     @Transactional(readOnly = true)
     public Page<ReadAllBidsResponse> readAllBids(Long auctionId, Pageable pageable) {
 
-        auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+        auctionRepository.validateExistsOrThrow(auctionId);
 
         return bidRepository.findAllByAuctionId(auctionId, pageable)
                 .map(ReadAllBidsResponse::from);

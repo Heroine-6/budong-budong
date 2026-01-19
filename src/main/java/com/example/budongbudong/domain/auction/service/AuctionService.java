@@ -1,5 +1,8 @@
 package com.example.budongbudong.domain.auction.service;
 
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Bid;
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
@@ -7,12 +10,9 @@ import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
 import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
-import com.example.budongbudong.domain.auction.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.entity.Bid;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.property.entity.Property;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -42,24 +43,20 @@ public class AuctionService {
         LocalDateTime startedAt = request.getStartedAt();
         LocalDateTime endedAt = request.getEndedAt();
 
-        Property property = propertyRepository.findById(propertyId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
+        Property property = propertyRepository.getByIdOrThrow(request.getPropertyId());
 
         if (!userId.equals(property.getUser().getId())) {
             throw new CustomException(ErrorCode.USER_NOT_MATCH);
         }
 
-        Auction auction = auctionRepository.findByPropertyId(propertyId).orElse(null);
-
-        if (auction != null && !auction.getStatus().equals(AuctionStatus.CANCELLED)) {
-            throw new CustomException(ErrorCode.AUCTION_ALREADY_EXISTS);
-        }
+        auctionRepository.getByPropertyIdOrThrowIfExists(property.getId());
 
         if (startedAt.isBefore(LocalDateTime.now()) || startedAt.isAfter(endedAt)) {
             throw new CustomException(ErrorCode.INVALID_AUCTION_PERIOD);
         }
 
-        auction = Auction.create(property,
+        Auction auction = Auction.create(
+                property,
                 startPrice,
                 startedAt,
                 endedAt
@@ -77,8 +74,7 @@ public class AuctionService {
     @Transactional
     public CancelAuctionResponse cancelAuction(Long auctionId, Long userId) {
 
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
 
         if (!userId.equals(auction.getProperty().getUser().getId())) {
             throw new CustomException(ErrorCode.USER_NOT_MATCH);
@@ -98,12 +94,11 @@ public class AuctionService {
      */
     @Transactional(readOnly = true)
     public AuctionInfoResponse getAuctionInfo(Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
 
         // 최고 입찰가
-        Long highestPrice = bidRepository.findHighestPriceByAuctionId(auctionId)
-                .orElse(auction.getStartPrice());
+        Long highestPrice = bidRepository.getHighestPriceOrStartPrice(auctionId, auction.getStartPrice());
 
         // 총 입찰자 수
         int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
@@ -123,8 +118,7 @@ public class AuctionService {
     @Transactional(readOnly = true)
     public GetStatisticsResponse getAuctionStatistics(Long auctionId) {
 
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
 
         int totalBidderCount = bidRepository.countTotalBidders(auctionId);
 
@@ -137,10 +131,9 @@ public class AuctionService {
         long priceIncrease = 0L;
 
         if (totalBidCount == 1L) {
-            priceIncrease = highestBid.getPrice() - auction.getStartPrice();
-        }
-        if (totalBidCount > 1L) {
-            priceIncrease = highestBid.getPrice() - bidList.get(1).getPrice();
+            priceIncrease = Objects.requireNonNull(highestBid).getPrice() - auction.getStartPrice();
+        } else if (totalBidCount > 1L) {
+            priceIncrease = Objects.requireNonNull(highestBid).getPrice() - bidList.get(1).getPrice();
         }
 
         return GetStatisticsResponse.from(

@@ -1,8 +1,8 @@
 package com.example.budongbudong.domain.property.dto.request;
 
-import com.example.budongbudong.domain.property.entity.Property;
+import com.example.budongbudong.common.entity.Property;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.domain.property.enums.PropertyType;
-import com.example.budongbudong.domain.user.entity.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

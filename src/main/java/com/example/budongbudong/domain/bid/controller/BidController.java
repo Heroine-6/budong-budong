@@ -62,7 +62,7 @@ public class BidController {
     /**
      * 내 입찰 내역 조회
      */
-    @GetMapping("/my/{userId}")
+    @GetMapping("/my")
     public ResponseEntity<GlobalResponse<CustomPageResponse<ReadMyBidsResponse>>> readMyBids(
             @AuthenticationPrincipal AuthUser authUser,
             @PageableDefault(

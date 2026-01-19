@@ -1,6 +1,5 @@
-package com.example.budongbudong.domain.user.entity;
+package com.example.budongbudong.common.entity;
 
-import com.example.budongbudong.common.entity.BaseEntity;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
