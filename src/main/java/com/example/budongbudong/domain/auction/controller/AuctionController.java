@@ -26,7 +26,7 @@ public class AuctionController {
 
         CreateAuctionResponse response = auctionService.createAuction(request, authUser.getUserId());
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "경매 등록 성공", response));
+        return GlobalResponse.ok(response);
     }
 
     @PatchMapping("/{auctionId}")
@@ -34,7 +34,7 @@ public class AuctionController {
 
         CancelAuctionResponse response = auctionService.cancelAuction(auctionId, authUser.getUserId());
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "경매 상태 변경 성공", response));
+        return GlobalResponse.ok(response);
     }
 
     @GetMapping("/{auctionId}/info")
@@ -42,7 +42,7 @@ public class AuctionController {
 
         AuctionInfoResponse response = auctionService.getAuctionInfo(auctionId);
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "입찰 정보 조회 성공", response));
+        return GlobalResponse.ok(response);
     }
 
     @GetMapping("/{auctionId}/statistics")
@@ -50,6 +50,6 @@ public class AuctionController {
 
         GetStatisticsResponse response = auctionService.getAuctionStatistics(auctionId);
 
-        return ResponseEntity.ok(GlobalResponse.success(true, "경쟁 정보 및 통계 조회 성공", response));
+        return GlobalResponse.ok(response);
     }
 }
