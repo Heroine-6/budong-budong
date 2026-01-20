@@ -1,13 +1,11 @@
 package com.example.budongbudong.domain.property.repository;
 
-import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 
 public interface QPropertyRepository {
 
     Page<ReadAllPropertyResponse> findAllMyProperties(Long userId, Pageable pageable);
 
-    Page<ReadAllPropertyResponse> searchProperties(SearchPropertyCond cond, Pageable pageable);
+    Slice<ReadAllPropertyResponse> findPropertyList(Pageable pageable);
 }

@@ -25,28 +25,7 @@ public class ReadAllPropertyResponse {
     private final AuctionResponse auction;
 
     //TODO 내 목록조회도 QueryDsl 사용시 제거 가능
-    public static ReadAllPropertyResponse from(Property property, AuctionResponse auction) {
-
-        // thumbnailImage 없음
-        if (property.getPropertyImageList() == null ||
-                property.getPropertyImageList().isEmpty()) {
-
-            return new ReadAllPropertyResponse(
-                    property.getId(),
-                    property.getName(),
-                    property.getAddress(),
-                    property.getType(),
-                    property.getDescription(),
-                    property.getSupplyArea(),
-                    property.getPrivateArea(),
-                    null,
-                    auction
-            );
-        }
-        String thumbnailImage =
-                property.getPropertyImageList()
-                        .get(0)
-                        .getImageUrl();
+    public static ReadAllPropertyResponse from(Property property, AuctionResponse auction, String thumbnailImage) {
 
         return  new ReadAllPropertyResponse(
                 property.getId(),

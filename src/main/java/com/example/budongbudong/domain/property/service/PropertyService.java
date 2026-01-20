@@ -4,7 +4,7 @@ import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
-import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
+import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.property.client.AptClient;
@@ -17,9 +17,6 @@ import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.lawdcode.LawdCodeService;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
-import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
-import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
-import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
@@ -35,8 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 @Service
@@ -77,27 +73,10 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(SearchPropertyCond cond, Pageable pageable) {
+    public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList( Pageable pageable) {
 
-        Long min = cond.getMinPrice();
-        Long max = cond.getMaxPrice();
-        if(min != null && max != null && min > max) {
-            throw new CustomException(ErrorCode.INVALID_PRICE_RANGE);
-        }
-
-        Page<Property> page =
-                propertyRepository.findAllByIsDeletedFalse(pageable);
-
-        Page<ReadAllPropertyResponse> response =
-                page.map(property -> {
-                    Auction auction =
-                            auctionRepository.findByPropertyIdOrNull(property.getId());
-                    AuctionResponse auctionResponse =
-                            auction != null ? AuctionResponse.from(auction) : null;
-                    return ReadAllPropertyResponse.from(property, auctionResponse);
-                });
-
-        return CustomPageResponse.from(response);
+        Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(pageable);
+        return CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
     }
 
     @Transactional(readOnly = true)

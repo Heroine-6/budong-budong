@@ -93,4 +93,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             select a from Auction a
             where a.property.id in :propertyIds
         """)
-    List<Auction> findAllByPropertyIds(@Param("propertyIds") List<Long> propertyIds);}
+    List<Auction> findAllByPropertyIds(@Param("propertyIds") List<Long> propertyIds);
+
+}

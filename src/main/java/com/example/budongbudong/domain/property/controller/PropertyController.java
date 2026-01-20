@@ -41,7 +41,7 @@ public class PropertyController {
     }
 
     @GetMapping
-    public ResponseEntity<GlobalResponse<CustomPageResponse<ReadAllPropertyResponse>>> getAllPropertyList(
+    public ResponseEntity<GlobalResponse<CustomSliceResponse<ReadAllPropertyResponse>>> getAllPropertyList(
             @ModelAttribute SearchPropertyCond cond,
             @PageableDefault(
                     page = 0,
@@ -51,7 +51,7 @@ public class PropertyController {
             )
             Pageable pageable
     ) {
-        CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(cond,pageable);
+        CustomSliceResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(pageable);
         return GlobalResponse.ok(response);
     }
 

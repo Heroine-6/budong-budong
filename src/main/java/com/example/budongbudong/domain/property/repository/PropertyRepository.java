@@ -33,8 +33,6 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, QProp
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
     }
 
-    Page<Property> findAllByIsDeletedFalse(Pageable pageable);
-
     @Query("""
             select p from Property p
             where p.id > :lastId
