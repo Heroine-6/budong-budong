@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface QPropertyRepository {
-    Page<ReadAllPropertyResponse> findAllProperties(Pageable pageable);
 
     Page<ReadAllPropertyResponse> findAllMyProperties(Long userId, Pageable pageable);
 

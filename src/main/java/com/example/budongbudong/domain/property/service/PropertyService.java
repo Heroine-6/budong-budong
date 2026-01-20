@@ -1,10 +1,10 @@
 package com.example.budongbudong.domain.property.service;
 
-import com.example.budongbudong.common.entity.Property;
-import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.property.client.AptClient;

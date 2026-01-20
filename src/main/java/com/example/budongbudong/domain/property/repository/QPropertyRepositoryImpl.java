@@ -114,35 +114,6 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
         return new PageImpl<>(content, pageable, total);
     }
 
-    private BooleanExpression nameContains(String name) {
-        return StringUtils.hasText(name) ? property.name.contains(name) : null;
-    }
-
-    private BooleanExpression typeEq(PropertyType type) {
-        return type != null ? property.type.eq(type) : null;
-    }
-
-    private BooleanExpression addressContains(String address) {
-        return StringUtils.hasText(address) ?  property.address.contains(address) : null;
-    }
-
-    private BooleanExpression minPriceGoe(Long minPrice) {
-        return minPrice != null ? property.price.goe(minPrice) : null;
-    }
-
-    private BooleanExpression maxPriceLoe(Long maxPrice) {
-        return maxPrice != null ? property.price.loe(maxPrice) : null;
-    }
-
-    private BooleanExpression migrateDateGoeFrom(LocalDate migrateDate) {
-        return migrateDate != null ? property.migrateDate.goe(migrateDate) : null;
-    }
-
-    private BooleanExpression builtYearFrom (Year builtYear) {
-        return builtYear != null ? property.builtYear.goe(builtYear) : null;
-    }
-
-
     /**
      * 내 매물 목록 페이징 조회
      */
@@ -212,6 +183,33 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
         return new PageImpl<>(content, pageable, total);
     }
 
+    private BooleanExpression nameContains(String name) {
+        return StringUtils.hasText(name) ? property.name.contains(name) : null;
+    }
+
+    private BooleanExpression typeEq(PropertyType type) {
+        return type != null ? property.type.eq(type) : null;
+    }
+
+    private BooleanExpression addressContains(String address) {
+        return StringUtils.hasText(address) ?  property.address.contains(address) : null;
+    }
+
+    private BooleanExpression minPriceGoe(Long minPrice) {
+        return minPrice != null ? property.price.goe(minPrice) : null;
+    }
+
+    private BooleanExpression maxPriceLoe(Long maxPrice) {
+        return maxPrice != null ? property.price.loe(maxPrice) : null;
+    }
+
+    private BooleanExpression migrateDateGoeFrom(LocalDate migrateDate) {
+        return migrateDate != null ? property.migrateDate.goe(migrateDate) : null;
+    }
+
+    private BooleanExpression builtYearFrom (Year builtYear) {
+        return builtYear != null ? property.builtYear.goe(builtYear) : null;
+    }
 
     /**
      * Querydsl 조회 DTO를 API 응답 DTO로 변환한다.
