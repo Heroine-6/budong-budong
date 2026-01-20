@@ -101,14 +101,14 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/signin", "/api/v1/auth/send", "/api/v1/auth/verify").permitAll()
+                .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/signin", "/api/v1/auth/refresh", "/api/v1/auth/send", "/api/v1/auth/verify").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
 
                 // Swagger / OpenAPI 허용
                 .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**"
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
                 ).permitAll();
     }
 
@@ -116,44 +116,44 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/*").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/v1/properties/my")
-            .hasRole(UserRole.SELLER.name())
+                .requestMatchers(HttpMethod.GET, "/api/v1/properties/my")
+                .hasRole(UserRole.SELLER.name())
 
-            .requestMatchers(HttpMethod.POST, "/api/v1/properties")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/v1/properties")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-            .requestMatchers(HttpMethod.PATCH, "/api/v1/properties/*")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/properties/*")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/*")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name());
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/*")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name());
     }
 
     private void auctionAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.POST, "/api/v1/auctions")
-            .hasRole(UserRole.SELLER.name())
+                .hasRole(UserRole.SELLER.name())
 
-            .requestMatchers(HttpMethod.PATCH, "/api/v1/auctions/*")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/auctions/*")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-            .requestMatchers(
-                    HttpMethod.GET,
-                    "/api/v1/auctions/*/statistics",
-                    "/api/v1/auctions/*/info"
-            ).permitAll();
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/v1/auctions/*/statistics",
+                        "/api/v1/auctions/*/info"
+                ).permitAll();
     }
 
     private void bidAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.GET, "/api/v1/bids/auctions/**").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/v1/bids")
-            .hasRole(UserRole.GENERAL.name())
+                .requestMatchers(HttpMethod.POST, "/api/v1/bids")
+                .hasRole(UserRole.GENERAL.name())
 
-            .requestMatchers(HttpMethod.GET, "/api/v1/bids/my")
-            .hasRole(UserRole.GENERAL.name());
+                .requestMatchers(HttpMethod.GET, "/api/v1/bids/my")
+                .hasRole(UserRole.GENERAL.name());
     }
 
 }

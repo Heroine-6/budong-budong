@@ -1,6 +1,9 @@
 package com.example.budongbudong.common.utils;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Calendar;
 import java.util.Date;
 
 @Slf4j
@@ -24,6 +28,23 @@ public class JwtUtil {
     private SecretKey key;
     private JwtParser parser;
 
+    /**
+     * 토큰 만료기간 지정
+     */
+    private static Date createExpiredDate(boolean isAccessToken) {
+
+        Calendar c = Calendar.getInstance();
+
+        // TODO: 시간 조정
+        if (isAccessToken) {
+            c.add(Calendar.SECOND, 20);
+        } else {
+            c.add(Calendar.MINUTE, 1);
+        }
+
+        return c.getTime();
+    }
+
     @PostConstruct
     public void init() {
 
@@ -34,7 +55,7 @@ public class JwtUtil {
                 .build();
     }
 
-    public String generateToken(String username, String userEmail, String userRole,Long userId) {
+    public String generateAccessToken(String username, String userEmail, String userRole, Long userId) {
 
         Date now = new Date();
         return BEARER_PREFIX + Jwts.builder()
@@ -43,7 +64,18 @@ public class JwtUtil {
                 .claim("userEmail", userEmail)
                 .claim("userRole", userRole)
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + TOKEN_TIME))
+                .expiration(createExpiredDate(true))
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(Long userId) {
+
+        Date now = new Date();
+        return BEARER_PREFIX + Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(now)
+                .expiration(createExpiredDate(false))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
