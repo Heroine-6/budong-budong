@@ -11,7 +11,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +24,7 @@ import java.util.List;
 import static com.example.budongbudong.common.entity.QAuction.auction;
 import static com.example.budongbudong.common.entity.QProperty.property;
 import static com.example.budongbudong.common.entity.QPropertyImage.propertyImage;
+import static com.example.budongbudong.common.entity.QUser.user;
 
 
 @Repository
@@ -139,6 +142,77 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
         return builtYear != null ? property.builtYear.goe(builtYear) : null;
     }
 
+
+    /**
+     * 내 매물 목록 페이징 조회
+     */
+    @Override
+    public Page<ReadAllPropertyResponse> findAllMyProperties(Long userId, Pageable pageable) {
+
+        // 매물 소프트 딜리트 검증
+        BooleanExpression baseCondition = property.isDeleted.isFalse();
+
+        var thumbnailSubquery =
+                JPAExpressions
+                        .select(propertyImage.imageUrl)
+                        .from(propertyImage)
+                        .where(propertyImage.id.eq(
+                                JPAExpressions
+                                        .select(propertyImage.id.min())
+                                        .from(propertyImage)
+                                        .where(
+                                                propertyImage.property.id.eq(property.id),
+                                                propertyImage.isDeleted.isFalse()
+                                        )
+                        ));
+
+        List<ReadAllPropertyDto> results = queryFactory
+                .select(new QReadAllPropertyDto(
+                        property.id,
+                        property.name,
+                        property.address,
+                        property.type,
+                        property.description,
+                        property.supplyArea,
+                        property.privateArea,
+                        auction.id,
+                        auction.startPrice,
+                        auction.status,
+                        auction.startedAt,
+                        auction.endedAt,
+                        thumbnailSubquery
+                ))
+                .from(property)
+                .leftJoin(auction).on(auction.property.id.eq(property.id))
+                .where(
+                        baseCondition,
+                        property.user.id.eq(userId),
+                        user.isDeleted.isFalse()
+                )
+                .orderBy(property.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<ReadAllPropertyResponse> content = results.stream()
+                .map(this::toResponse)
+                .toList();
+
+        long total =
+                queryFactory
+                        .select(property.count())
+                        .from(property)
+                        .where(
+                                baseCondition,
+                                property.user.id.eq(userId),
+                                user.isDeleted.isFalse()
+                        )
+                        .fetchFirst();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+
     /**
      * Querydsl 조회 DTO를 API 응답 DTO로 변환한다.
      * - 경매 정보는 존재할 경우에만 포함
@@ -151,8 +225,8 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                 dto.getStatus(),
                 dto.getStartedAt(),
                 dto.getEndedAt()
-                )
-                :null;
+        )
+                : null;
 
         return new ReadAllPropertyResponse(
                 dto.getPropertyId(),
