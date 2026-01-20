@@ -16,9 +16,7 @@ import com.example.budongbudong.domain.property.client.AptResponse;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
-import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
+import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.propertyimage.service.PropertyImageService;
 import com.example.budongbudong.domain.user.repository.UserRepository;
@@ -26,8 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,22 +67,27 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(
-            SearchPropertyCond cond,
-            Pageable pageable
-    ) {
-        long start = System.currentTimeMillis();
+    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(SearchPropertyCond cond, Pageable pageable) {
+
         Long min = cond.getMinPrice();
         Long max = cond.getMaxPrice();
         if(min != null && max != null && min > max) {
             throw new CustomException(ErrorCode.INVALID_PRICE_RANGE);
         }
 
-        Page<ReadAllPropertyResponse> page = propertyRepository.searchProperties(cond, pageable);
+        Page<Property> page =
+                propertyRepository.findAllByIsDeletedFalse(pageable);
 
-        long end = System.currentTimeMillis();
-        log.info("[매물 검색] 실행시간:{}, cond={}", end - start, cond);
-        return CustomPageResponse.from(page);
+        Page<ReadAllPropertyResponse> response =
+                page.map(property -> {
+                    Auction auction =
+                            auctionRepository.findByPropertyIdOrNull(property.getId());
+                    AuctionResponse auctionResponse =
+                            auction != null ? AuctionResponse.from(auction) : null;
+                    return ReadAllPropertyResponse.from(property, auctionResponse);
+                });
+
+        return CustomPageResponse.from(response);
     }
 
     @Transactional(readOnly = true)

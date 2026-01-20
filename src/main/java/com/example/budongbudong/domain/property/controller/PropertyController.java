@@ -1,23 +1,21 @@
 package com.example.budongbudong.domain.property.controller;
 
 import com.example.budongbudong.common.dto.AuthUser;
-import com.example.budongbudong.common.response.CustomPageResponse;
-import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.common.response.*;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
-import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
-import com.example.budongbudong.domain.property.service.PropertyService;
+import com.example.budongbudong.domain.property.dto.response.*;
+import com.example.budongbudong.domain.property.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 public class PropertyController {
 
     private final PropertyService propertyService;
+    private final PropertySyncService propertySyncService;
+    private final PropertySearchService propertySearchService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GlobalResponse<Void>> createProperty(
@@ -52,6 +52,19 @@ public class PropertyController {
             Pageable pageable
     ) {
         CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(cond,pageable);
+        return GlobalResponse.ok(response);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<GlobalResponse<CustomSliceResponse<SearchPropertyResponse>>> search(
+            @ModelAttribute SearchPropertyCond cond,
+            @PageableDefault(
+                    page = 0,
+                    size = 10
+            )
+            Pageable pageable
+    ) {
+        CustomSliceResponse<SearchPropertyResponse> response = propertySearchService.search(cond,pageable);
         return GlobalResponse.ok(response);
     }
 
@@ -95,6 +108,12 @@ public class PropertyController {
 
         propertyService.deleteProperty(propertyId, authUser.getUserId());
 
+        return GlobalResponse.noContent();
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<GlobalResponse<Void>> syncAllProperties() {
+        propertySyncService.syncAllProperties();
         return GlobalResponse.noContent();
     }
 }
