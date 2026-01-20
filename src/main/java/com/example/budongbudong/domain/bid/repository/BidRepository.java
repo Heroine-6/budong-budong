@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface BidRepository extends JpaRepository<Bid, Long> {
+public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository {
 
     @Query("""
                 select b from Bid b
@@ -22,22 +22,6 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
                   and b.isDeleted = false
             """)
     Optional<Bid> findHighestBidByAuctionId(Long auctionId);
-
-    @Query(
-            value = """
-                        select b
-                        from Bid b
-                        join fetch b.auction a
-                        join fetch a.property p
-                        where b.user.id = :userId
-                    """,
-            countQuery = """
-                        select count(b)
-                        from Bid b
-                        where b.user.id = :userId
-                    """
-    )
-    Page<Bid> findMyBidsPage(@Param("userId") Long userId, Pageable pageable);
 
     Page<Bid> findAllByAuctionId(Long auctionId, Pageable pageable);
 

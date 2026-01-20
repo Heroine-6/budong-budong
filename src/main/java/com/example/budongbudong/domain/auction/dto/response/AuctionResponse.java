@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.auction.dto.response;
 
 import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,6 +13,7 @@ public class AuctionResponse {
 
     private final Long id;
     private final Long startPrice;
+    private final AuctionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime endedAt;
 
@@ -19,6 +21,7 @@ public class AuctionResponse {
         return new AuctionResponse(
                 auction.getId(),
                 auction.getStartPrice(),
+                auction.getStatus(),
                 auction.getStartedAt(),
                 auction.getEndedAt()
         );

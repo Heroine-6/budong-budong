@@ -3,15 +3,13 @@ package com.example.budongbudong.domain.property.repository;
 import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface PropertyRepository extends JpaRepository<Property, Long> {
+public interface PropertyRepository extends JpaRepository<Property, Long>, QPropertyRepository {
 
     @Query("""
             select distinct p from Property p
@@ -21,14 +19,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             """)
     Optional<Property> findByIdWithImagesAndNotDeleted(@Param("propertyId") Long propertyId);
 
-    Page<Property> findAllByUserIdAndIsDeletedFalse(Long userId, Pageable pageable);
-
     Optional<Property> findByIdAndIsDeletedFalse(Long propertyId);
-
-    default Property getByIdOrThrow(Long propertyId) {
-        return findById(propertyId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
-    }
 
     default Property getByIdWithImagesAndNotDeletedOrThrow(Long propertyId) {
         return findByIdWithImagesAndNotDeleted(propertyId)
