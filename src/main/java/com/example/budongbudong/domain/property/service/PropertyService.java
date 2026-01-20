@@ -35,8 +35,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -167,61 +168,53 @@ public class PropertyService {
     private AptItem findMatchingItem(List<AptItem> items, String address, Integer targetFloor) {
         log.info("입력 주소: {}, 층수: {}", address, targetFloor);
 
-        // 1. 읍면동 + 지번 정확히 매칭되는 후보들 수집
-        List<AptItem> candidates = new ArrayList<>();
-        for (AptItem item : items) {
-            String umdNm = item.umdNm();
-            String jibun = item.jibun();
+        // 매칭 조건 (우선순위 순서)
+        Predicate<AptItem> matchesUmdAndJibun = item ->
+                item.umdNm() != null && address.contains(item.umdNm())
+                        && item.jibun() != null && matchesJibun(address, item.jibun());
 
-            if (umdNm != null && address.contains(umdNm)) {
-                if (jibun != null && matchesJibun(address, jibun)) {
-                    candidates.add(item);
-                }
-            }
-        }
+        Predicate<AptItem> matchesJibunOnly = item ->
+                item.jibun() != null && matchesJibun(address, item.jibun());
 
-        // 2. 후보가 없으면 지번만 정확히 매칭
+        Predicate<AptItem> matchesUmdOnly = item ->
+                item.umdNm() != null && address.contains(item.umdNm());
+
+        // 우선순위대로 매칭 시도
+        List<AptItem> candidates = findCandidates(items, matchesUmdAndJibun);
         if (candidates.isEmpty()) {
-            for (AptItem item : items) {
-                String jibun = item.jibun();
-                if (jibun != null && matchesJibun(address, jibun)) {
-                    candidates.add(item);
-                }
-            }
+            candidates = findCandidates(items, matchesJibunOnly);
         }
-
-        // 3. 후보가 없으면 동 이름만으로 매칭
         if (candidates.isEmpty()) {
-            for (AptItem item : items) {
-                String umdNm = item.umdNm();
-                if (umdNm != null && address.contains(umdNm)) {
-                    candidates.add(item);
-                }
-            }
+            candidates = findCandidates(items, matchesUmdOnly);
         }
 
-        // 4. 후보가 없으면 에러
         if (candidates.isEmpty()) {
             log.warn("매칭된 매물 없음 - 주소: {}", address);
             throw new CustomException(ErrorCode.PROPERTY_NOT_FOUND);
         }
 
-        // 5. 후보들 중 층수가 가장 비슷한 거래 선택
-        AptItem bestMatch = candidates.get(0);
-        int minDiff = Integer.MAX_VALUE;
-
-        for (AptItem candidate : candidates) {
-            if (candidate.floor() != null && targetFloor != null) {
-                int diff = Math.abs(candidate.floor() - targetFloor);
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    bestMatch = candidate;
-                }
-            }
-        }
+        // 층수가 가장 비슷한 거래 선택
+        AptItem bestMatch = selectBestMatchByFloor(candidates, targetFloor);
 
         log.info("선택된 매물: {} | 층수: {} | 가격: {}", bestMatch.getName(), bestMatch.floor(), bestMatch.dealAmount());
         return bestMatch;
+    }
+
+    private List<AptItem> findCandidates(List<AptItem> items, Predicate<AptItem> condition) {
+        return items.stream()
+                .filter(condition)
+                .toList();
+    }
+
+    private AptItem selectBestMatchByFloor(List<AptItem> candidates, Integer targetFloor) {
+        if (targetFloor == null) {
+            return candidates.get(0);
+        }
+
+        return candidates.stream()
+                .filter(item -> item.floor() != null)
+                .min(Comparator.comparingInt(item -> Math.abs(item.floor() - targetFloor)))
+                .orElse(candidates.get(0));
     }
 
     private boolean matchesJibun(String address, String jibun) {
