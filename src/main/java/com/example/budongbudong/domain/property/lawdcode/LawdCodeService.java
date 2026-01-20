@@ -56,9 +56,6 @@ public class LawdCodeService {
                         // 시군구 + 읍면동
                         String shortAddress = sigungu + " " + eupmyeondong;
                         addressToCodeMap.putIfAbsent(shortAddress, lawdCd);
-
-                        // 읍면동만
-                        addressToCodeMap.putIfAbsent(eupmyeondong, lawdCd);
                     } else if (!sigungu.isEmpty()) {
                         // 시도 + 시군구
                         String address = sido + " " + sigungu;

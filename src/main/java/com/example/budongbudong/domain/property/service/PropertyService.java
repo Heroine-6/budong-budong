@@ -181,7 +181,7 @@ public class PropertyService {
 
         if (candidates.isEmpty()) {
             log.warn("매칭된 매물 없음 - 주소: {}", address);
-            throw new CustomException(ErrorCode.PROPERTY_NOT_FOUND);
+            throw new CustomException(ErrorCode.API_PROPERTY_NOT_MATCHED);
         }
 
         // 층수가 가장 비슷한 거래 선택

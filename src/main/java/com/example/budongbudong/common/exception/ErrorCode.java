@@ -28,7 +28,8 @@ public enum ErrorCode {
     SMS_VERIFICATION_REQUIRED(401, "휴대전화 인증을 먼저 완료해주세요."),
 
     //------400-----------------------
-    INVALID_ADDRESS(400, "주소에서 지역코드를 찾을 수 없습니다."),
+    INVALID_ADDRESS(400, "주소에서 지역코드를 찾을 수 없습니다. 시/군/구를 포함한 전체 주소를 입력해주세요."),
+    API_PROPERTY_NOT_MATCHED(400, "입력한 주소와 층수에 해당하는 실거래 정보를 찾을 수 없습니다."),
     INVALID_EMAIL_FORMAT(400, "이메일 형식이 올바르지 않습니다."),
     INVALID_PASSWORD_FORMAT(400, "비밀번호 형식이 올바르지 않습니다."),
     INVALID_PASSWORD(400, "비밀번호가 유효하지 않습니다."),
