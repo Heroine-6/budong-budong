@@ -5,10 +5,8 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -34,6 +32,9 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({
+            @QueryHint(name = "jarkarta.persistence.lock.timeout", value = "2000")
+    })
     @Query("""
                 select a
                 from Auction a
