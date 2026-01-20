@@ -43,22 +43,21 @@ class AuctionSchedulerServiceTest {
     private BidRepository bidRepository;
 
     private Property createProperty(User user) {
-        Property property = Property.create(
-                "아파투",
-                "서울시 동대문구",
-                1,
-                10,
-                2,
-                PropertyType.APARTMENT,
-                Year.of(2020),
-                "설명",
-                100000000L,
-                LocalDate.now().plusMonths(1),
-                new BigDecimal("84.50"),
-                new BigDecimal("59.99"),
-                user
-        );
-        return property;
+        return Property.builder()
+                .name("아파투")
+                .address("서울시 동대문구")
+                .floor(1)
+                .totalFloor(10)
+                .roomCount(2)
+                .type(PropertyType.APARTMENT)
+                .builtYear(Year.of(2020))
+                .description("설명")
+                .price(100000000L)
+                .migrateDate(LocalDate.now().plusMonths(1))
+                .supplyArea(new BigDecimal("84.50"))
+                .privateArea(new BigDecimal("59.99"))
+                .user(user)
+                .build();
     }
 
     private User createUser() {
