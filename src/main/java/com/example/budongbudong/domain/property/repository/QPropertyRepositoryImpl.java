@@ -43,9 +43,9 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
     public Slice<ReadAllPropertyResponse> findPropertyList(Pageable pageable) {
 
         int pageSize = pageable.getPageSize();
-        int requestSize = pageSize + 1;
+        int requestSize = pageSize + 1; // 다음 페이지 존재 여부 판단을 위해 +1 조회
 
-        // 1️⃣ Property Slice 조회
+        //Property Slice 조회
         List<Property> properties =
                 queryFactory
                         .selectFrom(property)
@@ -55,6 +55,7 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                         .limit(requestSize)
                         .fetch();
 
+        //Slice의 다음 페이지 존재 여부 판단
         boolean hasNext = properties.size() > pageSize;
         if (hasNext) {
             properties = properties.subList(0, pageSize);
@@ -64,12 +65,10 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
             return new SliceImpl<>(List.of(), pageable, false);
         }
 
-        // 2️⃣ propertyIds 수집
-        List<Long> propertyIds = properties.stream()
-                .map(Property::getId)
-                .toList();
+        //propertyIds 수집 - 경매, 대표 이미지 조회를 IN 쿼리로 처리하기 위해
+        List<Long> propertyIds = properties.stream().map(Property::getId).toList();
 
-        // 3️⃣ Auction IN 조회
+        //Auction IN 조회
         Map<Long, Auction> auctionMap =
                 queryFactory
                         .selectFrom(auction)
@@ -85,23 +84,22 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                                 (a, b) -> a
                         ));
 
-        // 4️⃣ 대표 이미지 Querydsl (N+1 제거 핵심)
-        QPropertyImage pi = propertyImage;
-        QPropertyImage piSub = new QPropertyImage("piSub");
+        //대표 이미지 조회(Querydsl 서브 쿼리)
+        QPropertyImage piSub = new QPropertyImage("piSub"); //서브쿼리 별칭
 
         Map<Long, String> thumbnailMap =
                 queryFactory
-                        .select(pi.property.id, pi.imageUrl)
-                        .from(pi)
+                        .select(propertyImage.property.id, propertyImage.imageUrl)
+                        .from(propertyImage)
                         .where(
-                                pi.property.id.in(propertyIds),
-                                pi.isDeleted.isFalse(),
-                                pi.id.eq(
+                                propertyImage.property.id.in(propertyIds),
+                                propertyImage.isDeleted.isFalse(),
+                                propertyImage.id.eq(
                                         JPAExpressions
                                                 .select(piSub.id.min())
                                                 .from(piSub)
                                                 .where(
-                                                        piSub.property.id.eq(pi.property.id),
+                                                        piSub.property.id.eq(propertyImage.property.id),
                                                         piSub.isDeleted.isFalse()
                                                 )
                                 )
@@ -109,11 +107,11 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                         .fetch()
                         .stream()
                         .collect(Collectors.toMap(
-                                tuple -> tuple.get(pi.property.id),
-                                tuple -> tuple.get(pi.imageUrl)
+                                tuple -> tuple.get(propertyImage.property.id),
+                                tuple -> tuple.get(propertyImage.imageUrl)
                         ));
 
-        // 5️⃣ DTO 변환
+        //DTO 변환
         List<ReadAllPropertyResponse> content =
                 properties.stream()
                         .map(p -> {
@@ -121,11 +119,7 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                             AuctionResponse auctionResponse =
                                     auction != null ? AuctionResponse.from(auction) : null;
 
-                            return ReadAllPropertyResponse.from(
-                                    p,
-                                    auctionResponse,
-                                    thumbnailMap.get(p.getId())
-                            );
+                            return ReadAllPropertyResponse.from(p, auctionResponse, thumbnailMap.get(p.getId()));
                         })
                         .toList();
 

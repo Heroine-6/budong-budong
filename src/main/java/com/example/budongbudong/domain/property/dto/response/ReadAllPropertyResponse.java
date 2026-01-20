@@ -24,7 +24,6 @@ public class ReadAllPropertyResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuctionResponse auction;
 
-    //TODO 내 목록조회도 QueryDsl 사용시 제거 가능
     public static ReadAllPropertyResponse from(Property property, AuctionResponse auction, String thumbnailImage) {
 
         return  new ReadAllPropertyResponse(
