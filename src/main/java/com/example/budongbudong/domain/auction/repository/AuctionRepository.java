@@ -4,7 +4,9 @@ import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,6 +32,14 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             AuctionStatus status,
             LocalDateTime time
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+                select a
+                from Auction a
+                where a.id = :auctionId
+            """)
+    Optional<Auction> findByIdForUpdate(@Param("auctionId") Long auctionId);
 
     @Modifying
     @Query("""
@@ -62,6 +72,18 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
         return auction;
     }
+
+    default Auction getOpenAuctionForUpdateOrThrow(Long auctionId) {
+        Auction auction = findByIdForUpdate(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
+        }
+
+        return auction;
+    }
+
 
     default void validateExistsOrThrow(Long auctionId) {
         if (!existsById(auctionId)) {

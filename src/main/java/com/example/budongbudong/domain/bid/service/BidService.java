@@ -13,11 +13,13 @@ import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BidService {
@@ -34,7 +36,10 @@ public class BidService {
 
         User user = userRepository.getByIdOrThrow(userId);
 
-        Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
+        log.info("TRY LOCK auctionId={}", auctionId);
+        Auction auction = auctionRepository.getOpenAuctionForUpdateOrThrow(auctionId);
+        log.info("LOCK ACQUIRED auctionId={}", auctionId);
+
 
         Long bidPrice = request.getPrice();
         Bid highestBid = bidRepository.findHighestBidOrNull(auctionId);
