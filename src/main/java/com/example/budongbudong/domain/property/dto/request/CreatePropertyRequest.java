@@ -11,9 +11,6 @@ import java.time.LocalDate;
 
 public record CreatePropertyRequest(
 
-        @NotBlank(message = "지역번호는 필수입니다.")
-        String lawdCd,
-
         @NotBlank(message = "계약연월은 필수입니다.")
         String dealYmd,
 
