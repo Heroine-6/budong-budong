@@ -42,7 +42,6 @@ public class PropertyController {
 
     @GetMapping
     public ResponseEntity<GlobalResponse<CustomSliceResponse<ReadAllPropertyResponse>>> getAllPropertyList(
-            @ModelAttribute SearchPropertyCond cond,
             @PageableDefault(
                     page = 0,
                     size = 10,
