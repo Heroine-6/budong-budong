@@ -30,7 +30,8 @@ public class SearchPropertyCond {
 
     // 검색 조건이 하나라도 있으면 true인 메서드
     public boolean isEmpty() {
-        return !StringUtils.hasText(name)
+        return status == null
+                && !StringUtils.hasText(name)
                 && !StringUtils.hasText(address)
                 && type == null
                 && minPrice == null

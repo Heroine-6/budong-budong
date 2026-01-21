@@ -1,8 +1,11 @@
 package com.example.budongbudong.domain.property.search;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.enums.PropertyType;
+import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -41,6 +44,9 @@ public class PropertySearchQueryBuilder {
             Query builtYear = builtYearFrom(cond.getBuiltYear());
             if (builtYear != null) b.filter(builtYear);
 
+            Query status = auctionStatusEq(cond.getStatus());
+            if (status != null) b.filter(status);
+
             return b;
         }));
     }
@@ -60,6 +66,15 @@ public class PropertySearchQueryBuilder {
     private Query addressContains(String address){
         return StringUtils.hasText(address)
                 ? Query.of(q -> q.term(m -> m.field("address").value(address)))
+                : null;
+    }
+
+    private Query auctionStatusEq(AuctionStatus status) {
+        return status != null
+                ? Query.of(q -> q.term(t -> t
+                .field("auction.status")
+                .value(status.name())
+        ))
                 : null;
     }
 
