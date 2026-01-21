@@ -47,28 +47,19 @@ public class PropertySearchQueryBuilder {
 
     private Query nameContains(String name){
         return StringUtils.hasText(name)
-                ? Query.of(q -> q.match(m -> m
-                    .field("name")
-                    .query(name)
-                ))
+                ? Query.of(q -> q.match(m -> m.field("name").query(name)))
                 : null;
     }
 
     private Query typeEq(PropertyType type){
         return type != null
-                ? Query.of(q->q.term(t->t
-                    .field("type")
-                    .value(type.name())
-                ))
+                ? Query.of(q->q.term(t->t.field("type").value(type.name())))
                 : null;
     }
 
     private Query addressContains(String address){
         return StringUtils.hasText(address)
-                ? Query.of(q -> q.term(m -> m
-                    .field("address")
-                    .value(address)
-                ))
+                ? Query.of(q -> q.term(m -> m.field("address").value(address)))
                 : null;
     }
 
@@ -94,22 +85,13 @@ public class PropertySearchQueryBuilder {
     private Query migrateDateFrom(LocalDate migrateDate) {
         return migrateDate != null
                 ? Query.of(q -> q.range(r -> r
-                .date(d -> d
-                        .field("migrateDate")
-                        .gte(migrateDate.toString())
-                    )
-                ))
+                .date(d -> d.field("migrateDate").gte(migrateDate.toString()))))
                 : null;
     }
 
     private Query builtYearFrom (Year builtYear) {
         return builtYear != null
-                ? Query.of(q -> q.range(r -> r
-                        .number(n -> n
-                            .field("builtYear")
-                            .gte((double) builtYear.getValue())
-                        )
-                ))
+                ? Query.of(q -> q.range(r -> r.number(n -> n.field("builtYear").gte((double) builtYear.getValue()))))
                 : null;
     }
 }

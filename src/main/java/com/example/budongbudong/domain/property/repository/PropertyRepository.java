@@ -39,7 +39,6 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, QProp
               and p.isDeleted = false
             order by p.id asc
     """)
-    List<Property> findNextBatchNotDeleted(@Param("lastId") Long lastId, Pageable pageable
-    );
+    List<Property> findNextBatchNotDeleted(@Param("lastId") Long lastId, Pageable pageable);
 
 }
