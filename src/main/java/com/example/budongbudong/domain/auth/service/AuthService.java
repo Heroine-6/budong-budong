@@ -12,6 +12,7 @@ import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final String REFRESH_TOKEN_PREFIX = "refresh-token:";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -41,12 +44,10 @@ public class AuthService {
 
         redisTemplate.delete(verifiedKey);
 
-        String userEmail = request.getEmail();
-
-        userRepository.validateEmailNotExists(userEmail);
+        userRepository.validateEmailNotExists(request.getEmail());
 
         User user = User.create(
-                userEmail,
+                request.getEmail(),
                 request.getName(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getPhone(),
@@ -56,13 +57,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String accessToken = jwtUtil.generateAccessToken(user.getName(), userEmail, user.getRole().name(), user.getId());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId()).substring(7);
-
-        String refreshTokenKey = "refresh-token: " + user.getId();
-        redisTemplate.opsForValue().set(refreshTokenKey, refreshToken, 1, TimeUnit.MINUTES);
-
-        return new AuthResponse(accessToken, refreshToken);
+        return generateAndSaveToken(user);
     }
 
     @Transactional
@@ -77,13 +72,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getName(), user.getEmail(), user.getRole().name(), user.getId());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId()).substring(7);
-
-        String refreshTokenKey = "refresh-token: " + user.getId();
-        redisTemplate.opsForValue().set(refreshTokenKey, refreshToken, 1, TimeUnit.MINUTES);
-
-        return new AuthResponse(accessToken, refreshToken);
+        return generateAndSaveToken(user);
     }
 
     public void verifyAuthCode(String toNumber, String inputCode) {
@@ -117,7 +106,8 @@ public class AuthService {
         }
 
         Long userId = jwtUtil.extractUserId(refreshToken);
-        String refreshTokenKey = "refresh-token: " + userId;
+
+        String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
         String currentRefreshToken = redisTemplate.opsForValue().get(refreshTokenKey);
 
         if (currentRefreshToken == null || !currentRefreshToken.equals(refreshToken)) {
@@ -127,12 +117,21 @@ public class AuthService {
 
         User user = userRepository.getByIdOrThrow(jwtUtil.extractUserId(refreshToken));
 
-        String accessToken = jwtUtil.generateAccessToken(user.getName(), user.getEmail(), user.getRole().name(), user.getId());
-        String newRefreshToken = jwtUtil.generateRefreshToken(user.getId()).substring(7);
-
-        redisTemplate.opsForValue().set(refreshTokenKey, newRefreshToken, 1, TimeUnit.MINUTES);
-
-        return new AuthResponse(accessToken, newRefreshToken);
+        return generateAndSaveToken(user);
     }
+
+    @NotNull
+    private AuthResponse generateAndSaveToken(User user) {
+
+        String refreshTokenKey = REFRESH_TOKEN_PREFIX + user.getId();
+
+        String accessToken = jwtUtil.generateAccessToken(user.getName(), user.getEmail(), user.getRole().name(), user.getId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
+
+        redisTemplate.opsForValue().set(refreshTokenKey, refreshToken.substring(7), 14, TimeUnit.DAYS);
+
+        return new AuthResponse(accessToken, refreshToken);
+    }
+
 }
 

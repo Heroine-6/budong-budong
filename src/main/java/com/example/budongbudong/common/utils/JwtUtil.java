@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.Calendar;
 import java.util.Date;
 
 @Slf4j
@@ -20,30 +19,14 @@ import java.util.Date;
 public class JwtUtil {
 
     public static final String BEARER_PREFIX = "Bearer ";
-    public static final long TOKEN_TIME = 24 * 60 * 60 * 1000L;
+    public static final long ACCESS_TOKEN_TIME = 24 * 60 * 60 * 1000L;
+    public static final long REFRESH_TOKEN_TIME = 14 * 24 * 60 * 60 * 1000L;
 
     @Value("${JWT_SECRET_KEY}")
     private String secretKeyString;
 
     private SecretKey key;
     private JwtParser parser;
-
-    /**
-     * 토큰 만료기간 지정
-     */
-    private static Date createExpiredDate(boolean isAccessToken) {
-
-        Calendar c = Calendar.getInstance();
-
-        // TODO: 시간 조정
-        if (isAccessToken) {
-            c.add(Calendar.SECOND, 20);
-        } else {
-            c.add(Calendar.MINUTE, 1);
-        }
-
-        return c.getTime();
-    }
 
     @PostConstruct
     public void init() {
@@ -64,7 +47,7 @@ public class JwtUtil {
                 .claim("userEmail", userEmail)
                 .claim("userRole", userRole)
                 .issuedAt(now)
-                .expiration(createExpiredDate(true))
+                .expiration(new Date(now.getTime() + ACCESS_TOKEN_TIME))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
@@ -75,7 +58,7 @@ public class JwtUtil {
         return BEARER_PREFIX + Jwts.builder()
                 .subject(userId.toString())
                 .issuedAt(now)
-                .expiration(createExpiredDate(false))
+                .expiration(new Date(now.getTime() + REFRESH_TOKEN_TIME))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
