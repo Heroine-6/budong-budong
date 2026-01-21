@@ -55,6 +55,12 @@ public class AuctionService {
             throw new CustomException(ErrorCode.INVALID_AUCTION_PERIOD);
         }
 
+        LocalDateTime maxEndedAt = startedAt.plusDays(7);
+
+        if (endedAt.isAfter(maxEndedAt)) {
+            throw new CustomException(ErrorCode.MAX_AUCTION_PERIOD_EXCEEDED);
+        }
+
         Auction auction = Auction.create(
                 property,
                 startPrice,
