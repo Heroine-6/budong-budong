@@ -2,8 +2,10 @@ package com.example.budongbudong.domain.property.controller;
 
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.*;
+import com.example.budongbudong.common.storage.PresignedUrlInfo;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
+import com.example.budongbudong.domain.property.dto.request.PresignedUrlRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.service.*;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class PropertyController {
 
     private final PropertyService propertyService;
+    private final PropertyImagePresignService propertyImagePresignService;
     private final PropertySyncService propertySyncService;
     private final PropertySearchService propertySearchService;
 
@@ -33,11 +36,20 @@ public class PropertyController {
     public ResponseEntity<GlobalResponse<Void>> createProperty(
             @Valid @ModelAttribute CreatePropertyRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam(value = "imageUrls", required = false) List<String> imageUrls,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        propertyService.createProperty(request, images, authUser.getUserId());
+        propertyService.createProperty(request, images, imageUrls, authUser.getUserId());
 
         return GlobalResponse.created(null);
+    }
+
+    @PostMapping("/images/presign")
+    public ResponseEntity<GlobalResponse<List<PresignedUrlInfo>>> issuePresignedUrls(
+            @Valid @RequestBody PresignedUrlRequest request
+    ) {
+        List<PresignedUrlInfo> response = propertyImagePresignService.issuePresignedUrls(request);
+        return GlobalResponse.ok(response);
     }
 
     @GetMapping
