@@ -113,6 +113,7 @@ public class PropertyController {
 
     @PostMapping("/sync")
     public ResponseEntity<GlobalResponse<Void>> syncAllProperties() {
+
         propertySyncService.syncAllProperties();
         return GlobalResponse.noContent();
     }
