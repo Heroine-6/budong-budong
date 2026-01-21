@@ -165,9 +165,6 @@ class BidServiceConcurrencyTest {
         executorService.shutdown();
 
         // Then
-//        assertThat(success.get()).isEqualTo(userNum);
-//        assertThat(fail.get()).isEqualTo(0);
-
         List<Bid> bids = bidRepository.findAllByAuctionId(auctionId, Pageable.unpaged()).getContent();
 
         long highestCount = bids.stream().filter(Bid::isHighest).count();

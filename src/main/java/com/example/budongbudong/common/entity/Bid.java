@@ -53,6 +53,4 @@ public class Bid extends BaseEntity {
     public void changeStatus(BidStatus status) {
         this.status = status;
     }
-
-    public static Bid create;
 }
