@@ -66,6 +66,7 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
                 set b.isHighest = false, b.status = 'OUTBID'
                 where b.auction.id = :auctionId
                 and b.isHighest = true
+                and b.isDeleted = false
            """)
     void unmarkHighestAndOutbidByAuctionId(@Param("auctionId") Long auctionId);
 
