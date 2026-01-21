@@ -4,6 +4,7 @@ import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.utils.JwtUtil;
+import com.example.budongbudong.domain.auth.dto.request.ReissueAccessTokenRequest;
 import com.example.budongbudong.domain.auth.dto.request.SignInRequest;
 import com.example.budongbudong.domain.auth.dto.request.SignUpRequest;
 import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
@@ -23,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final String REFRESH_TOKEN_PREFIX = "refresh-token:";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -40,12 +43,10 @@ public class AuthService {
 
         redisTemplate.delete(verifiedKey);
 
-        String userEmail = request.getEmail();
-
-        userRepository.validateEmailNotExists(userEmail);
+        userRepository.validateEmailNotExists(request.getEmail());
 
         User user = User.create(
-                userEmail,
+                request.getEmail(),
                 request.getName(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getPhone(),
@@ -55,9 +56,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getName(), userEmail, user.getRole().name(), user.getId());
-
-        return new AuthResponse(token);
+        return generateAndSaveToken(user);
     }
 
     @Transactional
@@ -72,9 +71,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 
-        String token = jwtUtil.generateToken(user.getName(), user.getEmail(), user.getRole().name(), user.getId());
-
-        return new AuthResponse(token);
+        return generateAndSaveToken(user);
     }
 
     public void verifyAuthCode(String toNumber, String inputCode) {
@@ -90,7 +87,6 @@ public class AuthService {
             throw new CustomException(ErrorCode.SMS_CODE_MISMATCH);
         }
 
-
         redisTemplate.delete(redisKey);
 
         log.info("[AUTH] 인증번호 검증 성공 - key: {}", redisKey);
@@ -98,5 +94,40 @@ public class AuthService {
         String verifiedKey = "SMS:VERIFIED:" + toNumber;
         redisTemplate.opsForValue().set(verifiedKey, "true", 10, TimeUnit.MINUTES);
     }
+
+    @Transactional(readOnly = true)
+    public AuthResponse reissueAccessToken(ReissueAccessTokenRequest request) {
+
+        String refreshToken = request.getRefreshToken();
+
+        jwtUtil.validateToken(refreshToken);
+
+        Long userId = jwtUtil.extractUserId(refreshToken);
+
+        String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
+        String currentRefreshToken = redisTemplate.opsForValue().get(refreshTokenKey);
+
+        if (currentRefreshToken == null || !currentRefreshToken.equals(refreshToken)) {
+            redisTemplate.delete(refreshTokenKey);
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        }
+
+        User user = userRepository.getByIdOrThrow(userId);
+
+        return generateAndSaveToken(user);
+    }
+
+    private AuthResponse generateAndSaveToken(User user) {
+
+        String refreshTokenKey = REFRESH_TOKEN_PREFIX + user.getId();
+
+        String accessToken = jwtUtil.generateAccessToken(user.getName(), user.getEmail(), user.getRole().name(), user.getId());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
+
+        redisTemplate.opsForValue().set(refreshTokenKey, refreshToken.substring(7), 14, TimeUnit.DAYS);
+
+        return new AuthResponse(accessToken, refreshToken);
+    }
+
 }
 

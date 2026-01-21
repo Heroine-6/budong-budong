@@ -1,5 +1,7 @@
 package com.example.budongbudong.common.utils;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,7 +18,8 @@ import java.util.Date;
 public class JwtUtil {
 
     public static final String BEARER_PREFIX = "Bearer ";
-    public static final long TOKEN_TIME = 24 * 60 * 60 * 1000L;
+    public static final long ACCESS_TOKEN_TIME = 24 * 60 * 60 * 1000L;
+    public static final long REFRESH_TOKEN_TIME = 14 * 24 * 60 * 60 * 1000L;
 
     @Value("${JWT_SECRET_KEY}")
     private String secretKeyString;
@@ -34,7 +37,7 @@ public class JwtUtil {
                 .build();
     }
 
-    public String generateToken(String username, String userEmail, String userRole,Long userId) {
+    public String generateAccessToken(String username, String userEmail, String userRole, Long userId) {
 
         Date now = new Date();
         return BEARER_PREFIX + Jwts.builder()
@@ -43,21 +46,30 @@ public class JwtUtil {
                 .claim("userEmail", userEmail)
                 .claim("userRole", userRole)
                 .issuedAt(now)
-                .expiration(new Date(now.getTime() + TOKEN_TIME))
+                .expiration(new Date(now.getTime() + ACCESS_TOKEN_TIME))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    public String generateRefreshToken(Long userId) {
 
-        if (token == null || token.isBlank()) return false;
+        Date now = new Date();
+        return BEARER_PREFIX + Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + REFRESH_TOKEN_TIME))
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public void validateToken(String token) {
 
         try {
             parser.parseSignedClaims(token);
-            return true;
+        } catch (ExpiredJwtException expired) {
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
-            log.debug("Invalid JWT: {}", e.toString());
-            return false;
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
     }
 

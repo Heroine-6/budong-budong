@@ -1,17 +1,17 @@
 package com.example.budongbudong.domain.auth.controller;
 
 import com.example.budongbudong.common.response.GlobalResponse;
-import com.example.budongbudong.domain.auth.dto.request.SignInRequest;
-import com.example.budongbudong.domain.auth.dto.request.SmsSendRequest;
-import com.example.budongbudong.domain.auth.dto.request.SmsVerifyRequest;
-import com.example.budongbudong.domain.auth.service.AuthService;
-import com.example.budongbudong.domain.auth.dto.request.SignUpRequest;
+import com.example.budongbudong.domain.auth.dto.request.*;
 import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
+import com.example.budongbudong.domain.auth.service.AuthService;
 import com.example.budongbudong.domain.auth.service.SmsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -49,6 +49,14 @@ public class AuthController {
     public ResponseEntity<GlobalResponse<AuthResponse>> signIn(@Valid @RequestBody SignInRequest request) {
 
         AuthResponse response = authService.signIn(request);
+
+        return GlobalResponse.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<GlobalResponse<AuthResponse>> reissueAccessToken(@Valid @RequestBody ReissueAccessTokenRequest request) {
+
+        AuthResponse response = authService.reissueAccessToken(request);
 
         return GlobalResponse.ok(response);
     }
