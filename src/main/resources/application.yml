@@ -30,6 +30,9 @@ spring:
       host: localhost
       port: 6379
 
+  elasticsearch:
+    uris: ${ELASTIC_SEARCH}
+
 external:
   api:
     service-key: ${API_SERVICE_KEY}

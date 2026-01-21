@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.property.dto.response;
 
-import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
+import com.example.budongbudong.domain.property.document.PropertySearchDocument;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 
 @Getter
 @RequiredArgsConstructor
-public class ReadAllPropertyResponse {
+public class SearchPropertyResponse {
 
     private final Long id;
     private final String name;
@@ -24,18 +24,20 @@ public class ReadAllPropertyResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuctionResponse auction;
 
-    public static ReadAllPropertyResponse from(Property property, AuctionResponse auction, String thumbnailImage) {
+    public static SearchPropertyResponse from(PropertySearchDocument document) {
 
-        return  new ReadAllPropertyResponse(
-                property.getId(),
-                property.getName(),
-                property.getAddress(),
-                property.getType(),
-                property.getDescription(),
-                property.getSupplyArea(),
-                property.getPrivateArea(),
-                thumbnailImage,
-                auction
+        return new SearchPropertyResponse(
+                document.getId(),
+                document.getName(),
+                document.getAddress(),
+                document.getType(),
+                document.getDescription(),
+                document.getSupplyArea(),
+                document.getPrivateArea(),
+                document.getThumbnailImage(),
+                document.getAuction() != null
+                        ? AuctionResponse.from(document.getAuction())
+                        : null
         );
     }
 }
