@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: budong-budong
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/budongbudong_test?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 0000
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
+  config:
+    import: optional:file:.env[.properties]
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+external:
+  api:
+    service-key: ${API_SERVICE_KEY}
+
+coolsms:
+  api-key: ${COOLSMS_API_KEY}
+  api-secret: ${COOLSMS_API_SECRET}
+  from-number: ${COOLSMS_FROM_NUMBER}
