@@ -109,12 +109,7 @@ public class AuctionService {
         // 총 입찰자 수
         int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
 
-        return new AuctionInfoResponse(
-                auction.getStartPrice(),
-                highestPrice,
-                totalBidders,
-                auction.getEndedAt()
-        );
+        return AuctionInfoResponse.from(auction, highestPrice, totalBidders);
     }
 
     /**
