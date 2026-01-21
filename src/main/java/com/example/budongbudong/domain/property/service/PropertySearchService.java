@@ -23,11 +23,16 @@ public class PropertySearchService {
     private final ElasticsearchOperations operations;
     private final PropertySearchQueryBuilder queryBuilder;
 
+    /**
+     * Elasticsearch 기반 매물 검색
+     * - count 조회 없이 Slice 방식으로 페이징 처리
+     * - 검색 조건에 따라 동적 Query 생성
+     */
     public CustomSliceResponse<SearchPropertyResponse> search(SearchPropertyCond cond, Pageable pageable){
 
         long t0 = System.currentTimeMillis();
 
-        // 검색 Query 생성
+        // 검색 조건(SearchPropertyCond)을 기반으로 Elasticsearch Query 생성
         Query query = queryBuilder.build(cond);
         long t1 = System.currentTimeMillis();
 
@@ -41,7 +46,7 @@ public class PropertySearchService {
         SearchHits<PropertySearchDocument> searchHits = operations.search(nativeQuery, PropertySearchDocument.class);
         long t2 = System.currentTimeMillis();
 
-        // 결과 리스트 뽑아옴
+        // SearchHits에서 실제 Document만 추출
         List<PropertySearchDocument> documents = searchHits.getSearchHits().stream()
                 .map(SearchHit::getContent)
                 .toList();
@@ -64,7 +69,7 @@ public class PropertySearchService {
                 cond
         );
 
-        return CustomSliceResponse.from(content,pageable.getPageNumber(),requestedSize,hasNext);
+        return CustomSliceResponse.from(content,pageable.getPageSize(), pageable.getPageNumber(), hasNext);
     }
 }
 

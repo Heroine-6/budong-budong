@@ -9,6 +9,10 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.time.Year;
 
+/**
+ * 매물 검색 요청 조건 DTO
+ * - null 또는 비어있는 값은 검색 조건에서 제외
+ */
 @Getter
 @Setter
 @NoArgsConstructor
