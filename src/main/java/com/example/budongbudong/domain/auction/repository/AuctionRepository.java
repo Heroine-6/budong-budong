@@ -33,7 +33,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({
-            @QueryHint(name = "jarkarta.persistence.lock.timeout", value = "2000")
+            @QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")
     })
     @Query("""
                 select a
