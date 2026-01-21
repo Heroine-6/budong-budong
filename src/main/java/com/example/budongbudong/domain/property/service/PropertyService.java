@@ -1,10 +1,10 @@
 package com.example.budongbudong.domain.property.service;
 
-import com.example.budongbudong.common.entity.Property;
-import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.property.client.AptClient;
@@ -17,6 +17,7 @@ import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.lawdcode.LawdCodeService;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
+import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
@@ -26,14 +27,12 @@ import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 @Service
@@ -74,10 +73,10 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public CustomPageResponse<ReadAllPropertyResponse> getAllPropertyList(Pageable pageable) {
+    public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList( Pageable pageable) {
 
-        Page<ReadAllPropertyResponse> page = propertyRepository.findAllProperties(pageable);
-        return CustomPageResponse.from(page);
+        Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(pageable);
+        return CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
     }
 
     @Transactional(readOnly = true)

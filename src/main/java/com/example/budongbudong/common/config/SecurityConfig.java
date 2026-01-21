@@ -109,7 +109,10 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**"
-                ).permitAll();
+                ).permitAll()
+
+                // Elasticsearch 동기화
+                .requestMatchers("api/v1/properties/sync").permitAll();
     }
 
     private void propertyAuth(

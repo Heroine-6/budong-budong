@@ -3,10 +3,12 @@ package com.example.budongbudong.domain.property.repository;
 import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PropertyRepository extends JpaRepository<Property, Long>, QPropertyRepository {
@@ -30,4 +32,13 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, QProp
         return findByIdAndIsDeletedFalse(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
     }
+
+    @Query("""
+            select p from Property p
+            where p.id > :lastId
+              and p.isDeleted = false
+            order by p.id asc
+    """)
+    List<Property> findNextBatchNotDeleted(@Param("lastId") Long lastId, Pageable pageable);
+
 }
