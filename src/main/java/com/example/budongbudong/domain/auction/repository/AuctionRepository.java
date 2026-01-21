@@ -4,9 +4,9 @@ import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -30,6 +30,17 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             LocalDateTime time
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({
+            @QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")
+    })
+    @Query("""
+                select a
+                from Auction a
+                where a.id = :auctionId
+            """)
+    Optional<Auction> findByIdForUpdate(@Param("auctionId") Long auctionId);
+
     @Modifying
     @Query("""
                 update Auction a
@@ -52,8 +63,9 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         }
     }
 
-    default Auction getOpenAuctionOrThrow(Long auctionId) {
-        Auction auction = getByIdOrThrow(auctionId);
+    default Auction getOpenAuctionForUpdateOrThrow(Long auctionId) {
+        Auction auction = findByIdForUpdate(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
 
         if (auction.getStatus() != AuctionStatus.OPEN) {
             throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
@@ -61,6 +73,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
         return auction;
     }
+
 
     default void validateExistsOrThrow(Long auctionId) {
         if (!existsById(auctionId)) {

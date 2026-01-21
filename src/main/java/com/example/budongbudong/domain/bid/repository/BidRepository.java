@@ -7,6 +7,7 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -50,6 +51,24 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
                 where b.auction.id = :auctionId
             """)
     int countTotalBidders(Long auctionId);
+
+    @Query("""
+                select max(b.price)
+                from Bid b
+                where b.auction.id = :auctionId
+                and b.isDeleted = false
+            """)
+    Long findMaxPriceByAuctionId(Long auctionId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+                update Bid b
+                set b.isHighest = false, b.status = 'OUTBID'
+                where b.auction.id = :auctionId
+                and b.isHighest = true
+                and b.isDeleted = false
+           """)
+    void unmarkHighestAndOutbidByAuctionId(@Param("auctionId") Long auctionId);
 
     List<Bid> findAllByAuctionOrderByPriceDesc(Auction auction);
 
