@@ -1,9 +1,6 @@
 package com.example.budongbudong.common.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -70,6 +67,9 @@ public class JwtUtil {
         try {
             parser.parseSignedClaims(token);
             return true;
+        } catch (ExpiredJwtException expired) {
+            log.debug("expired JWT: {}", expired.toString());
+            return false;
         } catch (JwtException | IllegalArgumentException e) {
             log.debug("Invalid JWT: {}", e.toString());
             return false;
