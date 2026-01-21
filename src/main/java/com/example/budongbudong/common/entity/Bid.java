@@ -39,10 +39,10 @@ public class Bid extends BaseEntity {
         this.auction = auction;
         this.price = price;
         this.status = BidStatus.WINNING;
-        this.isHighest = true;
+        this.isHighest = false;
     }
 
-    public void markAsHighest() {
+    public void markHighest() {
         this.isHighest = true;
     }
 
@@ -53,5 +53,4 @@ public class Bid extends BaseEntity {
     public void changeStatus(BidStatus status) {
         this.status = status;
     }
-
 }
