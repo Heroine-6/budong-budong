@@ -5,7 +5,6 @@ import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -71,10 +70,7 @@ public class PropertySearchQueryBuilder {
 
     private Query auctionStatusEq(AuctionStatus status) {
         return status != null
-                ? Query.of(q -> q.term(t -> t
-                .field("auction.status")
-                .value(status.name())
-        ))
+                ? Query.of(q -> q.term(t -> t.field("auction.status").value(status.name())))
                 : null;
     }
 
