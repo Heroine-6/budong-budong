@@ -12,7 +12,6 @@ import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -96,7 +95,7 @@ public class AuthService {
         redisTemplate.opsForValue().set(verifiedKey, "true", 10, TimeUnit.MINUTES);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthResponse reissueAccessToken(ReissueAccessTokenRequest request) {
 
         String refreshToken = request.getRefreshToken();
@@ -113,12 +112,11 @@ public class AuthService {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
 
-        User user = userRepository.getByIdOrThrow(jwtUtil.extractUserId(refreshToken));
+        User user = userRepository.getByIdOrThrow(userId);
 
         return generateAndSaveToken(user);
     }
 
-    @NotNull
     private AuthResponse generateAndSaveToken(User user) {
 
         String refreshTokenKey = REFRESH_TOKEN_PREFIX + user.getId();
