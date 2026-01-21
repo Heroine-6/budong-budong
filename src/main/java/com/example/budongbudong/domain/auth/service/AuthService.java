@@ -101,9 +101,7 @@ public class AuthService {
 
         String refreshToken = request.getRefreshToken();
 
-        if (!jwtUtil.validateToken(refreshToken)) {
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_INVALID);
-        }
+        jwtUtil.validateToken(refreshToken);
 
         Long userId = jwtUtil.extractUserId(refreshToken);
 
@@ -112,7 +110,7 @@ public class AuthService {
 
         if (currentRefreshToken == null || !currentRefreshToken.equals(refreshToken)) {
             redisTemplate.delete(refreshTokenKey);
-            throw new CustomException(ErrorCode.REFRESH_TOKEN_INVALID);
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
 
         User user = userRepository.getByIdOrThrow(jwtUtil.extractUserId(refreshToken));

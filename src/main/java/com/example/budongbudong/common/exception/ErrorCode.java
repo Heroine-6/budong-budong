@@ -26,9 +26,8 @@ public enum ErrorCode {
     LOGIN_REQUIRED(401, "로그인한 유저만 사용할 수 있는 기능입니다"),
     LOGIN_UNAUTHORIZED(401, "아이디 또는 비밀번호가 올바르지 않습니다."),
     SMS_VERIFICATION_REQUIRED(401, "휴대전화 인증을 먼저 완료해주세요."),
-    ACCESS_TOKEN_EXPIRED(401, "Access Token이 만료되었습니다."),
-    ACCESS_TOKEN_INVALID(401, "Access Token이 유효하지 않습니다."),
-    REFRESH_TOKEN_INVALID(401, "Refresh Token이 유효하지 않습니다."),
+    TOKEN_EXPIRED(401, "Token이 만료되었습니다."),
+    TOKEN_INVALID(401, "Token이 유효하지 않습니다."),
 
     //------400-----------------------
     INVALID_ADDRESS(400, "주소에서 지역코드를 찾을 수 없습니다. 시/군/구를 포함한 전체 주소를 입력해주세요."),

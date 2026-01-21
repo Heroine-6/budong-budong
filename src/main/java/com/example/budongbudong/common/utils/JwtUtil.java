@@ -1,5 +1,7 @@
 package com.example.budongbudong.common.utils;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -60,19 +62,14 @@ public class JwtUtil {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-
-        if (token == null || token.isBlank()) return false;
+    public void validateToken(String token) {
 
         try {
             parser.parseSignedClaims(token);
-            return true;
         } catch (ExpiredJwtException expired) {
-            log.debug("expired JWT: {}", expired.toString());
-            return false;
+            throw new CustomException(ErrorCode.TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
-            log.debug("Invalid JWT: {}", e.toString());
-            return false;
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
     }
 
