@@ -20,12 +20,12 @@ public class CreateAuctionResponse {
     private final LocalDateTime endedAt;
     private final LocalDateTime createdAt;
 
-    public static CreateAuctionResponse from(Auction auction, Long minBidIncrement) {
+    public static CreateAuctionResponse from(Auction auction) {
         return new CreateAuctionResponse(
                 auction.getId(),
                 auction.getProperty().getId(),
                 auction.getStartPrice(),
-                minBidIncrement,
+                auction.getMinBidIncrement(),
                 auction.getStatus(),
                 auction.getStartedAt(),
                 auction.getEndedAt(),

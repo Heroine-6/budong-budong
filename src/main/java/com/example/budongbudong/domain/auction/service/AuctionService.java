@@ -70,8 +70,7 @@ public class AuctionService {
 
         auctionRepository.save(auction);
 
-        Long minBidIncrement = auction.getMinBidIncrement();
-        return CreateAuctionResponse.from(auction, minBidIncrement);
+        return CreateAuctionResponse.from(auction);
     }
 
     /**
