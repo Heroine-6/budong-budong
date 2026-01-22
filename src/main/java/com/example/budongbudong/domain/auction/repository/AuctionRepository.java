@@ -97,7 +97,9 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findAllByPropertyIds(@Param("propertyIds") List<Long> propertyIds);
 
     @Query("""
-            select a.endedAt from Auction a where a.id = :auctionId
+            select a.endedAt
+            from Auction a 
+            where a.id = :auctionId
         """)
     Optional<LocalDateTime> findEndedAtById(@Param("auctionId") Long auctionId);
 
