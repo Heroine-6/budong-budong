@@ -20,16 +20,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     boolean existsByPropertyIdAndStatusNotIn(Long propertyId, Iterable<AuctionStatus> statuses);
 
-    List<Auction> findByStatusAndStartedAtLessThanEqual(
-            AuctionStatus status,
-            LocalDateTime time
-    );
-
-    List<Auction> findByStatusAndEndedAtLessThanEqual(
-            AuctionStatus status,
-            LocalDateTime time
-    );
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({
             @QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")
@@ -40,15 +30,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 where a.id = :auctionId
             """)
     Optional<Auction> findByIdForUpdate(@Param("auctionId") Long auctionId);
-
-    @Modifying
-    @Query("""
-                update Auction a
-                set a.status = 'CLOSED'
-                where a.id = :auctionId
-                and a.status = 'OPEN'
-            """)
-    int closeIfOpen(@Param("auctionId") Long auctionId);
 
     default Auction getByIdOrThrow(Long auctionId) {
         return findById(auctionId)
@@ -103,9 +84,35 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     }
 
     @Query("""
-            select a from Auction a
+            select a
+            from Auction a
             where a.property.id in :propertyIds
         """)
     List<Auction> findAllByPropertyIds(@Param("propertyIds") List<Long> propertyIds);
 
+    @Modifying
+    @Query("""
+            update Auction a
+            set a.status = 'OPEN'
+            where a.status = 'SCHEDULED'
+              and a.startedAt <= :today
+        """)
+    int openScheduled(LocalDateTime today);
+
+    @Query("""
+            select a.id
+            from Auction a
+            where a.status = 'OPEN'
+              and a.endedAt < :today
+        """)
+    List<Long> findEndedAuctionIds(LocalDateTime today);
+
+    @Modifying
+    @Query("""
+            update Auction a
+            set a.status = 'CLOSED'
+            where a.id in :ids
+              and a.status = 'OPEN'
+        """)
+    int closeOpened(List<Long> ids);
 }

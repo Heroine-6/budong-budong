@@ -26,7 +26,7 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
 
     Page<Bid> findAllByAuctionId(Long auctionId, Pageable pageable);
 
-    Optional<Bid> findTopByAuctionOrderByPriceDescCreatedAtAsc(Auction auction);
+    Optional<Bid> findTopByAuctionIdOrderByPriceDescCreatedAtAsc(Long auctionId);
 
     // 최고 입찰가 조회 (논리 삭제 제외)
     @Query("""
