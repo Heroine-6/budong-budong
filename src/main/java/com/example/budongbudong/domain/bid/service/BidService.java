@@ -54,9 +54,9 @@ public class BidService {
         boolean acquired = false;
 
         try {
-            acquired = lock.tryLock(waitTime, 5, TimeUnit.SECONDS);
-
             log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
+
+            acquired = lock.tryLock(waitTime, 5, TimeUnit.SECONDS);
 
             if (!acquired) {
                 log.info("[{}] LOCK_FAILED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
