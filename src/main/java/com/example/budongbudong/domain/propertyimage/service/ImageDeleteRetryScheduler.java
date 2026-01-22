@@ -47,7 +47,7 @@ public class ImageDeleteRetryScheduler {
                 int remaining = parsed.remaining() - 1;
                 if (remaining <= 0) {
                     log.error("[IMAGE] 삭제 재시도 횟수 초과 - url={}", parsed.url(), e);
-                    return;
+                    continue;
                 }
 
                 // 실패하면 횟수를 줄여 다시 큐에 넣는다.
