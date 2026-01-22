@@ -53,7 +53,7 @@ public class BidTxService {
                 : currentMaxPrice + minBidIncrement;
 
         if (bidPrice < minimumRequired) {
-            log.info("[{}] FAIL_TOO_LOW auctionId={} bid={} minimum={}", th, auctionId, bidPrice, minimumRequired);
+            log.info("[{}] 최소입찰미달 auctionId={} bid={} minimum={}", th, auctionId, bidPrice, minimumRequired);
             throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
         }
 
