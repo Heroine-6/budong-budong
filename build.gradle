@@ -75,6 +75,9 @@ dependencies {
 
     // AWS S3 (Presigned URL)
     implementation 'software.amazon.awssdk:s3:2.25.27'
+
+    // 서버 health check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 tasks.named('test') {
