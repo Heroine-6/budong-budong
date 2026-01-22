@@ -1,86 +1,83 @@
 package com.example.budongbudong.domain.auction.service;
 
-import com.example.budongbudong.common.entity.Auction;
-import com.example.budongbudong.common.entity.AuctionWinner;
-import com.example.budongbudong.common.entity.Bid;
-import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.auctionwinner.repository.AuctionWinnerRepository;
-import com.example.budongbudong.domain.bid.enums.BidStatus;
-import com.example.budongbudong.domain.bid.repository.BidRepository;
+import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
+/**
+ *  자정 기준 경매 상태 전환 책임을 가지는 서비스
+ *  - 시작 시간 도달 → SCHEDULED → OPEN
+ *  - 종료 시간 도달 → OPEN → ENDED
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuctionSchedulerService {
 
     private final AuctionRepository auctionRepository;
-    private final BidRepository bidRepository;
-    private final AuctionWinnerRepository auctionWinnerRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
 
     /**
-     * 시작 시간이 된 경매 OPEN 처리
+     * 처리 순서
+     *  1. 시작 도달한 경매 OPEN
+     *  2. 종료일이 지난 경매 CLOSED
+     *  3. CLOSED 된 경매에 대해 이벤트 발행
      */
     @Transactional
-    public void openScheduledAction() {
+    public void run() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime todayStart = today.atStartOfDay();
 
-        LocalDateTime now = LocalDateTime.now();
+        openScheduledAuctions(todayStart);
+        closeOpenedAuctions(todayStart);
 
-        List<Auction> auctions = auctionRepository.findByStatusAndStartedAtLessThanEqual(
-                AuctionStatus.SCHEDULED, now
-        );
-        for (Auction auction : auctions) {
-            auction.updateStatus(AuctionStatus.OPEN);
-        }
+        //벌크 연산은 영속성 컨텍스트 우회, 이후 조회 일관성을 위해 명시적으로 초기화
+        entityManager.flush();
+        entityManager.clear();
     }
 
     /**
-     * 종료 시간이 된 경매 CLOSED + 낙찰/유찰 처리
+     * 시작 도달한 경매를 OPEN 상태로 전환
+     *  - 벌크 업데이트 사용
+     *  - 단순 상태 전환 전용
      */
-    @Transactional
-    public void closeEndedAction() {
+    private void openScheduledAuctions(LocalDateTime today) {
 
-        LocalDateTime now = LocalDateTime.now();
-
-        List<Auction> auctions = auctionRepository.findByStatusAndEndedAtLessThanEqual(
-                AuctionStatus.OPEN, now
-        );
-        for (Auction auction : auctions) {
-
-            int updatedAuctionNum = auctionRepository.closeIfOpen(auction.getId());
-            log.info("auctionId={}, closeIfOpen updated={}", auction.getId(), updatedAuctionNum);
-
-            if (updatedAuctionNum == 0) {
-                continue;
-            }
-
-            if (auctionWinnerRepository.existsByAuctionId(auction.getId())) {
-                log.warn("auctionId={} already has winner. skip", auction.getId());
-                continue;
-            }
-
-            Optional<Bid> highestBid = bidRepository.findTopByAuctionOrderByPriceDescCreatedAtAsc(auction);
-
-            if (highestBid.isPresent()) {
-                Bid bid = highestBid.get();
-
-                auctionWinnerRepository.save(
-                        AuctionWinner.create(
-                                auction,
-                                bid.getUser(),
-                                bid.getPrice()
-                        )
-                );
-                bid.changeStatus(BidStatus.WON);
-            }
-        }
+        int opened = auctionRepository.openScheduled(today);
+        log.info("[경매 OPEN 처리] opened={}",opened);
     }
+
+    /**
+     * 종료일이 지난 경매를 CLOSED 상태로 전환하고,
+     * 상태 전환이 발생한 경매에 대해 종료 이벤트를 발행
+     *  - 종료 대상 ID를 먼저 조회
+     *  - 벌크 업데이트로 상태 전환
+     *  - 실제 전환된 대상만 이벤트 발행
+     */
+    private void closeOpenedAuctions(LocalDateTime today) {
+
+        List<Long> willCloseAuctionIds = auctionRepository.findEndedAuctionIds(today);
+
+        if(willCloseAuctionIds.isEmpty()){
+            log.info("[Scheduling] CLOSED 대상 없음");
+            return;
+        }
+
+        int closed = auctionRepository.closeOpened(willCloseAuctionIds);
+        log.info("[Scheduling] CLOSE 처리 완료 - count={}",closed);
+
+        //이벤트 발행
+        willCloseAuctionIds.forEach(id->eventPublisher.publishEvent(new AuctionClosedEvent(id)));
+    }
+
 }
