@@ -54,7 +54,7 @@ public class ImageDeleteRetryScheduler {
                 String nextPayload = remaining + "|" + parsed.url();
                 log.warn("[IMAGE] 삭제 재시도 실패 - url={}, remaining={}", parsed.url(), remaining, e);
                 redisTemplate.opsForList().rightPush(StorageRetryKeys.S3_DELETE_RETRY, nextPayload);
-                return;
+                continue;
             }
         }
     }

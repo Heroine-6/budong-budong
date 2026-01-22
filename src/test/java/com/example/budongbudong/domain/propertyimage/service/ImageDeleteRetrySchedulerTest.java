@@ -74,6 +74,25 @@ class ImageDeleteRetrySchedulerTest {
     }
 
     @Test
+    @DisplayName("삭제 실패 후 재삽입하더라도 다음 항목을 계속 처리한다")
+    void retryDeletes_continueAfterRequeue() {
+        // given
+        String failedUrl = "https://s3.amazonaws.com/bucket/failed.jpg";
+        String okUrl = "https://s3.amazonaws.com/bucket/ok-next.jpg";
+        when(listOperations.leftPop(StorageRetryKeys.S3_DELETE_RETRY))
+                .thenReturn("3|" + failedUrl)
+                .thenReturn("3|" + okUrl)
+                .thenReturn(null);
+        doThrow(new RuntimeException("delete fail")).when(storageService).delete(failedUrl);
+
+        // when
+        scheduler.retryDeletes();
+
+        // then
+        verify(storageService).delete(okUrl);
+    }
+
+    @Test
     @DisplayName("삭제 성공 시 재삽입하지 않는다")
     void retryDeletes_noRequeueWhenDeleteSucceeds() {
         // given
