@@ -38,26 +38,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class BidServiceConcurrencyTest {
 
-    @Autowired
-    private BidService bidService;
-
-    @Autowired
-    private BidRepository bidRepository;
-
-    @Autowired
-    private AuctionRepository auctionRepository;
-
-    @Autowired
-    private AuctionWinnerRepository auctionWinnerRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PropertyRepository propertyRepository;
-
-    @Autowired
-    private PropertyImageRepository propertyImageRepository;
+    @Autowired private BidService bidService;
+    @Autowired private BidRepository bidRepository;
+    @Autowired private AuctionRepository auctionRepository;
+    @Autowired private AuctionWinnerRepository auctionWinnerRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private PropertyRepository propertyRepository;
+    @Autowired private PropertyImageRepository propertyImageRepository;
 
     private Long auctionId;
     private List<User> savedUsers;
@@ -82,13 +69,13 @@ class BidServiceConcurrencyTest {
         List<User> users = IntStream.rangeClosed(1, userNum)
                 .mapToObj(i ->
                         User.create(
-                                "user" + i + "-" + runId + "@test.com",
-                                "user" + i,
-                                "password",
-                                "010-0000-000" + i,
-                                "서울 어딘가",
-                                UserRole.GENERAL
-                        )).toList();
+                        "user" + i + "-" + runId + "@test.com",
+                        "user" + i,
+                        "password",
+                        "010-0000-000" + i,
+                        "서울 어딘가",
+                        UserRole.GENERAL
+                )).toList();
         savedUsers = userRepository.saveAll(users);
 
         Property property = Property.builder()
@@ -120,13 +107,43 @@ class BidServiceConcurrencyTest {
     }
 
     @Test
-    @DisplayName("동시 입찰 발생 시 비관적 락 실행")
-    void Pessimistic_Lock_Test() throws InterruptedException {
+    @DisplayName("마감 1시간 초과(wait=0)일 경우 동시 입찰 즉시 실패")
+    void LockWaitTime0_Test() throws InterruptedException {
 
         // Given
-        List<Long> userIds = savedUsers.stream()
-                .map(User::getId)
-                .toList();
+        updateAuctionEndedAt(auctionId, LocalDateTime.now().plusHours(2));
+
+        // When
+        ConcurrencyResult result = runConcurrentBids();
+
+        // Then
+        assertBidInvariants();
+
+        // 즉시 실패 발생 (환경에 따라 트랜잭션이 빨리 끝나 다음 요청이 성공하는 경우 고려)
+        assertThat(result.success()).isLessThan(userNum);
+        assertThat(result.fail()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("마감 1시간 이내(wait=2)일 경우 동시 입찰 대기 후 성공")
+    void LockWaitTime2_Test() throws InterruptedException {
+
+        // Given
+        updateAuctionEndedAt(auctionId, LocalDateTime.now().plusMinutes(30));
+
+        // When
+        ConcurrencyResult result = runConcurrentBids();
+
+        // Then
+        assertBidInvariants();
+
+        // 성공 횟수 1보다 많음 (입찰 금액이 현재 최고가보다 낮아 살패하는 경우 고려)
+        assertThat(result.success()).isGreaterThan(1);
+    }
+
+    private ConcurrencyResult runConcurrentBids() throws InterruptedException {
+
+        List<Long> userIds = savedUsers.stream().map(User::getId).toList();
 
         ExecutorService executorService = Executors.newFixedThreadPool(userNum);
         CountDownLatch ready = new CountDownLatch(userNum);
@@ -136,11 +153,9 @@ class BidServiceConcurrencyTest {
         AtomicInteger success = new AtomicInteger();
         AtomicInteger fail = new AtomicInteger();
 
-        // When
         for (int i = 0; i < userNum; i++) {
-
             final long userId = userIds.get(i);
-            final long bidPrice = 2000 + (i * 100);
+            final long bidPrice = 2000 + (i * 100L);
 
             executorService.execute(() -> {
                 ready.countDown();
@@ -164,16 +179,31 @@ class BidServiceConcurrencyTest {
         done.await();
         executorService.shutdown();
 
-        // Then
+        return new ConcurrencyResult(success.get(), fail.get());
+    }
+
+    private void assertBidInvariants() {
+
         List<Bid> bids = bidRepository.findAllByAuctionId(auctionId, Pageable.unpaged()).getContent();
 
+        // isHighest = true 1개인가 ?
         long highestCount = bids.stream().filter(Bid::isHighest).count();
         assertThat(highestCount).isEqualTo(1);
 
+        // isHighest = true 실제 최고가인가 ?
         long maxPrice = bids.stream().mapToLong(Bid::getPrice).max().orElseThrow();
-        assertThat(maxPrice).isEqualTo(2900);
-
         Bid highestBid = bids.stream().filter(Bid::isHighest).findFirst().orElseThrow();
         assertThat(highestBid.getPrice()).isEqualTo(maxPrice);
     }
+
+    private void updateAuctionEndedAt(Long auctionId, LocalDateTime newEndedAt) {
+
+        Auction auction = auctionRepository.findById(auctionId).orElseThrow();
+
+        ReflectionTestUtils.setField(auction, "endedAt", newEndedAt);
+
+        auctionRepository.saveAndFlush(auction);
+    }
+
+    private record ConcurrencyResult(int success, int fail) {}
 }

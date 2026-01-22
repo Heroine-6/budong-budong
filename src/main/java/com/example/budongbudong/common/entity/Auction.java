@@ -2,9 +2,7 @@ package com.example.budongbudong.common.entity;
 
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -37,6 +35,16 @@ public class Auction extends BaseEntity {
 
     @Column(name = "ended_at", nullable = false)
     private LocalDateTime endedAt;
+
+    @Builder(builderMethodName = "testBuilder")
+    public Auction(Long id, Property property, Long startPrice, AuctionStatus status,LocalDateTime startedAt, LocalDateTime endedAt) {
+        this.id = id;
+        this.property = property;
+        this.startPrice = startPrice;
+        this.status = status;
+        this.startedAt = startedAt;
+        this.endedAt = endedAt;
+    }
 
     public static Auction create(
             Property property,
