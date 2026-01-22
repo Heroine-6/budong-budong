@@ -9,7 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * 경매 종료 도메인 이벤트를 수신해 Redis Pub/Sub으로 외부에 전달하는 리스너
- * - DB 트랜잭션 커밋 이후(AFTER_COMMIT)에만 시ㅣㄹ행
+ * - DB 트랜잭션 커밋 이후(AFTER_COMMIT)에만 실행
  * - DB 상태와 메세지 불일치 방지
  */
 @Component
