@@ -14,18 +14,18 @@ public class CreateAuctionResponse {
     private final Long id;
     private final Long propertyId;
     private final Long startPrice;
-    private final Long bidPrice;
+    private final Long minBidIncrement;
     private final AuctionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime endedAt;
     private final LocalDateTime createdAt;
 
-    public static CreateAuctionResponse from(Auction auction, Long bidPrice) {
+    public static CreateAuctionResponse from(Auction auction, Long minBidIncrement) {
         return new CreateAuctionResponse(
                 auction.getId(),
                 auction.getProperty().getId(),
                 auction.getStartPrice(),
-                bidPrice,
+                minBidIncrement,
                 auction.getStatus(),
                 auction.getStartedAt(),
                 auction.getEndedAt(),

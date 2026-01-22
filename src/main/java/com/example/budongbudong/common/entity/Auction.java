@@ -25,6 +25,9 @@ public class Auction extends BaseEntity {
     @Column(name = "start_price", nullable = false)
     private Long startPrice;
 
+    @Column(name = "min_bid_increment", nullable = false)
+    private Long minBidIncrement;
+
     @Column(length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
@@ -44,10 +47,15 @@ public class Auction extends BaseEntity {
         Auction auction = new Auction();
         auction.property = property;
         auction.startPrice = startPrice;
+        auction.minBidIncrement = calculateMinBidIncrement(startPrice);
         auction.status = AuctionStatus.SCHEDULED;
         auction.startedAt = startedAt;
         auction.endedAt = endedAt;
         return auction;
+    }
+
+    private static Long calculateMinBidIncrement(Long startPrice) {
+        return (startPrice + 9) / 10;
     }
 
     public void updateStatus(AuctionStatus auctionStatus) {

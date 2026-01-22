@@ -70,8 +70,8 @@ public class AuctionService {
 
         auctionRepository.save(auction);
 
-        Long bidPrice = startPrice / 10;
-        return CreateAuctionResponse.from(auction, bidPrice);
+        Long minBidIncrement = auction.getMinBidIncrement();
+        return CreateAuctionResponse.from(auction, minBidIncrement);
     }
 
     /**
