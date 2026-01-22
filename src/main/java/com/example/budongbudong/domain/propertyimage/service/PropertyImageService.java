@@ -17,6 +17,17 @@ import java.util.List;
 @Slf4j
 public class PropertyImageService {
 
+    /**
+     * 이미지 실패 처리 흐름
+     * 1. 이미지 업로드/URL 저장 시작 -> DB 저장 중 예외 발생
+     * 2. 지금까지 업로드된 URL을 전부 순회하면서 삭제 시도
+     * 3. 삭제 실패는 로그로 기록
+     * 4. 원래 예외는 그대로 던짐 (트랜잭션 롤백)
+     *
+     * - 부분 실패 시 고아 파일 최소화
+     * - 다만 삭제도 실패할 수 있으니 그때는 로그만 남고 넘어갑니다.
+     */
+
     private final PropertyImageRepository propertyImageRepository;
     private final StorageService storageService;
 
@@ -26,18 +37,62 @@ public class PropertyImageService {
             return;
         }
 
-        for (MultipartFile image : images) {
-            String imageUrl = storageService.upload(image, "properties");
+        List<String> uploadedUrls = new java.util.ArrayList<>();
 
-            PropertyImage propertyImage = PropertyImage.builder()
-                    .property(property)
-                    .imageUrl(imageUrl)
-                    .build();
+        try {
+            for (MultipartFile image : images) {
+                String imageUrl = storageService.upload(image, "properties");
+                uploadedUrls.add(imageUrl);
 
-            propertyImageRepository.save(propertyImage);
+                PropertyImage propertyImage = PropertyImage.builder()
+                        .property(property)
+                        .imageUrl(imageUrl)
+                        .build();
 
-            // 매물 엔티티 쪽에도 이미지 추가 (양방향 연관관계 맞추기)
-            property.addImage(propertyImage);
+                propertyImageRepository.save(propertyImage);
+
+                // 매물 엔티티 쪽에도 이미지 추가 (양방향 연관관계 맞추기)
+                property.addImage(propertyImage);
+            }
+        } catch (Exception e) {
+            for (String url : uploadedUrls) {
+                try {
+                    storageService.delete(url);
+                } catch (Exception deleteError) {
+                    log.error("[IMAGE] 업로드 보상 삭제 실패 - url={}", url, deleteError);
+                }
+            }
+            throw e;
+        }
+    }
+
+    @Transactional
+    public void saveImageUrls(Property property, List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return;
+        }
+
+        List<String> uploadedUrls = new java.util.ArrayList<>(imageUrls);
+
+        try {
+            for (String imageUrl : imageUrls) {
+                PropertyImage propertyImage = PropertyImage.builder()
+                        .property(property)
+                        .imageUrl(imageUrl)
+                        .build();
+
+                propertyImageRepository.save(propertyImage);
+                property.addImage(propertyImage);
+            }
+        } catch (Exception e) {
+            for (String url : uploadedUrls) {
+                try {
+                    storageService.delete(url);
+                } catch (Exception deleteError) {
+                    log.error("[IMAGE] 업로드 보상 삭제 실패 - url={}", url, deleteError);
+                }
+            }
+            throw e;
         }
     }
 }

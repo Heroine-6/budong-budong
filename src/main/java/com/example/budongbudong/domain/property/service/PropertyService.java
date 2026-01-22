@@ -53,7 +53,7 @@ public class PropertyService {
     private String serviceKey;
 
     @Transactional
-    public void createProperty(CreatePropertyRequest request, List<MultipartFile> images, Long userId) {
+    public void createProperty(CreatePropertyRequest request, List<MultipartFile> images, List<String> imageUrls, Long userId) {
 
         User user = userRepository.getByIdOrThrow(userId);
 
@@ -69,7 +69,11 @@ public class PropertyService {
         // DB에 저장
         propertyRepository.save(property);
 
-        propertyImageService.saveImages(property, images);
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            propertyImageService.saveImageUrls(property, imageUrls);
+        } else {
+            propertyImageService.saveImages(property, images);
+        }
     }
 
     @Transactional(readOnly = true)
