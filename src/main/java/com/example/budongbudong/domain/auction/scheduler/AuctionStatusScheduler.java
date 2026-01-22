@@ -18,7 +18,7 @@ public class AuctionStatusScheduler {
 
     private final AuctionSchedulerService auctionSchedulerService;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 0 * * *") // 자정
     public void runMidnightBatch() {
         log.info("[AuctionStatusScheduler] 자정 경매 처리 시작");
         auctionSchedulerService.run();
