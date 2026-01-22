@@ -2,6 +2,7 @@ package com.example.budongbudong.domain.auction.service;
 
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import jakarta.persistence.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,6 +25,7 @@ public class AuctionSchedulerService {
 
     private final AuctionRepository auctionRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
 
     /**
      * 처리 순서
@@ -38,6 +40,10 @@ public class AuctionSchedulerService {
 
         openScheduledAuctions(todayStart);
         closeOpenedAuctions(todayStart);
+
+        //벌크 연산은 영속성 컨텍스트 우회, 이후 조회 일관성을 위해 명시적으로 초기화
+        entityManager.flush();
+        entityManager.clear();
     }
 
     /**
