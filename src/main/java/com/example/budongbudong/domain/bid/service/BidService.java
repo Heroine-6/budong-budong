@@ -16,11 +16,15 @@ import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -30,43 +34,45 @@ public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
+    private final RedissonClient redissonClient;
+    private final BidTxService bidTxService;
 
     /**
-     * 입찰 등록
+     * 입찰 등록 - Lock
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CreateBidResponse createBid(CreateBidRequest request, Long auctionId, Long userId) {
 
-        String th = Thread.currentThread().getName();
         long t0 = System.currentTimeMillis();
+        String th = Thread.currentThread().getName();
 
-        User user = userRepository.getByIdOrThrow(userId);
+        String lockKey = "lock:auction:" + auctionId;
+        RLock lock = redissonClient.getLock(lockKey);
 
-        log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
+        boolean acquired = false;
 
-        Auction auction = auctionRepository.getOpenAuctionForUpdateOrThrow(auctionId);
+        try {
+            acquired = lock.tryLock(0, 5, TimeUnit.SECONDS);
 
-        log.info("[{}] t={} LOCK_ACQUIRED auctionId={} waited={}ms", th, System.currentTimeMillis(), auctionId, (System.currentTimeMillis() - t0));
+            log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
 
-        Long bidPrice = request.getPrice();
-        Long currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
+            if (!acquired) {
+                log.info("[{}] LOCK_FAILED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+                throw new CustomException(ErrorCode.BID_LOCK_TIMEOUT);
+            }
 
-        if (currentMaxPrice != null && bidPrice <= currentMaxPrice) {
-            log.info("[{}] FAIL_TOO_LOW auctionId={} bid={} max={}", th, auctionId, bidPrice, currentMaxPrice);
-            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
+            log.info("[{}] LOCK_ACQUIRED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+
+            return bidTxService.createBidTx(request, auctionId, userId);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CustomException(ErrorCode.BID_LOCK_FAILED);
+
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        bidRepository.unmarkHighestAndOutbidByAuctionId(auctionId);
-
-        Bid bid = new Bid(user, auction, bidPrice);
-        bid.markHighest();
-        bid.changeStatus(BidStatus.WINNING);
-
-        Bid savedBid = bidRepository.save(bid);
-
-        log.info("[{}] SUCCESS auctionId={} price={}", th, auctionId, bidPrice);
-
-        return CreateBidResponse.from(savedBid);
     }
 
     /**

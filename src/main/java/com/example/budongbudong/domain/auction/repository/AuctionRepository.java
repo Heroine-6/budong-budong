@@ -30,17 +30,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             LocalDateTime time
     );
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @QueryHints({
-            @QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")
-    })
-    @Query("""
-                select a
-                from Auction a
-                where a.id = :auctionId
-            """)
-    Optional<Auction> findByIdForUpdate(@Param("auctionId") Long auctionId);
-
     @Modifying
     @Query("""
                 update Auction a
@@ -63,8 +52,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         }
     }
 
-    default Auction getOpenAuctionForUpdateOrThrow(Long auctionId) {
-        Auction auction = findByIdForUpdate(auctionId)
+    default Auction getOpenAuctionOrThrow(Long auctionId) {
+        Auction auction = findById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
 
         if (auction.getStatus() != AuctionStatus.OPEN) {
