@@ -47,12 +47,6 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
     int countDistinctBiddersByAuctionId(@Param("auctionId") Long auctionId);
 
     @Query("""
-                select count(distinct b.user) from Bid b
-                where b.auction.id = :auctionId
-            """)
-    int countTotalBidders(Long auctionId);
-
-    @Query("""
                 select max(b.price)
                 from Bid b
                 where b.auction.id = :auctionId
@@ -62,12 +56,12 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-                update Bid b
-                set b.isHighest = false, b.status = 'OUTBID'
-                where b.auction.id = :auctionId
-                and b.isHighest = true
-                and b.isDeleted = false
-           """)
+                 update Bid b
+                 set b.isHighest = false, b.status = 'OUTBID'
+                 where b.auction.id = :auctionId
+                 and b.isHighest = true
+                 and b.isDeleted = false
+            """)
     void unmarkHighestAndOutbidByAuctionId(@Param("auctionId") Long auctionId);
 
     List<Bid> findAllByAuctionOrderByPriceDesc(Auction auction);

@@ -53,7 +53,7 @@ public class PropertyService {
     private String serviceKey;
 
     @Transactional
-    public void createProperty(CreatePropertyRequest request, List<MultipartFile> images, Long userId) {
+    public void createProperty(CreatePropertyRequest request, List<MultipartFile> images, List<String> imageUrls, Long userId) {
 
         User user = userRepository.getByIdOrThrow(userId);
 
@@ -69,7 +69,19 @@ public class PropertyService {
         // DB에 저장
         propertyRepository.save(property);
 
-        propertyImageService.saveImages(property, images);
+        // imageUrls와 images 둘 중 하나만 들어오도록 동시에 들어오면 400으로 막음
+        boolean hasUrls = imageUrls != null && !imageUrls.isEmpty();
+        boolean hasImages = images != null && !images.isEmpty();
+
+        if (hasUrls && hasImages) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        if (hasUrls) {
+            propertyImageService.saveImageUrls(property, imageUrls);
+        } else {
+            propertyImageService.saveImages(property, images);
+        }
     }
 
     @Transactional(readOnly = true)
