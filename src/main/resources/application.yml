@@ -41,3 +41,21 @@ coolsms:
   api-key: ${COOLSMS_API_KEY}
   api-secret: ${COOLSMS_API_SECRET}
   from-number: ${COOLSMS_FROM_NUMBER}
+
+storage:
+  type: ${STORAGE_TYPE:local}
+  presign-expire-minutes: ${STORAGE_PRESIGN_EXPIRE_MINUTES:10}
+
+file:
+  upload-dir: uploads
+  base-url: http://localhost:8080/uploads
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+    s3:
+      bucket: ${AWS_S3_BUCKET:}
+    region:
+      static: ${AWS_REGION:ap-northeast-2}
