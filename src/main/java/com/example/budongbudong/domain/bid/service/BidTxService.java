@@ -41,11 +41,13 @@ public class BidTxService {
         Long bidPrice = request.getPrice();
         Long currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
 
+        // 최소 입찰 단위가 없으면 시작가의 10%로 보정.
         Long minBidIncrement = auction.getMinBidIncrement();
         if (minBidIncrement == null) {
             minBidIncrement = (auction.getStartPrice() + 9) / 10;
         }
 
+        // 첫 입찰은 시작가 이상, 이후 입찰은 최고가 + 최소 입찰 단위 이상.
         Long minimumRequired = currentMaxPrice == null
                 ? auction.getStartPrice()
                 : currentMaxPrice + minBidIncrement;

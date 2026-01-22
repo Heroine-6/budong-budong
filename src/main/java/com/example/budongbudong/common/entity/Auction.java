@@ -23,6 +23,7 @@ public class Auction extends BaseEntity {
     @Column(name = "start_price", nullable = false)
     private Long startPrice;
 
+    //통화는 원 단위 정수로 처리하고 소수점은 사용하지 않음
     @Column(name = "min_bid_increment", nullable = false)
     private Long minBidIncrement;
 
@@ -63,6 +64,7 @@ public class Auction extends BaseEntity {
     }
 
     private static Long calculateMinBidIncrement(Long startPrice) {
+        // 시작가의 10%를 올림한 값을 최소 입찰 단위로 사용.
         return (startPrice + 9) / 10;
     }
 
