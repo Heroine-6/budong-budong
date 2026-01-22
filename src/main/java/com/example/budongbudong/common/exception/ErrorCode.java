@@ -45,6 +45,7 @@ public enum ErrorCode {
     INVALID_PRICE_RANGE(400, "최소 가격은 최대 가격보다 클 수 없습니다"),
     SMS_CODE_EXPIRED(400, "인증번호가 만료되었습니다."),
     SMS_CODE_MISMATCH(400, "인증번호가 올바르지 않습니다."),
+    S3_NOT_CONFIGURED(400, "S3 설정이 필요합니다."),
 
 
     //------500-----------------------

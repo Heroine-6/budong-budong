@@ -3,6 +3,7 @@ package com.example.budongbudong.common.storage;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +23,7 @@ import java.util.UUID;
  * 저장 방식이 변경되더라도 서비스 로직 수정이 최소화
  */
 @Service
+@ConditionalOnProperty(name = "storage.type", havingValue = "local", matchIfMissing = true)
 public class LocalStorageService implements StorageService {
 
     @Value("${file.upload-dir:uploads}")
@@ -34,7 +36,15 @@ public class LocalStorageService implements StorageService {
     public String upload(MultipartFile file, String directory) {
         try {
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            // 파일 확장자가 없거나 파일명이 null일 때도 안전하게 처리
+            // NPE/IndexOutOfBounds 방지용 안전 처리
+            String extension = "";
+            if (originalFilename != null) {
+                int dot = originalFilename.lastIndexOf('.');
+                if (dot != -1) {
+                    extension = originalFilename.substring(dot);
+                }
+            }
             String savedFilename = UUID.randomUUID() + extension;
 
             Path uploadPath = Paths.get(uploadDir, directory);
