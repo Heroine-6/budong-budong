@@ -4,8 +4,6 @@ import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,16 +18,24 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     boolean existsByPropertyIdAndStatusNotIn(Long propertyId, Iterable<AuctionStatus> statuses);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @QueryHints({
-            @QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")
-    })
+    List<Auction> findByStatusAndStartedAtLessThanEqual(
+            AuctionStatus status,
+            LocalDateTime time
+    );
+
+    List<Auction> findByStatusAndEndedAtLessThanEqual(
+            AuctionStatus status,
+            LocalDateTime time
+    );
+
+    @Modifying
     @Query("""
-                select a
-                from Auction a
+                update Auction a
+                set a.status = 'CLOSED'
                 where a.id = :auctionId
+                and a.status = 'OPEN'
             """)
-    Optional<Auction> findByIdForUpdate(@Param("auctionId") Long auctionId);
+    int closeIfOpen(@Param("auctionId") Long auctionId);
 
     default Auction getByIdOrThrow(Long auctionId) {
         return findById(auctionId)
@@ -44,8 +50,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         }
     }
 
-    default Auction getOpenAuctionForUpdateOrThrow(Long auctionId) {
-        Auction auction = findByIdForUpdate(auctionId)
+    default Auction getOpenAuctionOrThrow(Long auctionId) {
+        Auction auction = findById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
 
         if (auction.getStatus() != AuctionStatus.OPEN) {
@@ -90,6 +96,17 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         """)
     List<Auction> findAllByPropertyIds(@Param("propertyIds") List<Long> propertyIds);
 
+    @Query("""
+            select a.endedAt
+            from Auction a 
+            where a.id = :auctionId
+        """)
+    Optional<LocalDateTime> findEndedAtById(@Param("auctionId") Long auctionId);
+
+    default LocalDateTime getEndedAtOrThrow(Long auctionId) {
+        return findEndedAtById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+    }
     @Modifying
     @Query("""
             update Auction a
