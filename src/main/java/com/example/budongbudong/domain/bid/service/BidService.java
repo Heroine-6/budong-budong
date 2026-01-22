@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -40,13 +41,20 @@ public class BidService {
         long t0 = System.currentTimeMillis();
         String th = Thread.currentThread().getName();
 
+        LocalDateTime endedAt = auctionRepository.getEndedAtOrThrow(auctionId);
+        LocalDateTime now = LocalDateTime.now();
+
+        boolean lastHour = !now.isBefore(endedAt.minusHours(1));
+
+        long waitTime = lastHour ? 2L : 0L;
+
         String lockKey = "lock:auction:" + auctionId;
         RLock lock = redissonClient.getLock(lockKey);
 
         boolean acquired = false;
 
         try {
-            acquired = lock.tryLock(0, 5, TimeUnit.SECONDS);
+            acquired = lock.tryLock(waitTime, 5, TimeUnit.SECONDS);
 
             log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
 
