@@ -55,6 +55,12 @@ public class AuctionService {
             throw new CustomException(ErrorCode.INVALID_AUCTION_PERIOD);
         }
 
+        LocalDateTime maxEndedAt = startedAt.plusDays(7);
+
+        if (endedAt.isAfter(maxEndedAt)) {
+            throw new CustomException(ErrorCode.MAX_AUCTION_PERIOD_EXCEEDED);
+        }
+
         Auction auction = Auction.create(
                 property,
                 startPrice,
@@ -103,31 +109,31 @@ public class AuctionService {
         // 총 입찰자 수
         int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
 
-        return new AuctionInfoResponse(
-                auction.getStartPrice(),
-                highestPrice,
-                totalBidders,
-                auction.getEndedAt()
-        );
+        return AuctionInfoResponse.from(auction, highestPrice, totalBidders);
     }
 
     /**
      * 경쟁 정보 및 통계 조회
-     * 총 입찰자 수, 총 입찰 횟수, 가격 상승 금액, 최근 입찰 시간
      */
     @Transactional(readOnly = true)
     public GetStatisticsResponse getAuctionStatistics(Long auctionId) {
 
         Auction auction = auctionRepository.getByIdOrThrow(auctionId);
 
-        int totalBidderCount = bidRepository.countTotalBidders(auctionId);
+        // 총 입찰자 수
+        int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
 
         List<Bid> bidList = bidRepository.findAllByAuctionOrderByPriceDesc(auction);
 
         Bid highestBid = (bidList.isEmpty()) ? null : bidList.get(0);
+
+        // 최근 입찰 시간
         LocalDateTime createdAt = (highestBid == null) ? null : highestBid.getCreatedAt();
 
+        // 총 입찰 횟수
         int totalBidCount = bidList.size();
+
+        // 입찰 가격 상승 금액
         long priceIncrease = 0L;
 
         if (totalBidCount == 1L) {
@@ -138,7 +144,7 @@ public class AuctionService {
 
         return GetStatisticsResponse.from(
                 auctionId,
-                totalBidderCount,
+                totalBidders,
                 totalBidCount,
                 priceIncrease,
                 createdAt

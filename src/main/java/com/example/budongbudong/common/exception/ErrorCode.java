@@ -40,6 +40,7 @@ public enum ErrorCode {
     INVALID_BID_PRICE(400, "입찰 금액이 올바르지 않습니다."),
     INVALID_REQUEST(400, "입력값 형식 오류"),
     INVALID_AUCTION_PERIOD(400, "경매 기간이 유효하지 않습니다."),
+    MAX_AUCTION_PERIOD_EXCEEDED(400, "경매 기간은 최대 7일을 초과할 수 없습니다."),
     PROPERTY_CANNOT_DELETE(400, "경매 시작 전 상태에서만 매물을 삭제할 수 있습니다."),
     INVALID_PRICE_RANGE(400, "최소 가격은 최대 가격보다 클 수 없습니다"),
     SMS_CODE_EXPIRED(400, "인증번호가 만료되었습니다."),
