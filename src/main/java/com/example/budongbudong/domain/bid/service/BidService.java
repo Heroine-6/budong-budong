@@ -49,7 +49,7 @@ public class BidService {
         long waitTime = lastHour ? 2L : 0L;
 
         String lockKey = "lock:auction:" + auctionId;
-        RLock lock = redissonClient.getLock(lockKey);
+        RLock lock = redissonClient.getFairLock(lockKey);
 
         boolean acquired = false;
 
