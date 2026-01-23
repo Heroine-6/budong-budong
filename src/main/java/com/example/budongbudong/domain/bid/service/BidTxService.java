@@ -41,9 +41,21 @@ public class BidTxService {
         Long bidPrice = request.getPrice();
         Long currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
 
-        if (currentMaxPrice != null && bidPrice <= currentMaxPrice) {
-            log.info("[{}] FAIL_TOO_LOW auctionId={} bid={} max={}", th, auctionId, bidPrice, currentMaxPrice);
+        Long minBidIncrement = auction.getMinBidIncrement();
+
+        // 첫 입찰은 시작가 이상, 이후 입찰은 최고가 + 최소 입찰 단위 이상.
+        Long minimumRequired = currentMaxPrice == null
+                ? auction.getStartPrice()
+                : currentMaxPrice + minBidIncrement;
+
+        if (bidPrice < minimumRequired) {
+            log.info("[{}] 최소입찰미달 auctionId={} bid={} minimum={}", th, auctionId, bidPrice, minimumRequired);
             throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
+        }
+
+        if ((bidPrice - minimumRequired) % minBidIncrement != 0) {
+            log.info("[{}] 입찰단위오류 auctionId={} bid={} minimum={} increment={}", th, auctionId, bidPrice, minimumRequired, minBidIncrement);
+            throw new CustomException(ErrorCode.INVALID_BID_PRICE);
         }
 
         bidRepository.unmarkHighestAndOutbidByAuctionId(auctionId);
