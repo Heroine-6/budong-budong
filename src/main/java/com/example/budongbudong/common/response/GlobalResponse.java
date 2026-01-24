@@ -24,17 +24,26 @@ public class GlobalResponse<T> {
     }
 
     //성공시
-    public static <T> GlobalResponse<T> success( T data) {
+    public static <T> GlobalResponse<T> success(T data) {
         return new GlobalResponse<>(true, null, data); //204 는 data null로 넣어주세요.
     }
 
     //예외처리시
-    public static <T> GlobalResponse<T> exception( ErrorCode errorCode, T data) {
+    public static <T> GlobalResponse<T> exception(ErrorCode errorCode, T data) {
         return new GlobalResponse<>(false, errorCode.getMessage(), data);
+    }
+
+    // 로직 실패 시 (200 응답용)
+    public static <T> GlobalResponse<T> successButRejected(String message) {
+        return new GlobalResponse<>(false, message, null);
     }
 
     public static <T> ResponseEntity<GlobalResponse<T>> ok(T data) {
         return ResponseEntity.ok(success(data));
+    }
+
+    public static <T> ResponseEntity<GlobalResponse<T>> okButRejected(String message) {
+        return ResponseEntity.ok(successButRejected(message));
     }
 
     public static <T> ResponseEntity<GlobalResponse<T>> created(T data) {

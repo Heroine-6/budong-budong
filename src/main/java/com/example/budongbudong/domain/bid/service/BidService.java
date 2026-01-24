@@ -3,8 +3,6 @@ package com.example.budongbudong.domain.bid.service;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.common.entity.User;
-import com.example.budongbudong.common.exception.CustomException;
-import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
@@ -53,7 +51,7 @@ public class BidService {
 
         if (currentMaxPrice != null && bidPrice <= currentMaxPrice) {
             log.info("[{}] FAIL_TOO_LOW auctionId={} bid={} max={}", th, auctionId, bidPrice, currentMaxPrice);
-            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
+            return CreateBidResponse.rejectedFrom(BidStatus.REJECTED, "입찰가는 현재 최고가보다 높아야 합니다.");
         }
 
         bidRepository.unmarkHighestAndOutbidByAuctionId(auctionId);

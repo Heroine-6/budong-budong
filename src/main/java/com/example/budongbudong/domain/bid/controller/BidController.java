@@ -7,6 +7,7 @@ import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
+import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.service.BidService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,9 @@ public class BidController {
     ) {
         CreateBidResponse response = bidService.createBid(request, auctionId, authUser.getUserId());
 
-        return GlobalResponse.created(response);
+        return response.getBidStatus().equals(BidStatus.REJECTED)
+                ? GlobalResponse.okButRejected(response.getMessage())
+                : GlobalResponse.created(response);
     }
 
     /**
