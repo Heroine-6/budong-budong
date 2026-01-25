@@ -3,8 +3,6 @@ package com.example.budongbudong.domain.bid.service;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.common.entity.User;
-import com.example.budongbudong.common.exception.CustomException;
-import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
@@ -50,12 +48,12 @@ public class BidTxService {
 
         if (bidPrice < minimumRequired) {
             log.info("[{}] 최소입찰미달 auctionId={} bid={} minimum={}", th, auctionId, bidPrice, minimumRequired);
-            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
+            return CreateBidResponse.rejectedFrom(BidStatus.REJECTED, "입찰가는 현재 최고가보다 높아야 합니다.");
         }
 
         if ((bidPrice - minimumRequired) % minBidIncrement != 0) {
             log.info("[{}] 입찰단위오류 auctionId={} bid={} minimum={} increment={}", th, auctionId, bidPrice, minimumRequired, minBidIncrement);
-            throw new CustomException(ErrorCode.INVALID_BID_PRICE);
+            return CreateBidResponse.rejectedFrom(BidStatus.REJECTED, "입찰 금액이 올바르지 않습니다.");
         }
 
         bidRepository.unmarkHighestAndOutbidByAuctionId(auctionId);

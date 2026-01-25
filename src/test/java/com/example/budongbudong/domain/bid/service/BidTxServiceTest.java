@@ -3,11 +3,11 @@ package com.example.budongbudong.domain.bid.service;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.entity.User;
-import com.example.budongbudong.common.exception.CustomException;
-import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
+import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
+import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.user.enums.UserRole;
@@ -24,15 +24,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class BidTxServiceTest {
 
-    @Autowired private BidTxService bidTxService;
-    @Autowired private AuctionRepository auctionRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private PropertyRepository propertyRepository;
+    @Autowired
+    private BidTxService bidTxService;
+    @Autowired
+    private AuctionRepository auctionRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PropertyRepository propertyRepository;
 
     private Long auctionId;
     private Long userId1;
@@ -106,10 +110,9 @@ class BidTxServiceTest {
     void firstBidMustMatchIncrement() {
         CreateBidRequest request = createRequest(1_124_000L);
 
-        assertThatThrownBy(() -> bidTxService.createBidTx(request, auctionId, userId1))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_BID_PRICE);
+        CreateBidResponse response = bidTxService.createBidTx(request, auctionId, userId1);
+
+        assertThat(response).extracting("bidStatus").isEqualTo(BidStatus.REJECTED);
     }
 
     @Test
@@ -120,10 +123,9 @@ class BidTxServiceTest {
 
         CreateBidRequest invalidNext = createRequest(1_240_000L);
 
-        assertThatThrownBy(() -> bidTxService.createBidTx(invalidNext, auctionId, userId2))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_BID_PRICE);
+        CreateBidResponse response = bidTxService.createBidTx(invalidNext, auctionId, userId2);
+
+        assertThat(response).extracting("bidStatus").isEqualTo(BidStatus.REJECTED);
     }
 
     private CreateBidRequest createRequest(Long price) {

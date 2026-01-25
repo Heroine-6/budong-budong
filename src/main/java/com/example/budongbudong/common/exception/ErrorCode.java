@@ -36,7 +36,6 @@ public enum ErrorCode {
     INVALID_PASSWORD_FORMAT(400, "비밀번호 형식이 올바르지 않습니다."),
     INVALID_PASSWORD(400, "비밀번호가 유효하지 않습니다."),
     VALIDATION_ERROR(400, "입력값이 유효하지 않습니다."),
-    INVALID_BID_PRICE(400, "입찰 금액이 올바르지 않습니다."),
     INVALID_REQUEST(400, "입력값 형식 오류"),
     INVALID_AUCTION_PERIOD(400, "경매 기간이 유효하지 않습니다."),
     MAX_AUCTION_PERIOD_EXCEEDED(400, "경매 기간은 최대 7일을 초과할 수 없습니다."),
