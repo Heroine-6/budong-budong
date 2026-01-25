@@ -33,6 +33,20 @@ spring:
   elasticsearch:
     uris: ${ELASTIC_SEARCH}
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+rabbitmq:
+  queue:
+    name: bid.queue
+  exchange:
+    name: bid.exchange
+  routing:
+    key: bid.key
+
 external:
   api:
     service-key: ${API_SERVICE_KEY}
