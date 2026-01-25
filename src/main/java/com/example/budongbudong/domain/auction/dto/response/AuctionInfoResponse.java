@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AuctionInfoResponse {
     private final Long startPrice;
+    private final Long minBidIncrement;
     private final Long highestPrice;
     private final int totalBidders;
     private final LocalDateTime startedAt;
@@ -22,6 +23,7 @@ public class AuctionInfoResponse {
     ) {
         return new AuctionInfoResponse(
                 auction.getStartPrice(),
+                auction.getMinBidIncrement(),
                 highestPrice,
                 totalBidders,
                 auction.getStartedAt(),

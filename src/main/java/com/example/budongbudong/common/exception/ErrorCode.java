@@ -51,6 +51,7 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
     FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
     SMS_SEND_FAILED(500, "인증번호 전송에 실패했습니다."),
+    BID_LOCK_FAILED(500, "입찰 등록에 실패했습니다."),
 
     ;
     private final int status;

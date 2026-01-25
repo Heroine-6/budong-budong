@@ -1,5 +1,7 @@
 package com.example.budongbudong.domain.bid.service;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.common.entity.User;
@@ -9,16 +11,19 @@ import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
-import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -28,43 +33,52 @@ public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
+    private final RedissonClient redissonClient;
+    private final BidTxService bidTxService;
 
     /**
-     * 입찰 등록
+     * 입찰 등록 - Lock
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CreateBidResponse createBid(CreateBidRequest request, Long auctionId, Long userId) {
 
-        String th = Thread.currentThread().getName();
         long t0 = System.currentTimeMillis();
+        String th = Thread.currentThread().getName();
 
-        User user = userRepository.getByIdOrThrow(userId);
+        LocalDateTime endedAt = auctionRepository.getEndedAtOrThrow(auctionId);
+        LocalDateTime now = LocalDateTime.now();
 
-        log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
+        boolean lastHour = !now.isBefore(endedAt.minusHours(1));
 
-        Auction auction = auctionRepository.getOpenAuctionForUpdateOrThrow(auctionId);
+        long waitTime = lastHour ? 2L : 0L;
 
-        log.info("[{}] t={} LOCK_ACQUIRED auctionId={} waited={}ms", th, System.currentTimeMillis(), auctionId, (System.currentTimeMillis() - t0));
+        String lockKey = "lock:auction:" + auctionId;
+        RLock lock = redissonClient.getFairLock(lockKey);
 
-        Long bidPrice = request.getPrice();
-        Long currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
+        boolean acquired = false;
 
-        if (currentMaxPrice != null && bidPrice <= currentMaxPrice) {
-            log.info("[{}] FAIL_TOO_LOW auctionId={} bid={} max={}", th, auctionId, bidPrice, currentMaxPrice);
-            return CreateBidResponse.rejectedFrom(BidStatus.REJECTED, "입찰가는 현재 최고가보다 높아야 합니다.");
+        try {
+            log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
+
+            acquired = lock.tryLock(waitTime, -1, TimeUnit.SECONDS);
+
+            if (!acquired) {
+                log.info("[{}] LOCK_FAILED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+                throw new CustomException(ErrorCode.BID_LOCK_TIMEOUT);
+            }
+
+            log.info("[{}] LOCK_ACQUIRED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+
+            return bidTxService.createBidTx(request, auctionId, userId);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CustomException(ErrorCode.BID_LOCK_FAILED);
+
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        bidRepository.unmarkHighestAndOutbidByAuctionId(auctionId);
-
-        Bid bid = new Bid(user, auction, bidPrice);
-        bid.markHighest();
-        bid.changeStatus(BidStatus.WINNING);
-
-        Bid savedBid = bidRepository.save(bid);
-
-        log.info("[{}] SUCCESS auctionId={} price={}", th, auctionId, bidPrice);
-
-        return CreateBidResponse.from(savedBid);
     }
 
     /**
