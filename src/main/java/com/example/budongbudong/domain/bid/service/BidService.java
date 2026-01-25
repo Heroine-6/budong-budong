@@ -2,9 +2,6 @@ package com.example.budongbudong.domain.bid.service;
 
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.common.entity.Auction;
-import com.example.budongbudong.common.entity.Bid;
-import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
@@ -12,7 +9,6 @@ import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -32,7 +28,6 @@ public class BidService {
 
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
-    private final UserRepository userRepository;
     private final RedissonClient redissonClient;
     private final BidTxService bidTxService;
 
