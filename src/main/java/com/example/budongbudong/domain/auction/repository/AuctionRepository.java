@@ -18,16 +18,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     boolean existsByPropertyIdAndStatusNotIn(Long propertyId, Iterable<AuctionStatus> statuses);
 
-    List<Auction> findByStatusAndStartedAtLessThanEqual(
-            AuctionStatus status,
-            LocalDateTime time
-    );
-
-    List<Auction> findByStatusAndEndedAtLessThanEqual(
-            AuctionStatus status,
-            LocalDateTime time
-    );
-
     @Modifying
     @Query("""
                 update Auction a
@@ -48,6 +38,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         if (auction != null && auction.getStatus() != AuctionStatus.CANCELLED) {
             throw new CustomException(ErrorCode.AUCTION_ALREADY_EXISTS);
         }
+    }
+
+    default Auction findByPropertyIdOrThrowIfExists(Long propertyId) {
+        return findByPropertyId(propertyId).orElse(null);
     }
 
     default Auction getOpenAuctionOrThrow(Long auctionId) {
@@ -98,7 +92,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     @Query("""
             select a.endedAt
-            from Auction a 
+            from Auction a
             where a.id = :auctionId
         """)
     Optional<LocalDateTime> findEndedAtById(@Param("auctionId") Long auctionId);
