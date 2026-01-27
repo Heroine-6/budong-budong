@@ -2,7 +2,10 @@ package com.example.budongbudong.common.entity;
 
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -23,22 +26,25 @@ public class Auction extends BaseEntity {
     @Column(name = "start_price", nullable = false)
     private Long startPrice;
 
-    //통화는 원 단위 정수로 처리하고 소수점은 사용하지 않음
-    @Column(name = "min_bid_increment", nullable = false)
-    private Long minBidIncrement;
+    @Column(name = "end_price")
+    private Long endPrice;
 
     @Column(length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
 
+    //통화는 원 단위 정수로 처리하고 소수점은 사용하지 않음
+    @Column(name = "min_bid_increment")
+    private Long minBidIncrement;
+
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
 
-    @Column(name = "ended_at", nullable = false)
+    @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
     @Builder(builderMethodName = "testBuilder")
-    public Auction(Long id, Property property, Long startPrice, AuctionStatus status,LocalDateTime startedAt, LocalDateTime endedAt) {
+    public Auction(Long id, Property property, Long startPrice, AuctionStatus status, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.id = id;
         this.property = property;
         this.startPrice = startPrice;

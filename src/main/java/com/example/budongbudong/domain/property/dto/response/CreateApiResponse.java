@@ -9,4 +9,5 @@ public record CreateApiResponse(
         Long price,
         BigDecimal privateArea,
         Year builtYear
-) { }
+) {
+}
