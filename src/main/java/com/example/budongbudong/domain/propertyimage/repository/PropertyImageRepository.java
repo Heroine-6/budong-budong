@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PropertyImageRepository extends JpaRepository<PropertyImage, Long> {
 
@@ -17,4 +18,12 @@ public interface PropertyImageRepository extends JpaRepository<PropertyImage, Lo
             order by pi.createdAt asc
         """)
     List<PropertyImage> findThumbnailImagesByPropertyIds(@Param("propertyIds") List<Long> propertyIds);
+
+    Optional<PropertyImage> findFirstByPropertyIdOrderByCreatedAtAsc(Long propertyId);
+
+    default String findThumbnailImageUrl(Long propertyId) {
+        return findFirstByPropertyIdOrderByCreatedAtAsc(propertyId)
+                .map(PropertyImage::getImageUrl)
+                .orElse(null);
+    }
 }

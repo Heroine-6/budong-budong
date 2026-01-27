@@ -52,7 +52,7 @@ public class PropertySearchQueryBuilder {
 
     private Query nameContains(String name){
         return StringUtils.hasText(name)
-                ? Query.of(q -> q.match(m -> m.field("name").query(name)))
+                ? Query.of(q -> q.matchPhrase(m -> m.field("name").query(name)))
                 : null;
     }
 
