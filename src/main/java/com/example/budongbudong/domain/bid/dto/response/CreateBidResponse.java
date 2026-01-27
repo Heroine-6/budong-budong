@@ -14,11 +14,10 @@ public class CreateBidResponse {
 
     private final Long bidId;
     private final Long auctionId;
-    private final Long price;
+    private final BigDecimal price;
     private final BidStatus bidStatus;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String message;
-    private final BigDecimal price;
 
     public static CreateBidResponse from(Bid bid) {
         return new CreateBidResponse(
