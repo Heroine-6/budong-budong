@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "auction_winners")
 @Getter
@@ -25,9 +27,9 @@ public class AuctionWinner extends BaseEntity {
     private User user;
 
     @Column(nullable = false)
-    private Long price;
+    private BigDecimal price;
 
-    public static AuctionWinner create(Auction auction, User user, Long price) {
+    public static AuctionWinner create(Auction auction, User user, BigDecimal price) {
         AuctionWinner winner = new AuctionWinner();
         winner.auction = auction;
         winner.user = user;

@@ -1,5 +1,6 @@
 package com.example.budongbudong.common.entity;
 
+import com.example.budongbudong.domain.user.enums.LoginType;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -34,6 +35,16 @@ public class User extends BaseEntity {
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.GENERAL;
+
+    @Column(name = "login_type")
+    @Enumerated(EnumType.STRING)
+    private LoginType loginType;
+
+    @Column(name = "provider_id", unique = true)
+    private String providerId;
+
+    @Column(name = "is_push_allowed", nullable = false)
+    private boolean isPushAllowed = true;
 
     public static User create(
             String email,

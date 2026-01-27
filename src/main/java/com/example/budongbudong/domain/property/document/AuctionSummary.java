@@ -3,8 +3,11 @@ package com.example.budongbudong.domain.property.document;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -17,14 +20,14 @@ import java.time.LocalDateTime;
 @Builder
 public class AuctionSummary {
 
-    @Field(type= FieldType.Long)
+    @Field(type = FieldType.Long)
     private Long auctionId;
 
     @Field(type = FieldType.Keyword)
     private AuctionStatus status;
 
     @Field(type = FieldType.Long)
-    private Long startPrice;
+    private BigDecimal startPrice;
 
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
     private LocalDateTime startedAt;
@@ -32,7 +35,7 @@ public class AuctionSummary {
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
     private LocalDateTime endedAt;
 
-    public static AuctionSummary from(Auction auction){
+    public static AuctionSummary from(Auction auction) {
         if (auction == null) {
             return null;
         }

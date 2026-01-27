@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +40,7 @@ public class AuctionService {
     public CreateAuctionResponse createAuction(CreateAuctionRequest request, Long userId) {
 
         Long propertyId = request.getPropertyId();
-        Long startPrice = request.getStartPrice();
+        BigDecimal startPrice = request.getStartPrice();
         LocalDateTime startedAt = request.getStartedAt();
         LocalDateTime endedAt = request.getEndedAt();
 
@@ -103,7 +104,7 @@ public class AuctionService {
         Auction auction = auctionRepository.getByIdOrThrow(auctionId);
 
         // 최고 입찰가
-        Long highestPrice = bidRepository.getHighestPriceOrStartPrice(auctionId, auction.getStartPrice());
+        BigDecimal highestPrice = bidRepository.getHighestPriceOrStartPrice(auctionId, auction.getStartPrice());
 
         // 총 입찰자 수
         int totalBidders = bidRepository.countDistinctBiddersByAuctionId(auctionId);
@@ -133,12 +134,12 @@ public class AuctionService {
         int totalBidCount = bidList.size();
 
         // 입찰 가격 상승 금액
-        long priceIncrease = 0L;
+        BigDecimal priceIncrease = new BigDecimal(0);
 
         if (totalBidCount == 1L) {
-            priceIncrease = Objects.requireNonNull(highestBid).getPrice() - auction.getStartPrice();
+            priceIncrease = Objects.requireNonNull(highestBid).getPrice().subtract(auction.getStartPrice());
         } else if (totalBidCount > 1L) {
-            priceIncrease = Objects.requireNonNull(highestBid).getPrice() - bidList.get(1).getPrice();
+            priceIncrease = Objects.requireNonNull(highestBid).getPrice().subtract(bidList.get(1).getPrice());
         }
 
         return GetStatisticsResponse.from(

@@ -6,7 +6,8 @@ import java.time.Year;
 public record CreateApiResponse(
         String name,
         String address,
-        Long price,
+        BigDecimal price,
         BigDecimal privateArea,
         Year builtYear
-) { }
+) {
+}

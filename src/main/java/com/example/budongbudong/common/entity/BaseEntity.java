@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 public abstract class BaseEntity {
 
     @CreatedDate
-    @Column(name="created_at",nullable = false,updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     protected LocalDateTime createdAt;
 
-    @Column(name="is_deleted", nullable = false)
-    private Boolean isDeleted=false;
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 
     public void softDelete() {
         this.isDeleted = true;

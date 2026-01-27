@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 
 /**
  * QueryDSL 조회 전용 DTO
- * */
+ *
+ */
 @Getter
 public class ReadAllPropertyDto {
     private final Long propertyId;
@@ -21,7 +22,7 @@ public class ReadAllPropertyDto {
     private final BigDecimal supplyArea;
     private final BigDecimal privateArea;
     private final Long auctionId;
-    private final Long startPrice;
+    private final BigDecimal startPrice;
     private final AuctionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime endedAt;
@@ -34,7 +35,8 @@ public class ReadAllPropertyDto {
      * {@link QueryProjection}을 사용해 Q클래스를 생성하며,
      * Querydsl 조회 결과를 타입 안정성 있게 매핑하기 위한 생성자
      * </p>
-     * */
+     *
+     */
     @QueryProjection
     public ReadAllPropertyDto(
             Long propertyId,
@@ -45,7 +47,7 @@ public class ReadAllPropertyDto {
             BigDecimal supplyArea,
             BigDecimal privateArea,
             Long auctionId,
-            Long startPrice,
+            BigDecimal startPrice,
             AuctionStatus status,
             LocalDateTime startedAt,
             LocalDateTime endedAt,

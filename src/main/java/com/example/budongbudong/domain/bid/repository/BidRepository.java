@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +34,7 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
                 where b.auction.id = :auctionId
                   and b.isDeleted = false
             """)
-    Optional<Long> findHighestPriceByAuctionId(@Param("auctionId") Long auctionId);
+    Optional<BigDecimal> findHighestPriceByAuctionId(@Param("auctionId") Long auctionId);
 
     // 총 입찰자 수 (논리 삭제 제외)
     @Query("""
@@ -50,7 +51,7 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
                 where b.auction.id = :auctionId
                 and b.isDeleted = false
             """)
-    Long findMaxPriceByAuctionId(Long auctionId);
+    BigDecimal findMaxPriceByAuctionId(Long auctionId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -64,7 +65,7 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
 
     List<Bid> findAllByAuctionOrderByPriceDesc(Auction auction);
 
-    default long getHighestPriceOrStartPrice(Long auctionId, long startPrice) {
+    default BigDecimal getHighestPriceOrStartPrice(Long auctionId, BigDecimal startPrice) {
         return findHighestPriceByAuctionId(auctionId)
                 .orElse(startPrice);
     }

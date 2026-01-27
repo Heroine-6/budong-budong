@@ -13,11 +13,12 @@ import com.example.budongbudong.domain.property.client.OffiClient;
 import com.example.budongbudong.domain.property.client.VillaClient;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
+import com.example.budongbudong.domain.property.event.PropertyEventType;
 import com.example.budongbudong.domain.property.enums.PropertyType;
+import com.example.budongbudong.domain.property.event.PropertyEventPublisher;
 import com.example.budongbudong.domain.property.lawdcode.LawdCodeService;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
-import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
@@ -48,6 +49,7 @@ public class PropertyService {
     private final OffiClient offiClient;
     private final VillaClient villaClient;
     private final LawdCodeService lawdCodeService;
+    private final PropertyEventPublisher propertyEventPublisher;
 
     @Value("${external.api.service-key}")
     private String serviceKey;
@@ -82,6 +84,9 @@ public class PropertyService {
         } else {
             propertyImageService.saveImages(property, images);
         }
+
+        //매물 등록 커밋 후 이벤트 발행
+        propertyEventPublisher.publish(property.getId(), PropertyEventType.CREATED);
     }
 
     @Transactional(readOnly = true)
@@ -120,6 +125,9 @@ public class PropertyService {
                 request.getMigrateDate(),
                 request.getDescription()
         );
+
+        //매물 수정 커밋 후 이벤트 발행
+        propertyEventPublisher.publish(property.getId(), PropertyEventType.UPDATED);
     }
 
     @Transactional
@@ -132,6 +140,9 @@ public class PropertyService {
         auctionRepository.validatePropertyDeletableOrThrow(propertyId);
 
         property.softDelete();
+
+        //매물 삭제 커밋 후 이벤트 발행
+        propertyEventPublisher.publish(property.getId(), PropertyEventType.DELETED);
     }
 
     private CreateApiResponse fetchApiInfo(CreatePropertyRequest request) {

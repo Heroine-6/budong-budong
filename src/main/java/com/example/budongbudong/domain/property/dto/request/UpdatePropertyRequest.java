@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 public class UpdatePropertyRequest {
 
     @Positive(message = "경매 시작가는 0보다 커야 합니다.")
-    private Long price;
+    private BigDecimal price;
 
     @Future(message = "입주 가능 날짜는 미래 날짜여야 합니다.")
     private LocalDate migrateDate;

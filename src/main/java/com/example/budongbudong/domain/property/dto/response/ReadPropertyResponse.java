@@ -19,7 +19,7 @@ public class ReadPropertyResponse {
 
     private final String name;
     private final String address;
-    private final Long price;
+    private final BigDecimal price;
     private final int floor;
     private final int totalFloor;
     private final int roomCount;

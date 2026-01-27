@@ -20,7 +20,7 @@ public class PropertyFixture {
                 .type(PropertyType.APARTMENT)
                 .builtYear(Year.of(2015))
                 .description("테스트 매물 설명")
-                .price(300_000_000L)
+                .price(BigDecimal.valueOf(300_000_000L))
                 .migrateDate(LocalDate.now().plusMonths(1))
                 .supplyArea(BigDecimal.valueOf(84.32))
                 .privateArea(BigDecimal.valueOf(59.87))

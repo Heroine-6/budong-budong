@@ -5,6 +5,7 @@ import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -13,8 +14,8 @@ public class CreateAuctionResponse {
 
     private final Long id;
     private final Long propertyId;
-    private final Long startPrice;
-    private final Long minBidIncrement;
+    private final BigDecimal startPrice;
+    private final BigDecimal minBidIncrement;
     private final AuctionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime endedAt;

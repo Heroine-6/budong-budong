@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,22 +38,22 @@ public class BidTxService {
 
         Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
 
-        Long bidPrice = request.getPrice();
-        Long currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
+        BigDecimal bidPrice = request.getPrice();
+        BigDecimal currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
 
-        Long minBidIncrement = auction.getMinBidIncrement();
+        BigDecimal minBidIncrement = auction.getMinBidIncrement();
 
         // 첫 입찰은 시작가 이상, 이후 입찰은 최고가 + 최소 입찰 단위 이상.
-        Long minimumRequired = currentMaxPrice == null
+        BigDecimal minimumRequired = currentMaxPrice == null
                 ? auction.getStartPrice()
-                : currentMaxPrice + minBidIncrement;
+                : currentMaxPrice.add(minBidIncrement);
 
-        if (bidPrice < minimumRequired) {
+        if (bidPrice.compareTo(minimumRequired) < 0) {
             log.info("[{}] 최소입찰미달 auctionId={} bid={} minimum={}", th, auctionId, bidPrice, minimumRequired);
             return CreateBidResponse.rejectedFrom(BidStatus.REJECTED, "입찰가는 현재 최고가보다 높아야 합니다.");
         }
 
-        if ((bidPrice - minimumRequired) % minBidIncrement != 0) {
+        if ((bidPrice.subtract(minimumRequired)).remainder(minBidIncrement).compareTo(BigDecimal.ZERO) != 0) {
             log.info("[{}] 입찰단위오류 auctionId={} bid={} minimum={} increment={}", th, auctionId, bidPrice, minimumRequired, minBidIncrement);
             return CreateBidResponse.rejectedFrom(BidStatus.REJECTED, "입찰 금액이 올바르지 않습니다.");
         }

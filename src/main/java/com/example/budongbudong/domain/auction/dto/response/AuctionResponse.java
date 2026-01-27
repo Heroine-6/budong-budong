@@ -6,6 +6,7 @@ import com.example.budongbudong.domain.property.document.AuctionSummary;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 public class AuctionResponse {
 
     private final Long id;
-    private final Long startPrice;
+    private final BigDecimal startPrice;
     private final AuctionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime endedAt;
@@ -29,7 +30,7 @@ public class AuctionResponse {
     }
 
     /**
-     *  Elasticsearch용 팩토리 메서드
+     * Elasticsearch용 팩토리 메서드
      */
     public static AuctionResponse from(AuctionSummary summary) {
         if (summary == null) {

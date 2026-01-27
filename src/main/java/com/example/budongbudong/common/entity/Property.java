@@ -20,6 +20,9 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Property extends BaseEntity {
 
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
+    private final List<PropertyImage> propertyImageList = new ArrayList<>();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -50,7 +53,7 @@ public class Property extends BaseEntity {
     private String description;
 
     @Column(name = "price", nullable = false)
-    private Long price;
+    private BigDecimal price;
 
     @Column(name = "migrate_date", nullable = false)
     private LocalDate migrateDate;
@@ -65,12 +68,15 @@ public class Property extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
-    private List<PropertyImage> propertyImageList = new ArrayList<>();
+    @Column(name = "lat", precision = 10, scale = 7, nullable = true)
+    private BigDecimal lat;
+
+    @Column(name = "lng", precision = 10, scale = 7, nullable = true)
+    private BigDecimal lng;
 
     @Builder
     public Property(String name, String address, int floor, int totalFloor, int roomCount,
-                    PropertyType type, Year builtYear, String description, Long price,
+                    PropertyType type, Year builtYear, String description, BigDecimal price,
                     LocalDate migrateDate, BigDecimal supplyArea, BigDecimal privateArea,
                     User user) {
         this.name = name;
@@ -92,7 +98,7 @@ public class Property extends BaseEntity {
         this.propertyImageList.add(image);
     }
 
-    public void update(Long price, LocalDate migrateDate, String description) {
+    public void update(BigDecimal price, LocalDate migrateDate, String description) {
         if (price != null) {
             this.price = price;
         }

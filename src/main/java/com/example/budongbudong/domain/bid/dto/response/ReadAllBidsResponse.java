@@ -4,6 +4,7 @@ import com.example.budongbudong.common.entity.Bid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static com.example.budongbudong.common.utils.TimeFormatUtil.formatTime;
@@ -12,7 +13,7 @@ import static com.example.budongbudong.common.utils.TimeFormatUtil.formatTime;
 @RequiredArgsConstructor
 public class ReadAllBidsResponse {
 
-    private final Long price;
+    private final BigDecimal price;
     private final String timeFormatted;
     private final LocalDateTime createdAt;
 

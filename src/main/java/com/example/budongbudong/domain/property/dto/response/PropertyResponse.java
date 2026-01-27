@@ -23,7 +23,7 @@ public class PropertyResponse {
     private final PropertyType type;
     private final Year builtYear;
     private final String description;
-    private final Long price;
+    private final BigDecimal price;
     private final LocalDate migrateDate;
     private final BigDecimal supplyArea;
     private final BigDecimal privateArea;
