@@ -2,10 +2,14 @@ package com.example.budongbudong.domain.property.dto.condition;
 
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.enums.PropertyType;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Year;
 
@@ -22,8 +26,8 @@ public class SearchPropertyCond {
     private String name;
     private PropertyType type;
     private String address;
-    private Long minPrice;
-    private Long maxPrice;
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate migrateDate;
     private Year builtYear;

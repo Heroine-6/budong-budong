@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Table(name = "bids")
@@ -25,7 +27,7 @@ public class Bid extends BaseEntity {
     private Auction auction;
 
     @Column(name = "price", nullable = false)
-    private Long price;
+    private BigDecimal price;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -34,7 +36,7 @@ public class Bid extends BaseEntity {
     @Column(name = "is_highest", nullable = false)
     private boolean isHighest = false;
 
-    public Bid(User user, Auction auction, Long price) {
+    public Bid(User user, Auction auction, BigDecimal price) {
         this.user = user;
         this.auction = auction;
         this.price = price;

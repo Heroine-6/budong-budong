@@ -5,6 +5,7 @@ import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -13,7 +14,7 @@ public class CancelAuctionResponse {
 
     private final Long id;
     private final Long propertyId;
-    private final Long startPrice;
+    private final BigDecimal startPrice;
     private final AuctionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime endedAt;

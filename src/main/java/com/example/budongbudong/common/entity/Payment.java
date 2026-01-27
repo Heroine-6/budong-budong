@@ -1,7 +1,7 @@
 package com.example.budongbudong.common.entity;
 
-import com.example.budongbudong.domain.payments.enums.PaymentStatus;
-import com.example.budongbudong.domain.payments.enums.PaymentType;
+import com.example.budongbudong.domain.payment.enums.PaymentStatus;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

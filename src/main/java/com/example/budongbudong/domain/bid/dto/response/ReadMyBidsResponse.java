@@ -5,6 +5,7 @@ import com.example.budongbudong.domain.bid.enums.BidStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -14,7 +15,7 @@ public class ReadMyBidsResponse {
     private final Long propertyId;
     private final BidStatus status;
     private final String propertyName;
-    private final Long price;
+    private final BigDecimal price;
     private final LocalDateTime endedAt;
 
     public static ReadMyBidsResponse from(Bid bid) {

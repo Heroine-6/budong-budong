@@ -38,18 +38,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class BidServiceConcurrencyTest {
 
-    @Autowired private BidService bidService;
-    @Autowired private BidRepository bidRepository;
-    @Autowired private AuctionRepository auctionRepository;
-    @Autowired private AuctionWinnerRepository auctionWinnerRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private PropertyRepository propertyRepository;
-    @Autowired private PropertyImageRepository propertyImageRepository;
-
+    int userNum = 10;
+    @Autowired
+    private BidService bidService;
+    @Autowired
+    private BidRepository bidRepository;
+    @Autowired
+    private AuctionRepository auctionRepository;
+    @Autowired
+    private AuctionWinnerRepository auctionWinnerRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PropertyRepository propertyRepository;
+    @Autowired
+    private PropertyImageRepository propertyImageRepository;
     private Long auctionId;
     private List<User> savedUsers;
-
-    int userNum = 10;
 
     @BeforeEach
     void setUp() {
@@ -69,13 +74,13 @@ class BidServiceConcurrencyTest {
         List<User> users = IntStream.rangeClosed(1, userNum)
                 .mapToObj(i ->
                         User.create(
-                        "user" + i + "-" + runId + "@test.com",
-                        "user" + i,
-                        "password",
-                        "010-0000-000" + i,
-                        "서울 어딘가",
-                        UserRole.GENERAL
-                )).toList();
+                                "user" + i + "-" + runId + "@test.com",
+                                "user" + i,
+                                "password",
+                                "010-0000-000" + i,
+                                "서울 어딘가",
+                                UserRole.GENERAL
+                        )).toList();
         savedUsers = userRepository.saveAll(users);
 
         Property property = Property.builder()
@@ -87,7 +92,7 @@ class BidServiceConcurrencyTest {
                 .type(PropertyType.APARTMENT)
                 .builtYear(Year.of(2015))
                 .description("테스트 매물 설명입니다.")
-                .price(500_000_000L)
+                .price(BigDecimal.valueOf(500_000_000L))
                 .migrateDate(LocalDate.now().plusDays(7))
                 .supplyArea(new BigDecimal("84.32"))
                 .privateArea(new BigDecimal("59.12"))
@@ -97,7 +102,7 @@ class BidServiceConcurrencyTest {
 
         Auction auction = Auction.create(
                 property,
-                1_000L,
+                BigDecimal.valueOf(1_000L),
                 LocalDateTime.now(),
                 LocalDateTime.now().plusMinutes(1)
         );
@@ -155,7 +160,7 @@ class BidServiceConcurrencyTest {
 
         for (int i = 0; i < userNum; i++) {
             final long userId = userIds.get(i);
-            final long bidPrice = 2000 + (i * 100L);
+            final BigDecimal bidPrice = BigDecimal.valueOf(2000 + (i * 100L));
 
             executorService.execute(() -> {
                 ready.countDown();
@@ -191,7 +196,7 @@ class BidServiceConcurrencyTest {
         assertThat(highestCount).isEqualTo(1);
 
         // isHighest = true 실제 최고가인가 ?
-        long maxPrice = bids.stream().mapToLong(Bid::getPrice).max().orElseThrow();
+        BigDecimal maxPrice = bids.stream().map(Bid::getPrice).max(BigDecimal::compareTo).orElseThrow();
         Bid highestBid = bids.stream().filter(Bid::isHighest).findFirst().orElseThrow();
         assertThat(highestBid.getPrice()).isEqualTo(maxPrice);
     }
@@ -205,5 +210,6 @@ class BidServiceConcurrencyTest {
         auctionRepository.saveAndFlush(auction);
     }
 
-    private record ConcurrencyResult(int success, int fail) {}
+    private record ConcurrencyResult(int success, int fail) {
+    }
 }

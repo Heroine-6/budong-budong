@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.payments.enums.repository;
+package com.example.budongbudong.domain.payment.repository;
 
 import com.example.budongbudong.common.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;

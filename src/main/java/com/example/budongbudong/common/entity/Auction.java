@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,10 +26,10 @@ public class Auction extends BaseEntity {
     private Property property;
 
     @Column(name = "start_price", nullable = false)
-    private Long startPrice;
+    private BigDecimal startPrice;
 
     @Column(name = "end_price")
-    private Long endPrice;
+    private BigDecimal endPrice;
 
     @Column(length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
@@ -35,7 +37,7 @@ public class Auction extends BaseEntity {
 
     //통화는 원 단위 정수로 처리하고 소수점은 사용하지 않음
     @Column(name = "min_bid_increment")
-    private Long minBidIncrement;
+    private BigDecimal minBidIncrement;
 
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
@@ -44,7 +46,7 @@ public class Auction extends BaseEntity {
     private LocalDateTime endedAt;
 
     @Builder(builderMethodName = "testBuilder")
-    public Auction(Long id, Property property, Long startPrice, AuctionStatus status, LocalDateTime startedAt, LocalDateTime endedAt) {
+    public Auction(Long id, Property property, BigDecimal startPrice, AuctionStatus status, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.id = id;
         this.property = property;
         this.startPrice = startPrice;
@@ -55,7 +57,7 @@ public class Auction extends BaseEntity {
 
     public static Auction create(
             Property property,
-            Long startPrice,
+            BigDecimal startPrice,
             LocalDateTime startedAt,
             LocalDateTime endedAt
     ) {
@@ -69,9 +71,9 @@ public class Auction extends BaseEntity {
         return auction;
     }
 
-    private static Long calculateMinBidIncrement(Long startPrice) {
+    private static BigDecimal calculateMinBidIncrement(BigDecimal startPrice) {
         // 시작가의 10%를 올림한 값을 최소 입찰 단위로 사용.
-        return (startPrice + 9) / 10;
+        return startPrice.divide(BigDecimal.TEN, RoundingMode.HALF_EVEN);
     }
 
     public void updateStatus(AuctionStatus auctionStatus) {

@@ -53,7 +53,7 @@ public class Property extends BaseEntity {
     private String description;
 
     @Column(name = "price", nullable = false)
-    private Long price;
+    private BigDecimal price;
 
     @Column(name = "migrate_date", nullable = false)
     private LocalDate migrateDate;
@@ -76,7 +76,7 @@ public class Property extends BaseEntity {
 
     @Builder
     public Property(String name, String address, int floor, int totalFloor, int roomCount,
-                    PropertyType type, Year builtYear, String description, Long price,
+                    PropertyType type, Year builtYear, String description, BigDecimal price,
                     LocalDate migrateDate, BigDecimal supplyArea, BigDecimal privateArea,
                     User user) {
         this.name = name;
@@ -98,7 +98,7 @@ public class Property extends BaseEntity {
         this.propertyImageList.add(image);
     }
 
-    public void update(Long price, LocalDate migrateDate, String description) {
+    public void update(BigDecimal price, LocalDate migrateDate, String description) {
         if (price != null) {
             this.price = price;
         }

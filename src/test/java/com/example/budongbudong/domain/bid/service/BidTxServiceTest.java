@@ -29,10 +29,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 class BidTxServiceTest {
 
-    @Autowired private BidTxService bidTxService;
-    @Autowired private AuctionRepository auctionRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private PropertyRepository propertyRepository;
+    @Autowired
+    private BidTxService bidTxService;
+    @Autowired
+    private AuctionRepository auctionRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PropertyRepository propertyRepository;
 
     private Long auctionId;
     private Long userId1;
@@ -82,7 +86,7 @@ class BidTxServiceTest {
                 .type(PropertyType.APARTMENT)
                 .builtYear(Year.of(2015))
                 .description("테스트 매물 설명입니다.")
-                .price(500_000_000L)
+                .price(BigDecimal.valueOf(500_000_000L))
                 .migrateDate(LocalDate.now().plusDays(7))
                 .supplyArea(new BigDecimal("84.32"))
                 .privateArea(new BigDecimal("59.12"))
@@ -92,7 +96,7 @@ class BidTxServiceTest {
 
         Auction auction = Auction.create(
                 property,
-                1_000_000L,
+                BigDecimal.valueOf(1_000_000L),
                 LocalDateTime.now(),
                 LocalDateTime.now().plusMinutes(10)
         );
@@ -104,7 +108,7 @@ class BidTxServiceTest {
     @Test
     @DisplayName("첫 입찰이 최소 입찰 단위 배수가 아니면 실패")
     void firstBidMustMatchIncrement() {
-        CreateBidRequest request = createRequest(1_124_000L);
+        CreateBidRequest request = createRequest(BigDecimal.valueOf(1_124_000L));
 
         assertThatThrownBy(() -> bidTxService.createBidTx(request, auctionId, userId1))
                 .isInstanceOf(CustomException.class)
@@ -115,10 +119,10 @@ class BidTxServiceTest {
     @Test
     @DisplayName("이후 입찰이 최소 입찰 단위 배수가 아니면 실패")
     void nextBidMustMatchIncrement() {
-        CreateBidRequest validFirst = createRequest(1_100_000L);
+        CreateBidRequest validFirst = createRequest(BigDecimal.valueOf(1_100_000L));
         bidTxService.createBidTx(validFirst, auctionId, userId1);
 
-        CreateBidRequest invalidNext = createRequest(1_240_000L);
+        CreateBidRequest invalidNext = createRequest(BigDecimal.valueOf(1_240_000L));
 
         assertThatThrownBy(() -> bidTxService.createBidTx(invalidNext, auctionId, userId2))
                 .isInstanceOf(CustomException.class)
@@ -126,7 +130,7 @@ class BidTxServiceTest {
                 .isEqualTo(ErrorCode.INVALID_BID_PRICE);
     }
 
-    private CreateBidRequest createRequest(Long price) {
+    private CreateBidRequest createRequest(BigDecimal price) {
         CreateBidRequest request = new CreateBidRequest();
         ReflectionTestUtils.setField(request, "price", price);
         return request;

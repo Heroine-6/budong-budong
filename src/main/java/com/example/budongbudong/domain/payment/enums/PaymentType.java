@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.payments.enums;
+package com.example.budongbudong.domain.payment.enums;
 
 public enum PaymentType {
     DEPOSIT("보증금"),

@@ -18,11 +18,11 @@ public class AptMapper {
     }
 
     // 매매가를 원 단위로 변환 (API는 만원 단위로 제공)
-    private static Long parseDealAmount(String dealAmount) {
+    private static BigDecimal parseDealAmount(String dealAmount) {
         if (dealAmount == null) return null;
         String normalized = dealAmount.replace(",", "").replace(" ", "");
         if (normalized.isBlank()) return null;
-        return Long.parseLong(normalized) * 10000;
+        return new BigDecimal(normalized).multiply(BigDecimal.valueOf(10000));
     }
 
     // 전용 면적을 BigDecimal로 변환

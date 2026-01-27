@@ -4,13 +4,15 @@ import com.example.budongbudong.common.entity.Bid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @RequiredArgsConstructor
 public class CreateBidResponse {
 
     private final Long bidId;
     private final Long auctionId;
-    private final Long price;
+    private final BigDecimal price;
 
     public static CreateBidResponse from(Bid bid) {
         return new CreateBidResponse(

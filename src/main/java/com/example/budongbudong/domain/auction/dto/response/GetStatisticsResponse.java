@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static com.example.budongbudong.common.utils.TimeFormatUtil.formatTime;
@@ -15,7 +16,7 @@ public class GetStatisticsResponse {
     private final Long auctionId;
     private final int totalBidders;
     private final int totalBidCount;
-    private final long priceIncrease;
+    private final BigDecimal priceIncrease;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String lastBidTimeFormatted;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,7 +26,7 @@ public class GetStatisticsResponse {
             Long auctionId,
             int totalBidders,
             int totalBidCount,
-            long priceIncrease,
+            BigDecimal priceIncrease,
             LocalDateTime updatedAt
     ) {
         return new GetStatisticsResponse(
