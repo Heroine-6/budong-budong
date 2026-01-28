@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum BidStatus {
+    REJECTED("입찰 조건을 만족하지 못한 상태"),
     PLACED("입찰이 정상적으로 제출된 상태"),
     OUTBID("다른 사용자의 더 높은 입찰로 밀린 상태"),
     WINNING("현재 최고가 입찰 상태"),

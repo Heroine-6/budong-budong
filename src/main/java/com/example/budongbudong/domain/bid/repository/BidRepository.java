@@ -2,8 +2,6 @@ package com.example.budongbudong.domain.bid.repository;
 
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
-import com.example.budongbudong.common.exception.CustomException;
-import com.example.budongbudong.common.exception.ErrorCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -76,9 +74,4 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
         return findHighestBidByAuctionId(auctionId).orElse(null);
     }
 
-    default void validateBidPriceHigherThanCurrentOrThrow(BigDecimal bidPrice, Bid highestBid) {
-        if (highestBid != null && bidPrice.compareTo(highestBid.getPrice()) != 1) {
-            throw new CustomException(ErrorCode.BID_PRICE_TOO_LOW);
-        }
-    }
 }

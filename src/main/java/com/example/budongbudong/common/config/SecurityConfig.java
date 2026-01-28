@@ -112,7 +112,10 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // Elasticsearch 동기화
-                .requestMatchers("api/v1/properties/sync").permitAll();
+                .requestMatchers("api/v1/properties/sync").permitAll()
+
+                // 서버 health check
+                .requestMatchers("/actuator/**").permitAll();
     }
 
     private void propertyAuth(
