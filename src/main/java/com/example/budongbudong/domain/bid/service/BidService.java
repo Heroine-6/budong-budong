@@ -1,12 +1,134 @@
 package com.example.budongbudong.domain.bid.service;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidMessageRequest;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
+import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
+import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
+import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
+import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BidService {
 
     private final BidRepository bidRepository;
+    private final AuctionRepository auctionRepository;
+    private final RedissonClient redissonClient;
+    private final BidTxService bidTxService;
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${rabbitmq.exchange.name}")
+    private String exchangeName;
+    @Value("${rabbitmq.routing.key}")
+    private String routingKey;
+
+    /**
+     * 입찰 등록 - Lock
+     */
+    public CreateBidResponse createBid(CreateBidRequest request, Long auctionId, Long userId) {
+
+        long t0 = System.currentTimeMillis();
+        String th = Thread.currentThread().getName();
+
+        LocalDateTime endedAt = auctionRepository.getEndedAtOrThrow(auctionId);
+        LocalDateTime now = LocalDateTime.now();
+
+        boolean lastHour = !now.isBefore(endedAt.minusHours(1));
+
+        long waitTime = lastHour ? 2L : 0L;
+
+        String lockKey = "lock:auction:" + auctionId;
+        RLock lock = redissonClient.getFairLock(lockKey);
+
+        boolean acquired = false;
+
+        try {
+            log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
+
+            acquired = lock.tryLock(waitTime, -1, TimeUnit.SECONDS);
+
+            if (!acquired) {
+                log.info("[{}] LOCK_FAILED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+                throw new CustomException(ErrorCode.BID_LOCK_TIMEOUT);
+            }
+
+            log.info("[{}] LOCK_ACQUIRED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+
+            return bidTxService.createBidTx(request, auctionId, userId);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CustomException(ErrorCode.BID_LOCK_FAILED);
+
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * 입찰 내역 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ReadAllBidsResponse> readAllBids(Long auctionId, Pageable pageable) {
+
+        auctionRepository.validateExistsOrThrow(auctionId);
+
+        return bidRepository.findAllByAuctionId(auctionId, pageable)
+                .map(ReadAllBidsResponse::from);
+
+    }
+
+    /**
+     * 내 입찰 내역 조회
+     */
+    @Transactional(readOnly = true)
+    public CustomPageResponse<ReadMyBidsResponse> readMyBids(Long userId, String status, Pageable pageable) {
+
+        Page<ReadMyBidsResponse> page = bidRepository.findMyBids(userId, status, pageable);
+        return CustomPageResponse.from(page);
+    }
+
+    /**
+     * Queue 로 입찰 메세지 발행
+     */
+    public CreateBidMessageResponse publishBid(CreateBidRequest request, Long auctionId, Long userId) {
+
+        CreateBidMessageRequest messageRequest = CreateBidMessageRequest.from(auctionId, userId, request);
+        rabbitTemplate.convertAndSend(exchangeName, routingKey, messageRequest);
+
+        return CreateBidMessageResponse.from(BidStatus.PLACED, "입찰 요청 완료");
+    }
+
+    /**
+     * Queue에 발행된 입찰 메시지 구독
+     */
+    @RabbitListener(queues = "${rabbitmq.queue.name}")
+    public void receiveCreateBidMessage(CreateBidMessageRequest request) {
+
+        createBid(request.getCreateBidRequest(), request.getAuctionId(), request.getUserId());
+
+    }
 }

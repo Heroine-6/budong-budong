@@ -1,0 +1,27 @@
+package com.example.budongbudong.domain.bid.dto.response;
+
+import com.example.budongbudong.common.entity.Bid;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import static com.example.budongbudong.common.utils.TimeFormatUtil.formatTime;
+
+@Getter
+@RequiredArgsConstructor
+public class ReadAllBidsResponse {
+
+    private final BigDecimal price;
+    private final String timeFormatted;
+    private final LocalDateTime createdAt;
+
+    public static ReadAllBidsResponse from(Bid bid) {
+        return new ReadAllBidsResponse(
+                bid.getPrice(),
+                formatTime(bid.getCreatedAt()),
+                bid.getCreatedAt()
+        );
+    }
+}
