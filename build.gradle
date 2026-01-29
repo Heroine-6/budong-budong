@@ -80,6 +80,13 @@ dependencies {
 
     // AWS S3 (Presigned URL)
     implementation 'software.amazon.awssdk:s3:2.25.27'
+
+    // 서버 health check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // RabbitMQ
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
 }
 
 tasks.named('test') {
