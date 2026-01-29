@@ -32,14 +32,16 @@ public class DealGeoCodingService {
     private final NaverGeoClient naverGeoClient;
     private final KakaoGeoClient kakaoGeoClient;
 
-    private static final int BATCH_SIZE = 500;   // 한 번에 처리할 건수
-    private static final long THROTTLE_MS = 50;  // API 호출 간격 (rate limit 방지)
+    private static final int BATCH_SIZE = 500;   // 한 번에 처리할 건수 (메모리/쿼터 고려)
+    private static final long THROTTLE_MS = 50;  // API 호출 간격 (레이트 리밋 완화용)
 
+    // 트랜잭션 범위 안에서 엔티티 업데이트를 모아 dirty checking으로 일괄 반영
     @Transactional
     public int geocodeBatch() {
         int totalGeocoded = 0;
 
         while (true) {
+            // 아직 좌표가 없는 건만 배치로 가져와서 외부 API 호출량을 최소화
             List<RealDeal> batch = realDealRepository.findByLatitudeIsNull(
                     PageRequest.of(0, BATCH_SIZE)
             );
@@ -52,6 +54,7 @@ public class DealGeoCodingService {
                         success = tryKakaoGeoCode(deal);
                     }
                     if (!success) {
+                        // 재시도 대상에서 제외하기 위해 실패 건은 (0,0)로 마킹
                         log.warn("[지오코딩 실패] id={}, address={}", deal.getId(), deal.getAddress());
                         deal.applyGeoCode(BigDecimal.ZERO, BigDecimal.ZERO, null);
                     } else {
