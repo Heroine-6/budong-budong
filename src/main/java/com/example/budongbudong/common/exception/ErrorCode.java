@@ -49,6 +49,8 @@ public enum ErrorCode {
 
 
     //------500-----------------------
+    GEOCODING_FAILED(500, "지오코딩에 실패했습니다."),
+    DEAL_COLLECT_FAILED(500, "실거래 데이터 수집에 실패했습니다."),
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
     FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
     SMS_SEND_FAILED(500, "인증번호 전송에 실패했습니다."),

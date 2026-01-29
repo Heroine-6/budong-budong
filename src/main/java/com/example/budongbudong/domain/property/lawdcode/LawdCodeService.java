@@ -17,6 +17,7 @@ import java.util.Optional;
 public class LawdCodeService {
 
     private final Map<String, String> addressToCodeMap = new HashMap<>();
+    private final Map<String, String> codeToAddressMap = new HashMap<>();
 
     @PostConstruct
     public void init() {
@@ -47,6 +48,12 @@ public class LawdCodeService {
                     // 5자리 지역코드 추출 (API용)
                     String lawdCd = code.substring(0, 5);
 
+                    // 코드 → 주소 역방향 매핑 (시도 + 시군구)
+                    if (!sigungu.isEmpty()) {
+                        String prefix = sido + " " + sigungu;
+                        codeToAddressMap.putIfAbsent(lawdCd, prefix);
+                    }
+
                     // 다양한 주소 패턴으로 매핑
                     if (!eupmyeondong.isEmpty()) {
                         // 시도 + 시군구 + 읍면동
@@ -69,6 +76,18 @@ public class LawdCodeService {
         } catch (Exception e) {
             log.error("법정동 코드 로드 실패", e);
         }
+    }
+
+    /**
+     * 지역코드에서 주소 prefix 추출 (시도 + 시군구)
+     * @param lawdCd 5자리 지역코드
+     * @return 시도 + 시군구 (예: "서울특별시 종로구")
+     */
+    public Optional<String> getAddressPrefixFromLawdCd(String lawdCd) {
+        if (lawdCd == null || lawdCd.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(codeToAddressMap.get(lawdCd));
     }
 
     /**
