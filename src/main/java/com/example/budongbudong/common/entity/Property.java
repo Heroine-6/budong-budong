@@ -118,4 +118,14 @@ public class Property extends BaseEntity {
         this.privateArea = api.privateArea();
         this.builtYear = api.builtYear();
     }
+
+    /**
+     * 지오코딩 결과(좌표) 적용
+     * @param latitude 위도
+     * @param longitude 경도
+     */
+    public void applyGeoCode(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }
