@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>결제 요청</title>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #e4ebf5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            width: 380px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            padding: 28px 24px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .deposit {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .contract {
+            background: #4f46e5;
+            color: #ffffff;
+        }
+
+        .balance {
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="title">결제 테스트</div>
+    <div class="subtitle">경매 결제 프로세스를 테스트합니다</div>
+
+    <button class="pay-button deposit" onclick="pay('DEPOSIT')">
+        입찰 보증금 결제
+    </button>
+
+    <button class="pay-button contract" onclick="pay('DOWN_PAYMENT')">
+        계약금 결제
+    </button>
+
+    <button class="pay-button balance" onclick="pay('BALANCE')">
+        잔금 결제
+    </button>
+
+    <div class="footer">
+        Toss Payments · Test Mode
+    </div>
+</div>
+
+<script>
+    const clientKey = "test_ck_E92LAa5PVbqvvxYaZPPz37YmpXyJ";
+    const auctionId = 4;
+
+    async function pay(type) {
+        try {
+            const response = await fetch(`/api/v2/payments/${auctionId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ type })
+            });
+
+            const json = await response.json();
+
+            if (!json.success) {
+                alert(json.message ?? "결제 요청 실패");
+                return;
+            }
+
+            const { orderId, amount, orderName } = json.data;
+
+            const tossPayments = TossPayments(clientKey);
+            await tossPayments.requestPayment("CARD", {
+                orderId,
+                amount,
+                orderName,
+                successUrl: "http://localhost:8080/success.html",
+                failUrl: "http://localhost:8080/fail.html"
+            });
+
+        } catch (e) {
+            console.error(e);
+            alert("결제 중 오류 발생");
+        }
+    }
+</script>
+
+</body>
+</html>

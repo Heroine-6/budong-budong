@@ -16,6 +16,8 @@ public enum ErrorCode {
     AUCTION_NOT_FOUND(404, "존재하지 않는 경매입니다."),
     PROPERTY_NOT_FOUND(404, "존재하지 않는 매물입니다."),
     EXTERNAL_API_FAILED(404, "해당 정보가 없습니다."),
+    AUCTION_WINNER_NOT_FOUND(404, "존재하지 않는 경매 낙찰입니다."),
+    PAYMENT_NOT_FOUND(404, "존재하지 않는 결제 이력입니다."),
 
     //------403-----------------------
     USER_NOT_MATCH(403, "소유자만 접근 가능합니다."),
@@ -46,6 +48,8 @@ public enum ErrorCode {
     SMS_CODE_EXPIRED(400, "인증번호가 만료되었습니다."),
     SMS_CODE_MISMATCH(400, "인증번호가 올바르지 않습니다."),
     S3_NOT_CONFIGURED(400, "S3 설정이 필요합니다."),
+    PAYMENT_AMOUNT_MISMATCH(400, "결제 금액이 일치하지 않습니다."),
+    PAYMENT_FAILURE(400, "결제 승인 실패."),
 
 
     //------500-----------------------

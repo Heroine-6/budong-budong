@@ -33,6 +33,11 @@ spring:
   elasticsearch:
     uris: ${ELASTIC_SEARCH}
 
+  toss:
+    api:
+      confirm-url: https://api.tosspayments.com/v1/payments/confirm
+    secret-key: ${TOSS_SECRET_KEY}
+
 external:
   api:
     service-key: ${API_SERVICE_KEY}
