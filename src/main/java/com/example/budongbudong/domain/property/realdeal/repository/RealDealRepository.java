@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.property.realdeal.repository;
 
 import com.example.budongbudong.common.entity.RealDeal;
+import com.example.budongbudong.domain.property.realdeal.enums.GeoStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,17 +13,20 @@ import java.util.List;
 @Repository
 public interface RealDealRepository extends JpaRepository<RealDeal, Long> {
 
-    List<RealDeal> findByLatitudeIsNull(Pageable pageable);
+    /** PENDING 상태 조회 (신규 지오코딩 대상) */
+    List<RealDeal> findByGeoStatus(GeoStatus geoStatus, Pageable pageable);
 
-    long countByLatitudeIsNull();
+    /** RETRY 상태 중 재시도 횟수 미만인 건 조회 */
+    List<RealDeal> findByGeoStatusAndRetryCountLessThan(GeoStatus geoStatus, int maxRetry, Pageable pageable);
 
-    long countByRoadAddressIsNotNull();
+    long countByGeoStatus(GeoStatus geoStatus);
+
+    long countByGeoStatusAndRetryCountLessThan(GeoStatus geoStatus, int maxRetry);
 
     @Query("""
             SELECT rd FROM RealDeal rd
             WHERE rd.id > :lastId
-              AND rd.latitude IS NOT NULL
-              AND rd.latitude <> 0
+              AND rd.geoStatus = 'SUCCESS'
               AND rd.isDeleted = false
             ORDER BY rd.id ASC
             """)

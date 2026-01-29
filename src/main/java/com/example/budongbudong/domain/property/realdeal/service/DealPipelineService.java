@@ -44,8 +44,8 @@ public class DealPipelineService {
         }
         long t1 = System.currentTimeMillis();
 
-        // 2단계: 지오코딩
-        int geocoded = dealGeoCodingService.geocodeBatch();
+        // 2단계: 지오코딩 (신규 PENDING 건)
+        int geocoded = dealGeoCodingService.geocodePending();
         long t2 = System.currentTimeMillis();
 
         // 3단계: ES 인덱싱

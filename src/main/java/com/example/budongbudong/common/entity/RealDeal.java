@@ -1,6 +1,7 @@
 package com.example.budongbudong.common.entity;
 
 import com.example.budongbudong.domain.property.enums.PropertyType;
+import com.example.budongbudong.domain.property.realdeal.enums.GeoStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,7 +27,7 @@ import java.time.LocalDate;
                 columnNames = {"property_name", "address", "deal_amount", "deal_date", "floor"}
         ),
         indexes = {
-                @Index(name = "idx_rd_lat_null", columnList = "latitude"),  // 지오코딩 미완료 조회용
+                @Index(name = "idx_rd_geo_status", columnList = "geo_status"),  // 지오코딩 상태 조회용
                 @Index(name = "idx_rd_address", columnList = "address")
         })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -73,6 +74,13 @@ public class RealDeal extends BaseEntity {
     @Column(name = "lawd_cd", length = 5)
     private String lawdCd;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "geo_status", length = 10, nullable = false)
+    private GeoStatus geoStatus = GeoStatus.PENDING;
+
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount = 0;
+
     @Builder
     public RealDeal(String propertyName, String address, BigDecimal dealAmount,
                     BigDecimal exclusiveArea, Integer floor, Integer builtYear,
@@ -88,13 +96,41 @@ public class RealDeal extends BaseEntity {
         this.lawdCd = lawdCd;
     }
 
+    /**
+     * 지오코딩 성공 시 좌표 적용
+     */
     public void applyGeoCode(BigDecimal latitude, BigDecimal longitude, String roadAddress) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.roadAddress = roadAddress;
+        this.geoStatus = GeoStatus.SUCCESS;
+    }
+
+    /**
+     * 지오코딩 실패 처리
+     * @param permanent true: 영구 실패(FAILED), false: 재시도 대상(RETRY)
+     */
+    public void markGeoFailed(boolean permanent) {
+        if (permanent) {
+            this.geoStatus = GeoStatus.FAILED;
+        } else {
+            this.geoStatus = GeoStatus.RETRY;
+            this.retryCount++;
+        }
+    }
+
+    /**
+     * 재시도 횟수 초과 시 영구 실패로 전환
+     */
+    public void markExhausted() {
+        this.geoStatus = GeoStatus.FAILED;
     }
 
     public boolean isGeoCoded() {
-        return this.latitude != null && this.longitude != null;
+        return this.geoStatus == GeoStatus.SUCCESS;
+    }
+
+    public boolean needsRetry(int maxRetry) {
+        return this.geoStatus == GeoStatus.RETRY && this.retryCount < maxRetry;
     }
 }
