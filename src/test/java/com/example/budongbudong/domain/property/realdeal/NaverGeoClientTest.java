@@ -1,10 +1,10 @@
-package com.example.budongbudong.domain.property.pricing;
+package com.example.budongbudong.domain.property.realdeal;
 
 import com.example.budongbudong.BudongBudongApplication;
 import com.example.budongbudong.common.entity.RealDeal;
-import com.example.budongbudong.domain.property.pricing.client.NaverGeoClient;
-import com.example.budongbudong.domain.property.pricing.client.NaverGeoResponse;
-import com.example.budongbudong.domain.property.pricing.repository.RealDealRepository;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoResponse;
+import com.example.budongbudong.domain.property.realdeal.repository.RealDealRepository;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

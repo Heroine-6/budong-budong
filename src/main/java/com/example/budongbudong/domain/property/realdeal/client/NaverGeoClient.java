@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.property.pricing.client;
+package com.example.budongbudong.domain.property.realdeal.client;
 
 import com.example.budongbudong.common.config.NaverGeoConfig;
 import org.springframework.cloud.openfeign.FeignClient;

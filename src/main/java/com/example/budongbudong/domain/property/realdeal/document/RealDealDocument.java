@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.property.pricing.document;
+package com.example.budongbudong.domain.property.realdeal.document;
 
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import lombok.*;
