@@ -33,6 +33,20 @@ spring:
   elasticsearch:
     uris: ${ELASTIC_SEARCH}
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+rabbitmq:
+  queue:
+    name: bid.queue
+  exchange:
+    name: bid.exchange
+  routing:
+    key: bid.key
+
   toss:
     api:
       confirm-url: https://api.tosspayments.com/v1/payments/confirm
