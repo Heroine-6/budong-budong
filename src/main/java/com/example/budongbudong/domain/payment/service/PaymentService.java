@@ -4,11 +4,15 @@ import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.response.PaymentRequestResponse;
+import com.example.budongbudong.domain.payment.enums.PaymentFailureReason;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
+import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
+import com.example.budongbudong.domain.payment.toss.exception.TossNetworkException;
 import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,7 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final PaymentAmountCalculator calculator;
     private final TossPaymentClient tossPaymentClient;
+    private final PaymentVerifyPublisher verifyPublisher;
 
     @Transactional
     public PaymentRequestResponse requestPayment(Long userId, Long auctionId, PaymentType type) {
@@ -53,19 +58,37 @@ public class PaymentService {
         return PaymentRequestResponse.from(payment);
     }
 
+    /**
+     * 결제 승인 처리
+     * - 성공 시 즉시 SUCCESS
+     * - 네트워크 장애 시 VERIFYING 전이 후 MQ 트리거 발행
+     */
     @Transactional
     public void confirmPayment(PaymentConfirmRequest request) {
 
         Payment payment = paymentRepository.getByOrderIdOrThrow(request.orderId());
 
+        //이미 확정된 결제 중복 처리 방지
+        if(payment.isFinalized()) {
+            return;
+        }
         //금액 검증
         if (payment.getAmount().compareTo(request.amount()) != 0){
+            payment.makeFail(PaymentFailureReason.AMOUNT_MISMATCH);
             throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
         //toss 승인 호출
-        tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
+        try{
+            tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
+            payment.makeSuccess(request.paymentKey(), LocalDateTime.now());
+        } catch(TossClientException e) {
+            payment.makeFail(PaymentFailureReason.INVALID_PAYMENT_INFO);
+        } catch(TossNetworkException e) {
+            payment.makeVerifying(PaymentFailureReason.PG_NETWORK_ERROR, request.paymentKey());
+            //일정 시간 후 재확인을 위한 MQ 트리거
+            verifyPublisher.publish(payment.getId(), 60000L);
+        }
 
-        payment.makeSuccess(request.paymentKey(), LocalDateTime.now());
     }
 }

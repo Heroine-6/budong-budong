@@ -48,7 +48,8 @@ public enum ErrorCode {
     S3_NOT_CONFIGURED(400, "S3 설정이 필요합니다."),
     PAYMENT_AMOUNT_MISMATCH(400, "결제 금액이 일치하지 않습니다."),
     PAYMENT_FAILURE(400, "결제 승인 실패."),
-
+    FAIL_HMAC(400, "HMAC 생성 실피했습니다." ),
+    INVALID_WEBHOOK_SIGNATURE(400, "잘못된 웹훅 시그니처입니다." ),
 
     //------500-----------------------
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
