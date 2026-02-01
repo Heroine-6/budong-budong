@@ -1,10 +1,10 @@
 package com.example.budongbudong.domain.payment.repository;
 
+import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Payment;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.domain.payment.enums.PaymentFailureReason;
-import com.example.budongbudong.domain.payment.enums.PaymentStatus;
+import com.example.budongbudong.domain.payment.enums.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -24,17 +24,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findByOrderId(String orderId);
 
-    List<Payment> findAllByStatusAndFailureReasonIn(PaymentStatus status, List<PaymentFailureReason> failureReasons);
+    Optional<Payment> findByAuctionAndTypeAndStatus(Auction auction, PaymentType paymentType, PaymentStatus paymentStatus);
 
-    Optional<Payment> findByPaymentKey(String paymentKey);
-
+    List<Payment> findAllByStatus(PaymentStatus paymentStatus);
 
     default Payment getByOrderIdOrThrow(String orderId) {
         return findByOrderId(orderId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
-    }
-
-    default Payment getByPaymentKeyOrThrow(String paymentKey) {
-        return findByPaymentKey(paymentKey).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
     default Payment getByIdOrThrow(Long paymentId) {

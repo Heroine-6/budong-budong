@@ -53,6 +53,7 @@ public class SecurityConfig {
                     propertyAuth(auth);
                     auctionAuth(auth);
                     bidAuth(auth);
+                    paymentAuth(auth);
                     auth.anyRequest().authenticated();
                 })
                 .exceptionHandling(ex -> ex
@@ -171,6 +172,15 @@ public class SecurityConfig {
 
             .requestMatchers(HttpMethod.GET, "/api/v1/bids/my")
             .hasRole(UserRole.GENERAL.name());
+    }
+
+    private void paymentAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/**")
+            .hasRole(UserRole.GENERAL.name())
+            .requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/confirm").permitAll();
+
     }
 
 }

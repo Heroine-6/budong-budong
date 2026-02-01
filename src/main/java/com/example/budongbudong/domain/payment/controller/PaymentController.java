@@ -1,28 +1,31 @@
 package com.example.budongbudong.domain.payment.controller;
 
+import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.request.PaymentRequest;
-import com.example.budongbudong.domain.payment.dto.response.PaymentRequestResponse;
+import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
 import com.example.budongbudong.domain.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/payments")
+@RequestMapping("/api/payments/v2")
 public class PaymentController {
 
     private final PaymentService paymentService;
 
     //TODO 구현 완료 후 AuthenticationPrincipal로 수정하기
-    @PostMapping("/{auctionId}")
-    public ResponseEntity<GlobalResponse<PaymentRequestResponse>> requestPayment(
+    @PostMapping("/auctions/{auctionId}")
+    public ResponseEntity<GlobalResponse<PaymentTossReadyResponse>> requestPayment(
             @PathVariable Long auctionId,
-            @RequestBody PaymentRequest request
+            @RequestBody PaymentRequest request,
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        PaymentRequestResponse response = paymentService.requestPayment(1L, auctionId, request.type());
+        PaymentTossReadyResponse response = paymentService.requestPayment(authUser.getUserId(), auctionId, request.type());
         return GlobalResponse.ok(response);
     }
 

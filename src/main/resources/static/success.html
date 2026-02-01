@@ -156,7 +156,7 @@
         setUI("loading", "서버에 결제 승인을 요청하고 있어요…");
 
         try {
-            const res = await fetch("/api/v2/payments/confirm", {
+            const res = await fetch("/api/payments/v2/confirm", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ paymentKey, orderId, amount })

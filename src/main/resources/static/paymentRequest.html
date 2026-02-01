@@ -114,7 +114,7 @@
 
     async function pay(type) {
         try {
-            const response = await fetch(`/api/v2/payments/${auctionId}`, {
+            const response = await fetch(`/api/payments/v2/auctions/${auctionId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

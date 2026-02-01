@@ -6,15 +6,18 @@ import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 
+/**
+ * 토스 결제창 호출용 DTO
+ */
 @Getter
 @RequiredArgsConstructor
-public class PaymentRequestResponse {
+public class PaymentTossReadyResponse {
     private final String orderId;
     private final BigDecimal amount;
     private final String orderName;
 
-    public static PaymentRequestResponse from(Payment payment) {
-        return new PaymentRequestResponse(
+    public static PaymentTossReadyResponse from(Payment payment) {
+        return new PaymentTossReadyResponse(
                 payment.getOrderId(),
                 payment.getAmount(),
                 payment.getOrderName()

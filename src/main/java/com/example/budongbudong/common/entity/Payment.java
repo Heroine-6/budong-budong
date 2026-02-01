@@ -1,6 +1,8 @@
 package com.example.budongbudong.common.entity;
 
 import com.example.budongbudong.domain.payment.enums.*;
+import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
+import com.example.budongbudong.domain.payment.toss.enums.TossPaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -90,6 +92,24 @@ public class Payment extends BaseEntity {
         this.paymentKey = paymentKey;
         if(this.verifyingStartedAt == null) {
             this.verifyingStartedAt = LocalDateTime.now();
+        }
+    }
+
+    public void makeInProgress(String paymentKey) {
+        if(this.status != PaymentStatus.READY) return;
+        this.status = PaymentStatus.IN_PROGRESS;
+        this.paymentKey = paymentKey;
+    }
+
+    public void finalizeByTossStatus(TossPaymentStatus status) {
+        if(this.status != PaymentStatus.VERIFYING) return;
+
+        switch (status) {
+            case SUCCESS -> makeSuccess(this.paymentKey, LocalDateTime.now());
+            case FAIL -> makeFail(PaymentFailureReason.UNKNOWN);
+            case UNKNOWN -> {
+                //그대로 VERIFYING 유지
+            }
         }
     }
 
