@@ -76,16 +76,16 @@ public class Payment extends BaseEntity {
         this.failureReason = null;
     }
 
-    /**
-     * 승인 결과 미확정 상태 처리
-     * - PG 장애 또는 네트워크 오류 시 사용
-     * - 배치 재확인 대상
-     */
     public void makeFail(PaymentFailureReason failureReason) {
         this.status = PaymentStatus.FAIL;
         this.failureReason = failureReason;
     }
 
+    /**
+     * 승인 결과 미확정 상태 처리
+     * - PG 장애 또는 네트워크 오류 시 사용
+     * - 배치 재확인 대상
+     */
     public void makeVerifying(PaymentFailureReason failureReason, String paymentKey) {
         this.status = PaymentStatus.VERIFYING;
         this.failureReason = failureReason;

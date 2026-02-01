@@ -18,7 +18,6 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    //TODO 구현 완료 후 AuthenticationPrincipal로 수정하기
     @PostMapping("/auctions/{auctionId}")
     public ResponseEntity<GlobalResponse<PaymentTossReadyResponse>> requestPayment(
             @PathVariable Long auctionId,
