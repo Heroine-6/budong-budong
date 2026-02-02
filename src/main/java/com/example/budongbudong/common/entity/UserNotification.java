@@ -16,9 +16,18 @@ public class UserNotification extends BaseEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "notification_id")
-    private Long notificationId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "notification_id", nullable = false)
+    private Notification notification;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "user_id")
-    private Long userId;
+    public static UserNotification create(Notification notification, User user) {
+        UserNotification userNotification = new UserNotification();
+        userNotification.notification = notification;
+        userNotification.user = user;
+        return userNotification;
+    }
 }

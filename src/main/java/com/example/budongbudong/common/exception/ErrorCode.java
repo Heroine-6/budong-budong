@@ -9,7 +9,7 @@ public enum ErrorCode {
     AUCTION_ALREADY_EXISTS(409, "이미 경매가 진행중인 매물입니다."),
     AUCTION_INVALID_STATUS_FOR_CANCEL(409, "경매 시작 전 상태에서만 경매를 취소할 수 있습니다."),
     BID_LOCK_TIMEOUT(409, "입찰 요청이 몰려 잠시 후 다시 시도해주세요."),
-    ALREADY_PAID(409, "이미 처리된 결제 입니다." ),
+    ALREADY_PAID(409, "이미 처리된 결제 입니다."),
 
     //------404-----------------------
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다."),
@@ -18,6 +18,7 @@ public enum ErrorCode {
     EXTERNAL_API_FAILED(404, "해당 정보가 없습니다."),
     AUCTION_WINNER_NOT_FOUND(404, "존재하지 않는 경매 낙찰입니다."),
     PAYMENT_NOT_FOUND(404, "존재하지 않는 결제 이력입니다."),
+    NOTIFICATION_NOT_FOUND(404, "존재하지 않는 알림입니다."),
 
     //------403-----------------------
     USER_NOT_MATCH(403, "소유자만 접근 가능합니다."),
@@ -49,8 +50,8 @@ public enum ErrorCode {
     S3_NOT_CONFIGURED(400, "S3 설정이 필요합니다."),
     PAYMENT_AMOUNT_MISMATCH(400, "결제 금액이 일치하지 않습니다."),
     PAYMENT_FAILURE(400, "결제 승인 실패."),
-    FAIL_HMAC(400, "HMAC 생성 실피했습니다." ),
-    INVALID_WEBHOOK_SIGNATURE(400, "잘못된 웹훅 시그니처입니다." ),
+    FAIL_HMAC(400, "HMAC 생성 실피했습니다."),
+    INVALID_WEBHOOK_SIGNATURE(400, "잘못된 웹훅 시그니처입니다."),
 
     //------500-----------------------
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
