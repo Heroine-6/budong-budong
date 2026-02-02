@@ -117,7 +117,7 @@ public class PaymentService {
             PaymentFailureReason reason
     ) {
 
-        payment.makeVerifying(PaymentFailureReason.PG_NETWORK_ERROR, request.paymentKey());
+        payment.makeVerifying(reason, request.paymentKey());
         //일정 시간 후 재확인을 위한 MQ 트리거
         verifyPublisher.publish(payment.getId(), 30000L);
     }
