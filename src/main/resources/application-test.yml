@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: local
   application:
     name: budong-budong
 
@@ -12,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      ddl-auto: ${DDL_AUTO:create-drop}
     show-sql: true
     properties:
       hibernate:
@@ -45,6 +43,8 @@ spring:
     api:
       confirm-url: https://api.tosspayments.com/v1/payments/confirm
     secret-key: ${TOSS_SECRET_KEY}
+    test:
+      force-network-error: true
 
 rabbitmq:
   queue:
@@ -54,23 +54,9 @@ rabbitmq:
   routing:
     key: bid.key
 
-  toss:
-    api:
-      confirm-url: https://api.tosspayments.com/v1/payments/confirm
-    secret-key: ${TOSS_SECRET_KEY}
-
 external:
   api:
     service-key: ${API_SERVICE_KEY}
-
-naver:
-  map:
-    client-id: ${NAVER_MAP_CLIENT_ID}
-    client-secret: ${NAVER_MAP_CLIENT_SECRET}
-
-kakao:
-  map:
-    rest-api-key: ${KAKAO_MAP_REST_API_KEY}
 
 coolsms:
   api-key: ${COOLSMS_API_KEY}
@@ -94,9 +80,3 @@ cloud:
       bucket: ${AWS_S3_BUCKET:}
     region:
       static: ${AWS_REGION:ap-northeast-2}
-
-logging:
-  level:
-    org.springframework.data.elasticsearch.client.WIRE: TRACE
-    org.springframework.data.elasticsearch: DEBUG
-    tracer: TRACE

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>결제 승인</title>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+        body {
+            margin: 0; height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #e4ebf5);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card {
+            width: 420px; background: #fff; border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.12);
+            padding: 28px 24px;
+        }
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 12px; border-radius: 999px;
+            font-size: 12px; font-weight: 700;
+            background: #eef2ff; color: #3730a3;
+            margin-bottom: 14px;
+        }
+        .title { font-size: 20px; font-weight: 800; margin: 6px 0 8px; }
+        .desc { font-size: 14px; color: #6b7280; margin: 0 0 18px; line-height: 1.5; }
+        .panel {
+            border: 1px solid #e5e7eb; border-radius: 12px;
+            padding: 14px; background: #fafafa;
+        }
+        .row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; }
+        .label { color: #6b7280; font-size: 13px; }
+        .value { font-weight: 700; font-size: 13px; color: #111827; word-break: break-all; text-align: right; }
+        .status {
+            margin-top: 18px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+        }
+        .status.ok { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+        .status.fail { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+        .status.loading { border-color: #c7d2fe; background: #eef2ff; color: #3730a3; }
+        .actions { display: flex; gap: 10px; margin-top: 14px; }
+        .btn {
+            flex: 1; border: none; border-radius: 12px; padding: 12px 14px;
+            font-size: 14px; font-weight: 700; cursor: pointer; transition: .2s;
+        }
+        .btn.primary { background: #2563eb; color: #fff; }
+        .btn.ghost { background: #111827; color: #fff; }
+        .btn:disabled { opacity: .6; cursor: not-allowed; }
+        .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+        .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 18px; }
+        .spinner {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid rgba(55,48,163,.2);
+            border-top-color: rgba(55,48,163,1);
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="badge"><span class="spinner" id="spin"></span><span id="badgeText">승인 처리 중</span></div>
+    <div class="title" id="title">결제 승인 처리 중입니다</div>
+    <p class="desc" id="desc">잠시만 기다려 주세요. 새로고침/뒤로가기를 하지 마세요.</p>
+
+    <div class="panel">
+        <div class="row">
+            <div class="label">orderId</div>
+            <div class="value" id="orderIdView">-</div>
+        </div>
+        <div class="row">
+            <div class="label">amount</div>
+            <div class="value" id="amountView">-</div>
+        </div>
+        <div class="row">
+            <div class="label">paymentKey</div>
+            <div class="value" id="paymentKeyView">-</div>
+        </div>
+    </div>
+
+    <div class="status loading" id="statusBox">서버에 결제 승인을 요청하고 있어요…</div>
+
+    <div class="actions">
+        <button class="btn primary" id="retryBtn" onclick="retry()" disabled>다시 시도</button>
+        <button class="btn ghost" onclick="location.href='/paymentRequest.html'">결제 페이지</button>
+    </div>
+
+    <div class="footer">Toss Payments · Test Mode</div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentKey = urlParams.get("paymentKey");
+    const orderId = urlParams.get("orderId");
+    const amount = urlParams.get("amount");
+    let confirming = false;
+
+    document.getElementById("orderIdView").innerText = orderId ?? "-";
+    document.getElementById("amountView").innerText = amount ?? "-";
+    document.getElementById("paymentKeyView").innerText = paymentKey ?? "-";
+
+    function setUI(state, message) {
+        const statusBox = document.getElementById("statusBox");
+        const title = document.getElementById("title");
+        const desc = document.getElementById("desc");
+        const badgeText = document.getElementById("badgeText");
+        const spin = document.getElementById("spin");
+        const retryBtn = document.getElementById("retryBtn");
+
+        statusBox.classList.remove("ok", "fail", "loading");
+        statusBox.classList.add(state);
+
+        if (state === "ok") {
+            badgeText.innerText = "승인 완료";
+            title.innerText = "결제가 완료되었습니다";
+            desc.innerText = "영수증/결제내역 페이지로 이동할 수 있어요.";
+            spin.style.display = "none";
+            retryBtn.disabled = true;
+        } else if (state === "fail") {
+            badgeText.innerText = "승인 실패";
+            title.innerText = "결제 승인을 완료하지 못했습니다";
+            desc.innerText = "잠시 후 다시 시도하거나 결제 페이지로 돌아가 주세요.";
+            spin.style.display = "none";
+            retryBtn.disabled = false;
+        } else {
+            badgeText.innerText = "승인 처리 중";
+            title.innerText = "결제 승인 처리 중입니다";
+            desc.innerText = "잠시만 기다려 주세요. 새로고침/뒤로가기를 하지 마세요.";
+            spin.style.display = "inline-block";
+            retryBtn.disabled = true;
+        }
+
+        statusBox.innerText = message;
+    }
+
+    async function confirmPayment() {
+        if (confirming) return;
+        confirming = true;
+        if (!paymentKey || !orderId || !amount) {
+            setUI("fail", "결제 정보가 누락되었습니다. (paymentKey/orderId/amount)");
+            return;
+        }
+
+        // 새로고침 중복 호출 방지(UX)
+        const onceKey = "payment-confirmed:" + orderId;
+        if (sessionStorage.getItem(onceKey)) {
+            setUI("ok", "이미 결제 승인 처리가 완료되었습니다.");
+            return;
+        }
+
+        setUI("loading", "서버에 결제 승인을 요청하고 있어요…");
+
+        try {
+            const res = await fetch("/api/payments/v2/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentKey, orderId, amount })
+            });
+
+            if (res.status === 204) {
+                sessionStorage.setItem(onceKey, "true");
+                setUI("ok", "결제 승인 완료 ✅");
+                return;
+            }
+
+            setUI("fail", "결제 승인 실패 ❌");
+            confirming = false;
+        } catch (e) {
+            console.error(e);
+            confirming = false;
+            setUI("fail", "네트워크 오류로 승인 요청에 실패했습니다.");
+        }
+    }
+
+    function retry() {
+        confirmPayment();
+    }
+
+    confirmPayment();
+</script>
+
+</body>
+</html>

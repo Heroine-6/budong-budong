@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -52,7 +53,8 @@ public class SecurityConfig {
                     propertyAuth(auth);
                     auctionAuth(auth);
                     bidAuth(auth);
-                    realDealAuth(auth);
+realDealAuth(auth);
+                    paymentAuth(auth);
                     auth.anyRequest().authenticated();
                 })
                 .exceptionHandling(ex -> ex
@@ -96,6 +98,16 @@ public class SecurityConfig {
                 GlobalResponse.exception(errorCode, null);
 
         objectMapper.writeValue(response.getWriter(), body);
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+                .requestMatchers(
+                        "/paymentRequest.html",
+                        "/success.html",
+                        "/fail.html"
+                );
     }
 
     private void commonAuth(
@@ -163,11 +175,19 @@ public class SecurityConfig {
             .hasRole(UserRole.GENERAL.name());
     }
 
-    private void realDealAuth(
+private void realDealAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         // 실거래가 검색 API - 비로그인 허용
         auth.requestMatchers(HttpMethod.GET, "/api/v2/real-deals/**").permitAll();
+    }
+
+    private void paymentAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/**")
+            .hasRole(UserRole.GENERAL.name())
+            .requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/confirm").permitAll();
     }
 
 }
