@@ -3,10 +3,12 @@ package com.example.budongbudong.domain.payment.service;
 import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
+import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
 import com.example.budongbudong.domain.payment.enums.*;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
@@ -16,6 +18,7 @@ import com.example.budongbudong.domain.payment.toss.exception.TossNetworkExcepti
 import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,6 +114,14 @@ public class PaymentService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public CustomSliceResponse<ReadAllPaymentResponse> getAllPaymentList(Long userId, Pageable pageable) {
+
+        Slice<Payment> payments = paymentRepository.findAllByUserId(userId, pageable);
+        Slice<ReadAllPaymentResponse> response = payments.map(ReadAllPaymentResponse::from);
+        return CustomSliceResponse.from(response.getContent(), pageable.getPageSize(), pageable.getPageNumber(), response.hasNext());
+    }
+
     private void makeVerifyingAndPublish(
             Payment payment,
             PaymentConfirmRequest request,
@@ -130,4 +141,6 @@ public class PaymentService {
 
         paymentRepository.save(payment);
     }
+
+
 }
