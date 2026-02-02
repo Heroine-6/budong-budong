@@ -1,9 +1,8 @@
 package com.example.budongbudong.domain.payment.dto.response;
 
-import com.example.budongbudong.common.entity.Payment;
+import com.example.budongbudong.domain.payment.dto.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.enums.PaymentDisplayStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -20,9 +19,9 @@ public class ReadAllPaymentResponse {
     private final PaymentDisplayStatus status;
     private final LocalDateTime approvedAt;
 
-    public static ReadAllPaymentResponse from(Payment payment){
+    public static ReadAllPaymentResponse from(ReadAllPaymentDto payment){
         return new ReadAllPaymentResponse(
-                payment.getId(),
+                payment.getPaymentId(),
                 payment.getType(),
                 payment.getOrderName(),
                 payment.getAmount(),

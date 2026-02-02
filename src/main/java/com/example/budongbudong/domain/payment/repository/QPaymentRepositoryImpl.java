@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.payment.repository;
 
-import com.example.budongbudong.common.entity.Payment;
+import com.example.budongbudong.domain.payment.dto.QReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -19,10 +20,18 @@ public class QPaymentRepositoryImpl implements QPaymentRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Slice<Payment> findAllByUserId(Long userId, Pageable pageable) {
+    public Slice<ReadAllPaymentDto> findAllByUserId(Long userId, Pageable pageable) {
 
-        List<Payment> contents = queryFactory
-                .selectFrom(payment)
+        List<ReadAllPaymentDto> contents = queryFactory
+                .select(new QReadAllPaymentDto(
+                        payment.id,
+                        payment.type,
+                        payment.orderName,
+                        payment.amount,
+                        payment.status,
+                        payment.approvedAt
+                ))
+                .from(payment)
                 .where(
                         payment.user.id.eq(userId),
                         payment.isDeleted.isFalse(),
