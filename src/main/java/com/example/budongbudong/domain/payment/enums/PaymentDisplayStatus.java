@@ -15,7 +15,7 @@ public enum PaymentDisplayStatus {
     public static PaymentDisplayStatus from(PaymentStatus status) {
         return switch(status) {
             case SUCCESS -> PAID;
-            case VERIFYING ->  FAILED; //사용자 UX 관점
+            case VERIFYING ->  IN_PROGRESS; //사용자 UX 관점
             case FAIL -> FAILED;
             default -> IN_PROGRESS;
         };
