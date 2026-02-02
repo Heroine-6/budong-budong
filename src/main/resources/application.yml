@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:create-drop}
+      ddl-auto: ${DDL_AUTO:update}
     show-sql: true
     properties:
       hibernate:
@@ -82,3 +82,9 @@ cloud:
       bucket: ${AWS_S3_BUCKET:}
     region:
       static: ${AWS_REGION:ap-northeast-2}
+
+logging:
+  level:
+    org.springframework.data.elasticsearch.client.WIRE: TRACE
+    org.springframework.data.elasticsearch: DEBUG
+    tracer: TRACE
