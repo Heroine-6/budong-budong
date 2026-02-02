@@ -6,6 +6,7 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
+import com.example.budongbudong.domain.payment.dto.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
 import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
@@ -117,7 +118,7 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public CustomSliceResponse<ReadAllPaymentResponse> getAllPaymentList(Long userId, Pageable pageable) {
 
-        Slice<Payment> payments = paymentRepository.findAllByUserId(userId, pageable);
+        Slice<ReadAllPaymentDto> payments = paymentRepository.findAllByUserId(userId, pageable);
         Slice<ReadAllPaymentResponse> response = payments.map(ReadAllPaymentResponse::from);
         return CustomSliceResponse.from(response.getContent(), pageable.getPageSize(), pageable.getPageNumber(), response.hasNext());
     }
@@ -141,6 +142,4 @@ public class PaymentService {
 
         paymentRepository.save(payment);
     }
-
-
 }
