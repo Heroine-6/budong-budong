@@ -83,6 +83,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
         }
     }
 
+    default Auction getAuctionWithPropertyOrTrow(Long auctionId) {
+        return findByIdWithProperty(auctionId).orElseThrow(()-> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+    }
+
     @Query("""
             select a
             from Auction a
@@ -126,4 +130,12 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
               and a.status = 'OPEN'
         """)
     int closeOpened(List<Long> ids);
+
+    @Query("""
+            select a
+            from Auction a
+            join fetch a.property p
+            where a.id = :auctionId
+        """)
+    Optional<Auction> findByIdWithProperty(Long auctionId);
 }

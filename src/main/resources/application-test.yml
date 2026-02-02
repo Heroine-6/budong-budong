@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: local
   application:
     name: budong-budong
 
@@ -45,6 +43,8 @@ spring:
     api:
       confirm-url: https://api.tosspayments.com/v1/payments/confirm
     secret-key: ${TOSS_SECRET_KEY}
+    test:
+      force-network-error: true
 
 rabbitmq:
   queue:
@@ -53,11 +53,6 @@ rabbitmq:
     name: bid.exchange
   routing:
     key: bid.key
-
-  toss:
-    api:
-      confirm-url: https://api.tosspayments.com/v1/payments/confirm
-    secret-key: ${TOSS_SECRET_KEY}
 
 external:
   api:
