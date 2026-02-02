@@ -1,9 +1,7 @@
 package com.example.budongbudong.domain.payment.repository;
 
 import com.example.budongbudong.common.entity.Payment;
-import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;

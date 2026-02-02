@@ -4,10 +4,7 @@ import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Payment;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
 import com.example.budongbudong.domain.payment.enums.*;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
