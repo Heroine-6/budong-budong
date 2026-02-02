@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @RequiredArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReadAllPaymentResponse {
     private final Long paymentId;
     private final PaymentType type;
