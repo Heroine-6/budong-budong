@@ -33,4 +33,21 @@ public class Notification extends BaseEntity {
     @JoinColumn(name = "auction_id", nullable = false)
     private Auction auction;
 
+    public static Notification create(
+            String content,
+            NotificationType type,
+            Long sellerId,
+            Auction auction
+    ) {
+        Notification notification = new Notification();
+        notification.content = content;
+        notification.type = type;
+        notification.sellerId = sellerId;
+        notification.auction = auction;
+        return notification;
+    }
+
+    public void updateWinnerId(Long winnerId) {
+        this.winnerId = winnerId;
+    }
 }
