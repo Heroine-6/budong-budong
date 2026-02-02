@@ -23,7 +23,7 @@ public class UserNotificationService {
      *
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void creatUserNotification(Long notificationId, Long userId) {
+    public void createUserNotification(Long notificationId, Long userId) {
 
         Notification notification = notificationRepository.getByIdOrThrow(notificationId);
         User user = userRepository.getByIdOrThrow(userId);
