@@ -65,7 +65,7 @@ public class PaymentVerifyConsumer {
         } catch(TossNetworkException e) {
             requeue(payment);
         }
-        }
+    }
     private void requeue (Payment payment) {
         //PG 조회 자체가 실패한 경우 재시도
         verifyPublisher.publish(payment.getId(), 30000L);
