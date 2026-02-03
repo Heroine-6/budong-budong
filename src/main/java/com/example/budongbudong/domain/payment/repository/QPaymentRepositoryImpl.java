@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.payment.repository;
 
-import com.example.budongbudong.domain.payment.dto.QReadAllPaymentDto;
-import com.example.budongbudong.domain.payment.dto.QReadPaymentDetailDto;
+import com.example.budongbudong.domain.payment.dto.query.QReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.QReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;

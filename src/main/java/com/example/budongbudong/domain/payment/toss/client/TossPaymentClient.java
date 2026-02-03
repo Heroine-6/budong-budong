@@ -54,7 +54,11 @@ public class TossPaymentClient {
 
         try {
             ResponseEntity<TossConfirmResponse> response = restTemplate.postForEntity(confirmUrl, request, TossConfirmResponse.class);
-            return response.getBody();
+            TossConfirmResponse responseBody = response.getBody();
+            if (responseBody == null) {
+                throw new TossNetworkException("토스 승인 응답 바디가 비어있습니다.");
+            }
+            return responseBody;
         } catch (HttpClientErrorException e) {
             // 4xx 승인 불가 확정
             throw new TossClientException(e.getResponseBodyAsString());
