@@ -27,6 +27,6 @@ public class ChatServerService {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
 
-        return new ChatServerResponse(property.getName(), property.getAddress(), bidder.getName());
+        return new ChatServerResponse(propertyId, property.getUser().getId(), bidderId, property.getName(), property.getAddress(), bidder.getName());
     }
 }
