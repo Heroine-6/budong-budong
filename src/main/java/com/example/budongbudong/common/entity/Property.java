@@ -68,11 +68,11 @@ public class Property extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "lat", precision = 10, scale = 7, nullable = true)
-    private BigDecimal lat;
+    @Column(name = "latitude", precision = 10, scale = 7)
+    private BigDecimal latitude;
 
-    @Column(name = "lng", precision = 10, scale = 7, nullable = true)
-    private BigDecimal lng;
+    @Column(name = "longitude", precision = 10, scale = 7)
+    private BigDecimal longitude;
 
     @Builder
     public Property(String name, String address, int floor, int totalFloor, int roomCount,
@@ -117,5 +117,15 @@ public class Property extends BaseEntity {
         this.price = api.price();
         this.privateArea = api.privateArea();
         this.builtYear = api.builtYear();
+    }
+
+    /**
+     * 지오코딩 결과(좌표) 적용
+     * @param latitude 위도
+     * @param longitude 경도
+     */
+    public void applyGeoCode(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }

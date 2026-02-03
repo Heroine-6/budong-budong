@@ -17,6 +17,10 @@ import com.example.budongbudong.domain.property.event.PropertyEventType;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.event.PropertyEventPublisher;
 import com.example.budongbudong.domain.property.lawdcode.LawdCodeService;
+import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoResponse;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoResponse;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
@@ -27,6 +31,7 @@ import com.example.budongbudong.domain.propertyimage.service.PropertyImageServic
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -50,6 +55,8 @@ public class PropertyService {
     private final VillaClient villaClient;
     private final LawdCodeService lawdCodeService;
     private final PropertyEventPublisher propertyEventPublisher;
+    private final NaverGeoClient naverGeoClient;
+    private final KakaoGeoClient kakaoGeoClient;
 
     @Value("${external.api.service-key}")
     private String serviceKey;
@@ -67,6 +74,9 @@ public class PropertyService {
 
         // 외부 API에서 받은 값 엔티티에 저장
         property.applyApiInfo(apiInfo);
+
+        // 지오코딩으로 좌표 추출 (네이버 → 카카오 fallback)
+        applyGeoCode(property, request.address());
 
         // DB에 저장
         propertyRepository.save(property);
@@ -237,6 +247,46 @@ public class PropertyService {
                 || address.endsWith(jibun)
                 || address.contains(" " + jibun + "-")
                 || address.contains(" " + jibun + " ");
+    }
+
+    /**
+     * 주소를 기반으로 지오코딩하여 좌표 적용
+     * - 네이버 API 우선 사용, 실패 시 카카오 API fallback
+     * - 둘 다 실패해도 매물 등록은 진행 (좌표만 null)
+     */
+    private void applyGeoCode(Property property, String address) {
+        try {
+            // 1. 네이버 지오코딩 시도
+            NaverGeoResponse naverResponse = naverGeoClient.geocode(address);
+            if (naverResponse.hasResult()) {
+                NaverGeoResponse.Address addr = naverResponse.addresses().get(0);
+                property.applyGeoCode(
+                        new BigDecimal(addr.y()),  // 위도
+                        new BigDecimal(addr.x())   // 경도
+                );
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("네이버 지오코딩 실패: {} - {}", address, e.getMessage());
+        }
+
+        try {
+            // 2. 카카오 지오코딩 fallback
+            KakaoGeoResponse kakaoResponse = kakaoGeoClient.geocode(address);
+            if (kakaoResponse.hasResult()) {
+                KakaoGeoResponse.Document doc = kakaoResponse.documents().get(0);
+                property.applyGeoCode(
+                        new BigDecimal(doc.y()),  // 위도
+                        new BigDecimal(doc.x())   // 경도
+                );
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("카카오 지오코딩 실패: {} - {}", address, e.getMessage());
+        }
+
+        // 둘 다 실패 시 좌표 없이 진행 (null 유지)
+        log.warn("지오코딩 실패 - 좌표 없이 매물 등록: {}", address);
     }
 
 }

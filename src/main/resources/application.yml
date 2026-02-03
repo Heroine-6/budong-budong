@@ -12,7 +12,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:create-drop}
+      ddl-auto: ${DDL_AUTO:update}
     show-sql: true
     properties:
       hibernate:
@@ -63,6 +63,15 @@ external:
   api:
     service-key: ${API_SERVICE_KEY}
 
+naver:
+  map:
+    client-id: ${NAVER_MAP_CLIENT_ID}
+    client-secret: ${NAVER_MAP_CLIENT_SECRET}
+
+kakao:
+  map:
+    rest-api-key: ${KAKAO_MAP_REST_API_KEY}
+
 coolsms:
   api-key: ${COOLSMS_API_KEY}
   api-secret: ${COOLSMS_API_SECRET}
@@ -85,3 +94,9 @@ cloud:
       bucket: ${AWS_S3_BUCKET:}
     region:
       static: ${AWS_REGION:ap-northeast-2}
+
+logging:
+  level:
+    org.springframework.data.elasticsearch.client.WIRE: TRACE
+    org.springframework.data.elasticsearch: DEBUG
+    tracer: TRACE
