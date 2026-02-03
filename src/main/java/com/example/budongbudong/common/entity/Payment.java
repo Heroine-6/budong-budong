@@ -28,11 +28,11 @@ public class Payment extends BaseEntity {
     @JoinColumn(name = "auction_id", nullable = false)
     private Auction auction;
 
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PaymentStatus status = PaymentStatus.READY;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PaymentType type;
 
@@ -51,12 +51,19 @@ public class Payment extends BaseEntity {
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
-    @Column(name = "failure_reason")
+    @Column(name = "failure_reason", columnDefinition = "varchar(50)")
     @Enumerated(EnumType.STRING)
     private PaymentFailureReason failureReason;
 
     @Column(name="verifying_started_at")
     private LocalDateTime verifyingStartedAt;
+
+    @Column(name = "payment_method_type", columnDefinition = "varchar(50)")
+    @Enumerated(EnumType.STRING)
+    private PaymentMethodType paymentMethodType;
+
+    @Column(name = "method_detail")
+    private String methodDetail;
 
     @Builder
     public Payment(User user, Auction auction, PaymentType type, String orderName, BigDecimal amount, String orderId) {
@@ -69,11 +76,18 @@ public class Payment extends BaseEntity {
         this.orderId = orderId;
     }
 
-    public void makeSuccess(String paymentKey, LocalDateTime approvedAt) {
+    public void makeSuccess(String paymentKey, LocalDateTime approvedAt,
+                            PaymentMethodType paymentMethodType, String methodDetail) {
         this.paymentKey = paymentKey;
         this.approvedAt = approvedAt;
         this.status = PaymentStatus.SUCCESS;
         this.failureReason = null;
+        if (paymentMethodType != null) {
+            this.paymentMethodType = paymentMethodType;
+        }
+        if (methodDetail != null) {
+            this.methodDetail = methodDetail;
+        }
     }
 
     public void makeFail(PaymentFailureReason failureReason) {
@@ -101,11 +115,12 @@ public class Payment extends BaseEntity {
         this.paymentKey = paymentKey;
     }
 
-    public void finalizeByTossStatus(TossPaymentStatus status) {
+    public void finalizeByTossStatus(TossPaymentStatus status,
+                                     PaymentMethodType paymentMethodType, String methodDetail) {
         if(this.status != PaymentStatus.VERIFYING) return;
 
         switch (status) {
-            case SUCCESS -> makeSuccess(this.paymentKey, LocalDateTime.now());
+            case SUCCESS -> makeSuccess(this.paymentKey, LocalDateTime.now(), paymentMethodType, methodDetail);
             case FAIL -> makeFail(PaymentFailureReason.UNKNOWN);
             case UNKNOWN -> {
                 //그대로 VERIFYING 유지

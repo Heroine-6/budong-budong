@@ -58,7 +58,7 @@ public class PaymentVerifyConsumer {
             TossPaymentStatus tossStatus = mapper.map(response);
 
             if(tossStatus.isFinalized()) {
-                payment.finalizeByTossStatus(tossStatus);
+                payment.finalizeByTossStatus(tossStatus, null, null);
             } else {
                 requeue(payment);
             }
