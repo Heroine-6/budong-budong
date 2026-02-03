@@ -21,15 +21,8 @@ import java.time.LocalDate;
  */
 @Getter
 @Entity
-@Table(name = "real_deals",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_real_deal_dedup",
-                columnNames = {"property_name", "address", "deal_amount", "deal_date", "floor"}
-        ),
-        indexes = {
-                @Index(name = "idx_rd_geo_status", columnList = "geo_status"),  // 지오코딩 상태 조회용
-                @Index(name = "idx_rd_address", columnList = "address")
-        })
+@Table(name = "real_deals")
+// 인덱스/유니크 제약은 resources/db/v2_real_deal_index.sql 에서 관리
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RealDeal extends BaseEntity {
 
