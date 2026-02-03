@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.payment.dto;
+package com.example.budongbudong.domain.payment.dto.query;
 
 import com.example.budongbudong.domain.payment.enums.*;
 import com.querydsl.core.annotations.QueryProjection;
@@ -7,9 +7,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * QueryDSL 조회 전용 DTO
- */
+/** QueryDSL 조회 전용 DTO */
 @Getter
 public class ReadAllPaymentDto {
     private final Long paymentId;
