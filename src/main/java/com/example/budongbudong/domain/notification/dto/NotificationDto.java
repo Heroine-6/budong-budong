@@ -9,8 +9,9 @@ import lombok.RequiredArgsConstructor;
 public class NotificationDto {
 
     private final Long notificationId;
+    private final String content;
 
     public static NotificationDto from(Notification notification) {
-        return new NotificationDto(notification.getId());
+        return new NotificationDto(notification.getId(), notification.getContent());
     }
 }

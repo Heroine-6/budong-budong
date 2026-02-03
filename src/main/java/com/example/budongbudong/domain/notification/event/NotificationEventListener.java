@@ -60,7 +60,7 @@ public class NotificationEventListener {
         List<GetNotificationTargetResponse> targets = userNotificationService.getNotificationTargets(dto.getNotificationId());
 
         targets.forEach(target ->
-                notificationService.sendMessage(target.getUserId(), event.getType().getMessage())
+                notificationService.sendMessage(target.getUserId(), dto.getContent())
         );
     }
 }

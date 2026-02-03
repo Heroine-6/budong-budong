@@ -46,7 +46,7 @@ public class NotificationService {
         }
 
         Notification newNotification = Notification.create(
-                type.getMessage(),
+                type.format(auction.getProperty().getName()),
                 type,
                 sellerId,
                 auction
