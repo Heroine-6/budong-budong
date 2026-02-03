@@ -76,10 +76,10 @@ public class NotificationService {
 
         try {
             KakaoNotificationResponse response = kakaoClient.sendToMeMessage("Bearer " + accessToken, createTextMessage(content));
-            log.info("to: {}, 카카오톡 나에게 보내기 성공: {}, result_code: {}", userId, content, response.getResultCode());
+            log.info("[알림] to: {}, 카카오톡 나에게 보내기 성공: {}, result_code: {}", userId, content, response.getResultCode());
 
         } catch (Exception e) {
-            log.info("to: {}, 카카오톡 나에게 보내기 실패: {}", userId, e.getMessage());
+            log.error("[알림] to: {}, 카카오톡 나에게 보내기 실패: {}", userId, e.getMessage());
         }
 
     }
