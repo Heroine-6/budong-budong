@@ -13,9 +13,11 @@ import com.example.budongbudong.domain.auction.dto.response.GetStatisticsRespons
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
+import com.example.budongbudong.domain.notification.event.CreatedAuctionEvent;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class AuctionService {
     private final AuctionRepository auctionRepository;
     private final PropertyRepository propertyRepository;
     private final BidRepository bidRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 경매 등록
@@ -70,6 +73,9 @@ public class AuctionService {
         );
 
         auctionRepository.save(auction);
+
+        // 알림 생성용 이벤트 발행
+        eventPublisher.publishEvent(new CreatedAuctionEvent(auction.getId(), userId));
 
         return CreateAuctionResponse.from(auction);
     }
