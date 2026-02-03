@@ -14,7 +14,8 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     boolean existsByNotificationIdAndUserId(Long notificationId, Long userId);
 
     @Query("""
-            select un from UserNotification un
+            select un
+            from UserNotification un
             join fetch un.user u
             where un.notification.id = :notificationId
             and u.isPushAllowed = true
