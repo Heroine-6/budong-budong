@@ -53,6 +53,7 @@ public class SecurityConfig {
                     propertyAuth(auth);
                     auctionAuth(auth);
                     bidAuth(auth);
+realDealAuth(auth);
                     paymentAuth(auth);
                     auth.anyRequest().authenticated();
                 })
@@ -174,13 +175,19 @@ public class SecurityConfig {
             .hasRole(UserRole.GENERAL.name());
     }
 
+private void realDealAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        // 실거래가 검색 API - 비로그인 허용
+        auth.requestMatchers(HttpMethod.GET, "/api/v2/real-deals/**").permitAll();
+    }
+
     private void paymentAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/**")
             .hasRole(UserRole.GENERAL.name())
             .requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/confirm").permitAll();
-
     }
 
 }
