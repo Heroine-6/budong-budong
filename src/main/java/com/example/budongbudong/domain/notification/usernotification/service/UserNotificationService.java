@@ -62,6 +62,7 @@ public class UserNotificationService {
     }
 
     // 입찰 시 알림 수신자 검색
+    @Transactional(readOnly = true)
     public List<GetNotificationTargetResponse> getNotificationTargets(Long notificationId) {
 
         List<UserNotification> targets = userNotificationRepository.findPushTargets(notificationId);

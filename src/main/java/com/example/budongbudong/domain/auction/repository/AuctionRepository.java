@@ -4,12 +4,15 @@ import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
@@ -84,58 +87,67 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     }
 
     default Auction getAuctionWithPropertyOrTrow(Long auctionId) {
-        return findByIdWithProperty(auctionId).orElseThrow(()-> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+        return findByIdWithProperty(auctionId).orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
     }
 
     @Query("""
-            select a
-            from Auction a
-            where a.property.id in :propertyIds
-        """)
+                select a
+                from Auction a
+                where a.property.id in :propertyIds
+            """)
     List<Auction> findAllByPropertyIds(@Param("propertyIds") List<Long> propertyIds);
 
     @Query("""
-            select a.endedAt
-            from Auction a
-            where a.id = :auctionId
-        """)
+                select a.endedAt
+                from Auction a
+                where a.id = :auctionId
+            """)
     Optional<LocalDateTime> findEndedAtById(@Param("auctionId") Long auctionId);
 
     default LocalDateTime getEndedAtOrThrow(Long auctionId) {
         return findEndedAtById(auctionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
     }
-    @Modifying
-    @Query("""
-            update Auction a
-            set a.status = 'OPEN'
-            where a.status = 'SCHEDULED'
-              and a.startedAt <= :today
-        """)
-    int openScheduled(LocalDateTime today);
 
     @Query("""
-            select a.id
-            from Auction a
-            where a.status = 'OPEN'
-              and a.endedAt < :today
-        """)
+                select a.id
+                from Auction a
+                where a.status = 'SCHEDULED'
+                  and a.startedAt <= :today
+            """)
+    List<Long> findOpenAuctionIds(LocalDateTime today);
+
+    @Modifying
+    @Query("""
+                update Auction a
+                set a.status = 'OPEN'
+                where a.id in :ids
+                  and a.status = 'SCHEDULED'
+            """)
+    int openScheduled(List<Long> ids);
+
+    @Query("""
+                select a.id
+                from Auction a
+                where a.status = 'OPEN'
+                  and a.endedAt < :today
+            """)
     List<Long> findEndedAuctionIds(LocalDateTime today);
 
     @Modifying
     @Query("""
-            update Auction a
-            set a.status = 'CLOSED'
-            where a.id in :ids
-              and a.status = 'OPEN'
-        """)
+                update Auction a
+                set a.status = 'CLOSED'
+                where a.id in :ids
+                  and a.status = 'OPEN'
+            """)
     int closeOpened(List<Long> ids);
 
     @Query("""
-            select a
-            from Auction a
-            join fetch a.property p
-            where a.id = :auctionId
-        """)
+                select a
+                from Auction a
+                join fetch a.property p
+                where a.id = :auctionId
+            """)
     Optional<Auction> findByIdWithProperty(Long auctionId);
 }

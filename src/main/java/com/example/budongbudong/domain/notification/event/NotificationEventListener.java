@@ -27,7 +27,7 @@ public class NotificationEventListener {
      * 판매자 수신 알림(Notification) 생성
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void createNotificationOnCreatedAuction(CreatedAuctionEvent event) {
+    public void createNotificationOnCreatedAuction(AuctionCreatedEvent event) {
 
         List<NotificationType> types = List.of(
                 NotificationType.AUCTION_START,
@@ -39,7 +39,7 @@ public class NotificationEventListener {
         types.forEach(type -> createSellerNotification(event, type));
     }
 
-    private void createSellerNotification(CreatedAuctionEvent event, NotificationType type) {
+    private void createSellerNotification(AuctionCreatedEvent event, NotificationType type) {
 
         CreateNotificationResponse response = notificationService.createSellerNotification(event.getAuctionId(), event.getSellerId(), type);
 
@@ -53,9 +53,22 @@ public class NotificationEventListener {
      *
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void sendNotificationOnCreatedBid(CreatedBidEvent event) {
+    public void sendNotificationOnCreatedBid(BidCreatedEvent event) {
 
         NotificationDto dto = userNotificationService.createUserNotification(event.getAuctionId(), event.getType(), event.getBidderId());
+
+        sendNotification(dto);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendNotificationOnOpenAuction(AuctionOpenEvent event) {
+        
+        NotificationDto dto = notificationService.getNotification(event.getAuctionId(), event.getType());
+
+        sendNotification(dto);
+    }
+
+    private void sendNotification(NotificationDto dto) {
 
         List<GetNotificationTargetResponse> targets = userNotificationService.getNotificationTargets(dto.getNotificationId());
 
