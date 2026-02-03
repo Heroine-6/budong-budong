@@ -4,11 +4,14 @@ package com.example.budongbudong.domain.notification.service;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Notification;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.notification.client.KakaoClient;
 import com.example.budongbudong.domain.notification.dto.CreateNotificationResponse;
+import com.example.budongbudong.domain.notification.dto.KakaoNotificationResponse;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,11 @@ public class NotificationService {
 
     private final AuctionRepository auctionRepository;
     private final NotificationRepository notificationRepository;
+    private final KakaoClient kakaoClient;
+
+    // TODO: OAuth 로그인 구현 후 토큰 주입 방식 변경 예정
+    @Value("${KAKAO_ACCESS_TOKEN}")
+    private String accessToken;
 
     /**
      * 알림 생성
@@ -38,7 +46,7 @@ public class NotificationService {
         }
 
         Notification newNotification = Notification.create(
-                type.getMessage(),
+                type.format(auction.getProperty().getName()),
                 type,
                 sellerId,
                 auction
@@ -48,4 +56,32 @@ public class NotificationService {
 
         return CreateNotificationResponse.from(newNotification);
     }
+
+    public String createTextMessage(String content) {
+
+        // TODO: 우리 서비스로 연결 가능한 url 변경 예정
+        String webUrl = "https://developers.kakao.com";
+
+        return "template_object={"
+                + "\"object_type\":\"text\","
+                + "\"text\":\"" + content + "\","
+                + "\"link\":{\"web_url\":\"" + webUrl + "\"}}";
+    }
+
+    /**
+     * 카카오톡 나에게 보내기
+     * 전송 성공 result_code: 0
+     */
+    public void sendMessage(Long userId, String content) {
+
+        try {
+            KakaoNotificationResponse response = kakaoClient.sendToMeMessage("Bearer " + accessToken, createTextMessage(content));
+            log.info("[알림] to: {}, 카카오톡 나에게 보내기 성공: {}, result_code: {}", userId, content, response.getResultCode());
+
+        } catch (Exception e) {
+            log.error("[알림] to: {}, 카카오톡 나에게 보내기 실패: {}", userId, e.getMessage());
+        }
+
+    }
+
 }
