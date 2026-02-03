@@ -8,6 +8,7 @@ function cleanUrlPlugin() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.url === '/budongbudong' || req.url === '/budongbudong/') req.url = '/index.html'
+        if (req.url.startsWith('/search')) req.url = req.url.replace(/^\/search/, '/search.html')
         if (req.url === '/signin' || req.url === '/signin/') req.url = '/signin.html'
         if (req.url === '/signup' || req.url === '/signup/') req.url = '/signup.html'
         next()
@@ -25,6 +26,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(__dirname, 'src/index.html'),
+        search: resolve(__dirname, 'src/search.html'),
         signin: resolve(__dirname, 'src/signin.html'),
         signup: resolve(__dirname, 'src/signup.html'),
       },

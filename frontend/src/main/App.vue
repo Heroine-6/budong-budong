@@ -5,6 +5,7 @@
       <div class="header-inner">
         <a href="/" class="logo">부동부동</a>
         <nav class="header-nav">
+          <a href="/search" class="btn-text">매물 검색</a>
           <template v-if="isLoggedIn">
             <span class="user-greeting">{{ userName }}님</span>
             <button class="btn-text" @click="logout">로그아웃</button>
@@ -238,6 +239,10 @@ async function loadMore() {
 }
 
 function doSearch() {
+  if (searchKeyword.value) {
+    window.location.href = `/search?keyword=${encodeURIComponent(searchKeyword.value)}`
+    return
+  }
   fetchProperties()
 }
 

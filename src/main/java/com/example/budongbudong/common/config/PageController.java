@@ -16,6 +16,11 @@ public class PageController {
         return "forward:/index.html";
     }
 
+    @GetMapping("/search")
+    public String search() {
+        return "forward:/search.html";
+    }
+
     @GetMapping("/signin")
     public String signin() {
         return "forward:/signin.html";

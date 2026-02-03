@@ -108,6 +108,7 @@ realDealAuth(auth);
                         "/success.html",
                         "/fail.html",
                         "/", "/index.html", "/budongbudong",
+                        "/search", "/search.html",
                         "/signin", "/signin.html",
                         "/signup", "/signup.html",
                         "/assets/**"
