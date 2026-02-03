@@ -8,9 +8,12 @@ import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
+import com.example.budongbudong.domain.notification.enums.NotificationType;
+import com.example.budongbudong.domain.notification.event.CreatedBidEvent;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ public class BidTxService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 입찰 등록 - Create
@@ -67,6 +71,8 @@ public class BidTxService {
         Bid savedBid = bidRepository.save(bid);
 
         log.info("[{}] SUCCESS auctionId={} price={}", th, auctionId, bidPrice);
+
+        eventPublisher.publishEvent(new CreatedBidEvent(auctionId, userId, NotificationType.BID_UPDATE));
 
         return CreateBidResponse.from(savedBid);
     }
