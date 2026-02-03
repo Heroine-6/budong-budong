@@ -41,6 +41,6 @@ public class NotificationEventListener {
 
         CreateNotificationResponse response = notificationService.createSellerNotification(event.getAuctionId(), event.getSellerId(), type);
 
-        userNotificationService.creatUserNotification(response.getId(), event.getSellerId());
+        userNotificationService.createUserNotification(response.getId(), event.getSellerId());
     }
 }
