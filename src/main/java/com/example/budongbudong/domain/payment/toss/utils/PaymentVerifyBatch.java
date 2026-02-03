@@ -32,7 +32,7 @@ public class PaymentVerifyBatch {
         for (Payment payment : paymentList) {
             TossPaymentStatusResponse response = client.getPayment(payment.getPaymentKey());
             TossPaymentStatus tossStatus = mapper.map(response);
-            payment.finalizeByTossStatus(tossStatus);
+            payment.finalizeByTossStatus(tossStatus, null, null);
         }
     }
 }

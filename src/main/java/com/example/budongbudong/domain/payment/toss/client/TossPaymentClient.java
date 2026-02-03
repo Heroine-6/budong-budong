@@ -1,5 +1,6 @@
 package com.example.budongbudong.domain.payment.toss.client;
 
+import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
 import com.example.budongbudong.domain.payment.toss.dto.response.TossPaymentStatusResponse;
 import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
 import com.example.budongbudong.domain.payment.toss.exception.TossNetworkException;
@@ -38,7 +39,7 @@ public class TossPaymentClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public void confirm(String paymentKey, String orderId, BigDecimal amount) {
+    public TossConfirmResponse confirm(String paymentKey, String orderId, BigDecimal amount) {
 
 //        if(forceNetworkError) {
 //            throw new TossNetworkException("토스 장애");
@@ -52,7 +53,12 @@ public class TossPaymentClient {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            restTemplate.postForEntity(confirmUrl, request, String.class);
+            ResponseEntity<TossConfirmResponse> response = restTemplate.postForEntity(confirmUrl, request, TossConfirmResponse.class);
+            TossConfirmResponse responseBody = response.getBody();
+            if (responseBody == null) {
+                throw new TossNetworkException("토스 승인 응답 바디가 비어있습니다.");
+            }
+            return responseBody;
         } catch (HttpClientErrorException e) {
             // 4xx 승인 불가 확정
             throw new TossClientException(e.getResponseBodyAsString());

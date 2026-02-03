@@ -1,6 +1,6 @@
 package com.example.budongbudong.domain.payment.dto.response;
 
-import com.example.budongbudong.domain.payment.dto.ReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.enums.PaymentDisplayStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
 import lombok.Getter;

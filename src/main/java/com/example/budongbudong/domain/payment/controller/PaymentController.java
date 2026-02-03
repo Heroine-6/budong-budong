@@ -5,8 +5,7 @@ import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.request.PaymentRequest;
-import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
-import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
+import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -46,5 +45,14 @@ public class PaymentController {
         CustomSliceResponse<ReadAllPaymentResponse> slice = paymentService.getAllPaymentList(authUser.getUserId(), pageable);
         return GlobalResponse.ok(slice);
     }
+
+   @GetMapping("/{paymentId}")
+    public ResponseEntity<GlobalResponse<ReadPaymentResponse>> getPaymentDetail(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long paymentId
+   ) {
+       ReadPaymentResponse response= paymentService.getPaymentDetail(authUser.getUserId(), paymentId);
+        return GlobalResponse.ok(response);
+   }
 
 }

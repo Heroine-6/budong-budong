@@ -6,17 +6,19 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
-import com.example.budongbudong.domain.payment.dto.ReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
-import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
-import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
+import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.enums.*;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
 import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
 import com.example.budongbudong.domain.payment.toss.exception.TossNetworkException;
+import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
 import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
+import com.example.budongbudong.domain.payment.utils.PaymentMethodDetailFormatter;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -96,8 +98,9 @@ public class PaymentService {
         }
 
         //toss 승인 호출
+        TossConfirmResponse tossResponse;
         try{
-            tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
+            tossResponse = tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
         } catch(TossClientException e) {
             payment.makeFail(PaymentFailureReason.INVALID_PAYMENT_INFO);
             return;
@@ -108,8 +111,11 @@ public class PaymentService {
 
         // 승인 확정 -> SUCCESS 상태 전이
         try {
+            PaymentMethodType methodType = PaymentMethodType.from(tossResponse.getMethod());
+            String methodDetail = PaymentMethodDetailFormatter.format(methodType, tossResponse);
+
             finalizePayment(payment, request);
-            payment.makeSuccess(request.paymentKey(), LocalDateTime.now());
+            payment.makeSuccess(request.paymentKey(), LocalDateTime.now(), methodType, methodDetail);
         } catch(Exception e) {
             makeVerifyingAndPublish(payment,request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
         }
@@ -132,6 +138,19 @@ public class PaymentService {
         payment.makeVerifying(reason, request.paymentKey());
         //일정 시간 후 재확인을 위한 MQ 트리거
         verifyPublisher.publish(payment.getId(), 30000L);
+    }
+
+    @Transactional(readOnly = true)
+    public ReadPaymentResponse getPaymentDetail(Long userId, Long paymentId) {
+
+        ReadPaymentDetailDto dto = paymentRepository.findDetailById(paymentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        if (!dto.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        return ReadPaymentResponse.from(dto);
     }
 
     /**

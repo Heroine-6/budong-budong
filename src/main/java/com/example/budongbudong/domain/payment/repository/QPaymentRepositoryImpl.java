@@ -1,7 +1,9 @@
 package com.example.budongbudong.domain.payment.repository;
 
-import com.example.budongbudong.domain.payment.dto.QReadAllPaymentDto;
-import com.example.budongbudong.domain.payment.dto.ReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.QReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.QReadPaymentDetailDto;
+import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
+import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.example.budongbudong.common.entity.QPayment.payment;
 
@@ -49,6 +52,36 @@ public class QPaymentRepositoryImpl implements QPaymentRepository {
         }
 
         return new SliceImpl<>(contents, pageable, hasNext);
+    }
+
+    @Override
+    public Optional<ReadPaymentDetailDto> findDetailById(Long paymentId) {
+
+        ReadPaymentDetailDto result = queryFactory
+                .select(new QReadPaymentDetailDto(
+                        payment.id,
+                        payment.user.id,
+                        payment.status,
+                        payment.type,
+                        payment.amount,
+                        payment.orderName,
+                        payment.paymentMethodType,
+                        payment.methodDetail,
+                        payment.approvedAt,
+                        payment.auction.id,
+                        payment.auction.startPrice,
+                        payment.auction.status,
+                        payment.auction.startedAt,
+                        payment.auction.endedAt
+                ))
+                .from(payment)
+                .where(
+                        payment.id.eq(paymentId),
+                        payment.isDeleted.isFalse()
+                )
+                .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 
     private BooleanExpression exposeStatus() {
