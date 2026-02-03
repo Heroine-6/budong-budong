@@ -194,7 +194,7 @@ private void realDealAuth(
     private void chatServerAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.POST, "/api/v2/internal/**")
+        auth.requestMatchers(HttpMethod.GET, "/api/v2/internal/**")
         .hasRole(UserRole.GENERAL.name());
     }
 }

@@ -6,7 +6,6 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
-import com.example.budongbudong.integration.chatServer.dto.request.ChatServerRequest;
 import com.example.budongbudong.integration.chatServer.dto.response.ChatServerResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,20 +19,13 @@ public class ChatServerService {
     private final PropertyRepository propertyRepository;
 
     @Transactional(readOnly = true)
-    public ChatServerResponse getChatContext(ChatServerRequest request) {
+    public ChatServerResponse getChatContext(Long propertyId, Long bidderId) {
 
-        User seller = userRepository.findById(request.getSellerId())
+        User bidder = userRepository.findById(bidderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        User bidder = userRepository.findById(request.getBidderId())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        Property property = propertyRepository.findById(request.getPropertyId())
+        Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROPERTY_NOT_FOUND));
-
-        if (!property.getUser().getId().equals(seller.getId())) {
-            throw new CustomException(ErrorCode.SELLER_NOT_MATCH);
-        }
 
         return new ChatServerResponse(property.getName(), property.getAddress(), bidder.getName());
     }
