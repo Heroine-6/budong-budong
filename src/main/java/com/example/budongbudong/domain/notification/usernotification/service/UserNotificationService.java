@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.notification.usernotification.service;
 import com.example.budongbudong.common.entity.Notification;
 import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.entity.UserNotification;
+import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.notification.dto.NotificationDto;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
@@ -23,6 +24,7 @@ public class UserNotificationService {
     private final UserNotificationRepository userNotificationRepository;
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final BidRepository bidRepository;
 
     /**
      * 알림 수신자 등록
@@ -42,6 +44,18 @@ public class UserNotificationService {
         Notification notification = notificationRepository.getByAuctionIdAndTypeEqualsOrThrow(auctionId, type);
 
         saveUserNotification(userId, notification);
+
+        return NotificationDto.from(notification);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public NotificationDto createUserNotificationAllBidders(Long auctionId, NotificationType type) {
+
+        Notification notification = notificationRepository.getByAuctionIdAndTypeEqualsOrThrow(auctionId, type);
+
+        List<User> bidders = bidRepository.findAllBiddersByAuctionId(auctionId);
+
+        bidders.forEach(bidder -> saveUserNotification(bidder.getId(), notification));
 
         return NotificationDto.from(notification);
     }
