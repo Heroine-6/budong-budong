@@ -46,6 +46,12 @@ public class NotificationEventListener {
         userNotificationService.createUserNotification(response.getId(), event.getSellerId());
     }
 
+    /**
+     * CreatedBidEvent 발생 시
+     * 입찰자 + 판매자 중
+     * 알림 수신에 동의한 사람에게만 알림 발송
+     *
+     */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendNotificationOnCreatedBid(CreatedBidEvent event) {
 
@@ -53,5 +59,8 @@ public class NotificationEventListener {
 
         List<GetNotificationTargetResponse> targets = userNotificationService.getNotificationTargets(dto.getNotificationId());
 
+        targets.forEach(target ->
+                notificationService.sendMessage(target.getUserId(), event.getType().getMessage())
+        );
     }
 }
