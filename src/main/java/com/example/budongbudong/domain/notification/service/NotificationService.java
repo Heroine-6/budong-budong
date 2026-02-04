@@ -63,10 +63,13 @@ public class NotificationService {
         // TODO: 우리 서비스로 연결 가능한 url 변경 예정
         String webUrl = "https://developers.kakao.com";
 
-        return "template_object={"
-                + "\"object_type\":\"text\","
-                + "\"text\":\"" + content + "\","
-                + "\"link\":{\"web_url\":\"" + webUrl + "\"}}";
+        return """
+                {
+                    "object_type": "text",
+                    "text": "%s",
+                    "link": {"web_url": "%s"}
+                }
+                """.formatted(content, webUrl);
     }
 
     /**
