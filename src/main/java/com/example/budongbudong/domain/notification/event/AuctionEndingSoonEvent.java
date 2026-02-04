@@ -1,12 +1,13 @@
 package com.example.budongbudong.domain.notification.event;
 
+import com.example.budongbudong.domain.notification.enums.NotificationType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class CreatedAuctionEvent {
+public class AuctionEndingSoonEvent {
 
     private final Long auctionId;
-    private final Long sellerId;
+    private final NotificationType type;
 }

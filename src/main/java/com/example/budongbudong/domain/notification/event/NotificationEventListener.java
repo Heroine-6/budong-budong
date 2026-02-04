@@ -1,5 +1,6 @@
 package com.example.budongbudong.domain.notification.event;
 
+import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.notification.dto.CreateNotificationResponse;
 import com.example.budongbudong.domain.notification.dto.NotificationDto;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
@@ -23,11 +24,12 @@ public class NotificationEventListener {
     private final UserNotificationService userNotificationService;
 
     /**
-     * CreatedAuctionEvent 발생 시
-     * 판매자 수신 알림(Notification) 생성
+     * 경매 생성 이벤트 처리
+     * - 판매자 대상 알림 정의 생성
+     * - 경매 전 과정에서 사용할 알림 유형 미리 등록
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void createNotificationOnCreatedAuction(CreatedAuctionEvent event) {
+    public void createNotificationOnCreatedAuction(AuctionCreatedEvent event) {
 
         List<NotificationType> types = List.of(
                 NotificationType.AUCTION_START,
@@ -39,7 +41,7 @@ public class NotificationEventListener {
         types.forEach(type -> createSellerNotification(event, type));
     }
 
-    private void createSellerNotification(CreatedAuctionEvent event, NotificationType type) {
+    private void createSellerNotification(AuctionCreatedEvent event, NotificationType type) {
 
         CreateNotificationResponse response = notificationService.createSellerNotification(event.getAuctionId(), event.getSellerId(), type);
 
@@ -47,15 +49,57 @@ public class NotificationEventListener {
     }
 
     /**
-     * CreatedBidEvent 발생 시
-     * 입찰자 + 판매자 중
-     * 알림 수신에 동의한 사람에게만 알림 발송
-     *
+     * 입찰 생성 이벤트 처리
+     * - 새로운 입찰자 수신 등록
+     * - 알림 수신에 동의한 판매자 + 입찰자 대상 알림
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void sendNotificationOnCreatedBid(CreatedBidEvent event) {
+    public void sendNotificationOnCreatedBid(BidCreatedEvent event) {
 
         NotificationDto dto = userNotificationService.createUserNotification(event.getAuctionId(), event.getType(), event.getBidderId());
+
+        sendNotification(dto);
+    }
+
+    /**
+     * 경매 시작 이벤트 처리
+     * - 알림 수신에 동의한 판매자 대상 알림
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendNotificationOnOpenAuction(AuctionOpenEvent event) {
+
+        NotificationDto dto = notificationService.getNotification(event.getAuctionId(), event.getType());
+
+        sendNotification(dto);
+    }
+
+    /**
+     * 경매 종료 임박 이벤트 처리
+     * - 경매에 참여한 모든 입찰자 수신 등록
+     * - 알림 수신에 동의한 판매자 + 입찰자 대상 알림
+     */
+    @TransactionalEventListener
+    public void sendNotificationEndingSoonAuction(AuctionEndingSoonEvent event) {
+
+        NotificationDto dto = userNotificationService.createUserNotificationAllBidders(event.getAuctionId(), event.getType());
+
+        sendNotification(dto);
+    }
+
+    /**
+     * 경매 종료 이벤트 처리
+     * - 경매에 참여한 모든 입찰자 수신 등록
+     * - 알림 수신에 동의한 판매자 + 입찰자 대상 알림
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendNotificationOnClosedAuction(AuctionClosedEvent event) {
+
+        NotificationDto dto = userNotificationService.createUserNotificationAllBidders(event.auctionId(), NotificationType.AUCTION_END);
+
+        sendNotification(dto);
+    }
+
+    private void sendNotification(NotificationDto dto) {
 
         List<GetNotificationTargetResponse> targets = userNotificationService.getNotificationTargets(dto.getNotificationId());
 

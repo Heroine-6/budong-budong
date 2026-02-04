@@ -2,6 +2,7 @@ package com.example.budongbudong.domain.bid.repository;
 
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
+import com.example.budongbudong.common.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -64,6 +65,13 @@ public interface BidRepository extends JpaRepository<Bid, Long>, QBidRepository 
     void unmarkHighestAndOutbidByAuctionId(@Param("auctionId") Long auctionId);
 
     List<Bid> findAllByAuctionOrderByPriceDesc(Auction auction);
+
+    @Query("""
+            select distinct b.user
+            from Bid b
+            where b.auction.id = :auctionId
+            """)
+    List<User> findAllBiddersByAuctionId(@Param("auctionId") Long auctionId);
 
     default BigDecimal getHighestPriceOrStartPrice(Long auctionId, BigDecimal startPrice) {
         return findHighestPriceByAuctionId(auctionId)
