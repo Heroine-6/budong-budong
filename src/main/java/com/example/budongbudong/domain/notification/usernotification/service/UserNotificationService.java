@@ -31,11 +31,13 @@ public class UserNotificationService {
      *
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createUserNotification(Long notificationId, Long userId) {
+    public NotificationDto createUserNotification(Long notificationId, Long userId) {
 
         Notification notification = notificationRepository.getByIdOrThrow(notificationId);
 
         saveUserNotification(userId, notification);
+
+        return NotificationDto.from(notification);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
