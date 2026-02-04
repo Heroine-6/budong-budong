@@ -55,6 +55,7 @@ public class SecurityConfig {
                     bidAuth(auth);
 realDealAuth(auth);
                     paymentAuth(auth);
+                    chatServerAuth(auth);
                     auth.anyRequest().authenticated();
                 })
                 .exceptionHandling(ex -> ex
@@ -190,4 +191,10 @@ private void realDealAuth(
             .requestMatchers(HttpMethod.POST, "/api/payments/v2/payments/confirm").permitAll();
     }
 
+    private void chatServerAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.GET, "/api/v2/internal/**")
+        .hasRole(UserRole.GENERAL.name());
+    }
 }
