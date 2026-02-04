@@ -7,9 +7,8 @@ import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
+import com.example.budongbudong.domain.bid.event.BidCreatedEvent;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
-import com.example.budongbudong.domain.notification.enums.NotificationType;
-import com.example.budongbudong.domain.notification.event.BidCreatedEvent;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +71,7 @@ public class BidTxService {
 
         log.info("[{}] SUCCESS auctionId={} price={}", th, auctionId, bidPrice);
 
-        eventPublisher.publishEvent(new BidCreatedEvent(auctionId, userId, NotificationType.BID_UPDATE));
+        eventPublisher.publishEvent(new BidCreatedEvent(auctionId, userId));
 
         return CreateBidResponse.from(savedBid);
     }

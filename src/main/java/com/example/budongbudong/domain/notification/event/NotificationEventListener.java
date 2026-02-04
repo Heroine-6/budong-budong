@@ -1,6 +1,10 @@
 package com.example.budongbudong.domain.notification.event;
 
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
+import com.example.budongbudong.domain.auction.event.AuctionCreatedEvent;
+import com.example.budongbudong.domain.auction.event.AuctionEndingSoonEvent;
+import com.example.budongbudong.domain.auction.event.AuctionOpenEvent;
+import com.example.budongbudong.domain.bid.event.BidCreatedEvent;
 import com.example.budongbudong.domain.notification.dto.CreateNotificationResponse;
 import com.example.budongbudong.domain.notification.dto.NotificationDto;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
@@ -43,9 +47,9 @@ public class NotificationEventListener {
 
     private void createSellerNotification(AuctionCreatedEvent event, NotificationType type) {
 
-        CreateNotificationResponse response = notificationService.createSellerNotification(event.getAuctionId(), event.getSellerId(), type);
+        CreateNotificationResponse response = notificationService.createSellerNotification(event.auctionId(), event.sellerId(), type);
 
-        userNotificationService.createUserNotification(response.getId(), event.getSellerId());
+        userNotificationService.createUserNotification(response.getId(), event.sellerId());
     }
 
     /**
@@ -56,7 +60,11 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendNotificationOnCreatedBid(BidCreatedEvent event) {
 
-        NotificationDto dto = userNotificationService.createUserNotification(event.getAuctionId(), event.getType(), event.getBidderId());
+        NotificationDto dto = userNotificationService.createUserNotification(
+                event.auctionId(),
+                NotificationType.BID_UPDATE,
+                event.bidderId()
+        );
 
         sendNotification(dto);
     }
@@ -68,7 +76,7 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendNotificationOnOpenAuction(AuctionOpenEvent event) {
 
-        NotificationDto dto = notificationService.getNotification(event.getAuctionId(), event.getType());
+        NotificationDto dto = notificationService.getNotification(event.auctionId(), NotificationType.AUCTION_START);
 
         sendNotification(dto);
     }
@@ -81,7 +89,7 @@ public class NotificationEventListener {
     @TransactionalEventListener
     public void sendNotificationEndingSoonAuction(AuctionEndingSoonEvent event) {
 
-        NotificationDto dto = userNotificationService.createUserNotificationAllBidders(event.getAuctionId(), event.getType());
+        NotificationDto dto = userNotificationService.createUserNotificationAllBidders(event.auctionId(), NotificationType.AUCTION_END_SOON);
 
         sendNotification(dto);
     }
