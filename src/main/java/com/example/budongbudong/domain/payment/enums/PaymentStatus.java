@@ -16,8 +16,11 @@ public enum PaymentStatus {
     IN_PROGRESS("결제 처리 중"),
     VERIFYING("결제 확인 중"),
     SUCCESS("결제 성공"),
-    FAIL("결제 실패");
+    FAIL("결제 실패"),
 
+    REFUND_REQUESTED("환불 처리 중"),
+    REFUNDED("환불 완료"),
+    ;
     private final String message;
 
     PaymentStatus(String message) {

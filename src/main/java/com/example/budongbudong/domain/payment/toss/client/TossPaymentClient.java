@@ -71,6 +71,29 @@ public class TossPaymentClient {
         }
     }
 
+    public void refund(String paymentKey, BigDecimal amount, String cancelReason) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(secretKey, "");
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> body = Map.of(
+                "cancelReason", cancelReason,
+                "cancelAmount", amount
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        String cancelUrl = confirmUrl.replace("/confirm", "") + "/" + paymentKey + "/cancel";
+
+        try {
+            restTemplate.postForEntity(cancelUrl, request, String.class);
+        } catch (HttpClientErrorException e) {
+            throw new TossClientException(e.getResponseBodyAsString());
+        } catch (ResourceAccessException | HttpServerErrorException e) {
+            throw new TossNetworkException(e);
+        }
+    }
+
     public TossPaymentStatusResponse getPayment(String paymentKey) {
 
 //        int count = verifyCount.incrementAndGet();

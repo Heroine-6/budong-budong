@@ -56,7 +56,7 @@ public class PaymentConfirmTest {
     @BeforeEach
     void setUp() {
         //given
-        user = UserFixture.user();
+        user = UserFixture.sellerUser();
         auction = AuctionFixture.openEndedAuction(
                 PropertyFixture.property(user),
                 LocalDateTime.now()

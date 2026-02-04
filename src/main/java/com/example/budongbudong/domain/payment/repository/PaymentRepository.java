@@ -28,12 +28,18 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
 
     List<Payment> findAllByStatus(PaymentStatus paymentStatus);
 
+    Optional<Payment> findByIdAndUserId(Long id, Long userId);
+
     default Payment getByOrderIdOrThrow(String orderId) {
         return findByOrderId(orderId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
     default Payment getByIdOrThrow(Long paymentId) {
         return findById(paymentId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    default Payment getByIdAndUserIdOrThrow(Long id, Long userId) {
+        return findByIdAndUserId(id,userId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
 }

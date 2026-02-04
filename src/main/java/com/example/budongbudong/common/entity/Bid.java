@@ -2,9 +2,7 @@ package com.example.budongbudong.common.entity;
 
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -36,6 +34,7 @@ public class Bid extends BaseEntity {
     @Column(name = "is_highest", nullable = false)
     private boolean isHighest = false;
 
+    @Builder
     public Bid(User user, Auction auction, BigDecimal price) {
         this.user = user;
         this.auction = auction;

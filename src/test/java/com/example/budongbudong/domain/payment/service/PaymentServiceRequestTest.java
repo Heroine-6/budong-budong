@@ -8,7 +8,6 @@ import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
-import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import com.example.budongbudong.fixture.*;
 import com.example.budongbudong.fixture.PaymentFixture;
@@ -51,7 +50,7 @@ class PaymentServiceRequestTest {
 
     @BeforeEach
     void setUp() {
-        user = UserFixture.user();
+        user = UserFixture.sellerUser();
         property = PropertyFixture.property(user);
         auction = AuctionFixture.openEndedAuction(property, LocalDateTime.now());
 

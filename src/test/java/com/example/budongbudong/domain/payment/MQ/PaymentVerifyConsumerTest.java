@@ -1,7 +1,6 @@
-package com.example.budongbudong.domain.payment.service;
+package com.example.budongbudong.domain.payment.MQ;
 
 import com.example.budongbudong.common.entity.*;
-import com.example.budongbudong.domain.payment.MQ.*;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
@@ -58,7 +57,7 @@ public class PaymentVerifyConsumerTest {
     @BeforeEach
     void setUp() {
         //given
-        user = UserFixture.user();
+        user = UserFixture.sellerUser();
         auction = AuctionFixture.openEndedAuction(
                 PropertyFixture.property(user),
                 LocalDateTime.now()
