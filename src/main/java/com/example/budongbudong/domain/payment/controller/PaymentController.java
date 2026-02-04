@@ -55,8 +55,9 @@ public class PaymentController {
         return GlobalResponse.ok(response);
    }
 
+   /** 재시도 까지 실패 후 사용자 요청 환불 */
     @PostMapping("/{paymentId}/refund")
-    public ResponseEntity<GlobalResponse<Void>> requestRefund(
+    public ResponseEntity<GlobalResponse<Void>> requestRefundByUser(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long paymentId
     ) {

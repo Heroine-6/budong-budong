@@ -5,6 +5,6 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefundRequestedEvent {
+public class RefundRequestedMQEvent {
     private Long paymentId;
 }

@@ -42,7 +42,7 @@ class AuctionStatusServiceTest {
         //given
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
 
-        User user = userRepository.save(UserFixture.user());
+        User user = userRepository.save(UserFixture.sellerUser());
         Property property = propertyRepository.save(PropertyFixture.property(user));
 
         Auction endedAuction = auctionRepository.save(
@@ -70,7 +70,7 @@ class AuctionStatusServiceTest {
         // given
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
 
-        User user = userRepository.save(UserFixture.user());
+        User user = userRepository.save(UserFixture.sellerUser());
         Property property = propertyRepository.save(PropertyFixture.property(user));
 
         Auction endedAuction = auctionRepository.save(AuctionFixture.openEndedAuction(property, startOfToday));

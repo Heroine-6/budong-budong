@@ -23,7 +23,7 @@ public class PaymentRefundConsumer {
 
     @RabbitListener(queues = PaymentRefundMQConfig.REFUND_QUEUE)
     @Transactional
-    public void consume(RefundRequestedEvent event) {
+    public void consume(RefundRequestedMQEvent event) {
 
         Payment payment = paymentRepository.getByIdOrThrow(event.getPaymentId());
 
