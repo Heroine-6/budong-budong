@@ -13,6 +13,11 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 환불 MQ 메시지를 소비해 실제 환불을 실행하는 Consumer
+ * - Toss 결제 환불 API를 호출한다
+ * - 재시도 여부는 예외 타입으로 제어한다
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
