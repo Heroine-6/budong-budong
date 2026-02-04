@@ -11,6 +11,7 @@ import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.service.NotificationService;
 import com.example.budongbudong.domain.notification.usernotification.dto.GetNotificationTargetResponse;
 import com.example.budongbudong.domain.notification.usernotification.service.UserNotificationService;
+import com.example.budongbudong.domain.payment.event.PaymentCompletedEvent;
 import com.example.budongbudong.domain.payment.event.PaymentRequestedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -115,7 +116,21 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendNotificationOnRequestedPayment(PaymentRequestedEvent event) {
 
-        CreateNotificationResponse response = notificationService.createPaymentNotification(event.auctionId(), NotificationType.PAYMENT_REQUEST, event.paymentId());
+        CreateNotificationResponse response = notificationService.createPaymentRequestNotification(event.auctionId(), NotificationType.PAYMENT_REQUEST, event.paymentId());
+
+        NotificationDto dto = userNotificationService.createUserNotification(response.getId(), event.userId());
+
+        sendNotification(dto);
+    }
+
+    /**
+     * 결제 완료 이벤트 처리
+     * - 결제 완료 대상 알림
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendNotificationOnCompletedPayment(PaymentCompletedEvent event) {
+
+        CreateNotificationResponse response = notificationService.createPaymentCompletedNotification(event.auctionId(), NotificationType.PAYMENT_COMPLETED, event.paymentId());
 
         NotificationDto dto = userNotificationService.createUserNotification(response.getId(), event.userId());
 

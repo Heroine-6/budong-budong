@@ -41,16 +41,15 @@ public class NotificationService {
     @Value("${KAKAO_ACCESS_TOKEN}")
     private String accessToken;
 
-    private static String getFormatDueDateTime(Payment payment, PaymentType paymentType) {
+    private static String getFormatDueDateTime(Payment payment) {
 
         LocalDate dueDate = payment.getCreatedAt()
-                .plusDays(paymentType.getDueDays())
+                .plusDays(payment.getType().getDueDays())
                 .toLocalDate();
 
         LocalDateTime dueDateTime = dueDate.atTime(23, 59);
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd. HH:mm");
 
         return dueDateTime.format(formatter);
     }
@@ -82,30 +81,52 @@ public class NotificationService {
     }
 
     /**
-     * 결제 요청 / 완료 알림 생성
-     *
+     * 결제 요청 알림 생성
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public CreateNotificationResponse createPaymentNotification(Long auctionId, NotificationType notificationType, Long paymentId) {
-
-        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
-        Long sellerId = auction.getProperty().getUser().getId();
+    public CreateNotificationResponse createPaymentRequestNotification(Long auctionId, NotificationType notificationType, Long paymentId) {
 
         Payment payment = paymentRepository.getByIdOrThrow(paymentId);
         PaymentType paymentType = payment.getType();
 
-        // 금액 3자리마다 콤마로 구분
-        DecimalFormat decimalFormat = new DecimalFormat("#,###.##");
+        // 결제 기한 문자열 변환
+        String dueDateTime = getFormatDueDateTime(payment);
+
+        return savePaymentNotification(auctionId, notificationType, payment, dueDateTime);
+    }
+
+    /**
+     * 결제 완료 알림 생성
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public CreateNotificationResponse createPaymentCompletedNotification(Long auctionId, NotificationType notificationType, Long paymentId) {
+
+        Payment payment = paymentRepository.getByIdOrThrow(paymentId);
+
+        // 결제 승인 일시 문자열 변환
+        LocalDateTime approvedAt = payment.getApprovedAt();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd. HH:mm");
+
+        String approvedDateTime = approvedAt.format(formatter);
+
+        return savePaymentNotification(auctionId, notificationType, payment, approvedDateTime);
+    }
+
+    private CreateNotificationResponse savePaymentNotification(Long auctionId, NotificationType notificationType, Payment payment, String dateTime) {
+
+        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
+        Long sellerId = auction.getProperty().getUser().getId();
+
+        // 결제 금액 3자리마다 콤마로 구분
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
         String formattedAmount = decimalFormat.format(payment.getAmount());
 
-        String dueDateTime = getFormatDueDateTime(payment, paymentType);
-
-        String content = notificationType.paymentRequestFormat(
+        String content = notificationType.paymentFormat(
                 payment.getOrderName(),
-                paymentType.getMessage(),
+                payment.getType().getMessage(),
                 payment.getOrderId(),
                 formattedAmount,
-                dueDateTime
+                dateTime
         );
 
         Notification notification = Notification.create(
