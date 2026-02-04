@@ -107,7 +107,12 @@ realDealAuth(auth);
                 .requestMatchers(
                         "/paymentRequest.html",
                         "/success.html",
-                        "/fail.html"
+                        "/fail.html",
+                        "/", "/index.html", "/budongbudong",
+                        "/search", "/search.html",
+                        "/signin", "/signin.html",
+                        "/signup", "/signup.html",
+                        "/assets/**"
                 );
     }
 
