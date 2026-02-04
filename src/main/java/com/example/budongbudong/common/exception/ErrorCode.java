@@ -25,6 +25,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(403, "비밀번호가 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다"),
     AUCTION_NOT_OPEN(403, "현재 입찰이 불가능한 경매입니다."),
+    SELLER_NOT_MATCH(403, "판매자 정보가 올바르지 않습니다."),
 
     //------401-----------------------
     LOGIN_REQUIRED(401, "로그인한 유저만 사용할 수 있는 기능입니다"),
