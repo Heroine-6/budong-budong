@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>결제 내역</title>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #e4ebf5);
+            padding: 40px 20px;
+        }
+        .container { max-width: 640px; margin: 0 auto; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px;
+        }
+        .header h1 { font-size: 24px; font-weight: 800; color: #111827; }
+        .header .back-btn {
+            background: #111827; color: #fff; border: none; border-radius: 10px;
+            padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: .2s;
+        }
+        .header .back-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+
+        .login-card {
+            background: #fff; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,.12);
+            padding: 28px 24px; text-align: center;
+        }
+        .login-card p { color: #6b7280; font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+        .login-card input {
+            width: 100%; padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 10px;
+            font-size: 14px; margin-bottom: 12px; outline: none;
+        }
+        .login-card input:focus { border-color: #2563eb; }
+        .login-card button {
+            width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none;
+            border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+        }
+
+        .empty {
+            background: #fff; border-radius: 16px; box-shadow: 0 12px 30px rgba(0,0,0,.12);
+            padding: 48px 24px; text-align: center; color: #9ca3af; font-size: 15px;
+        }
+
+        .payment-card {
+            background: #fff; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.08);
+            padding: 20px; margin-bottom: 14px; transition: .2s; cursor: pointer;
+        }
+        .payment-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.14); transform: translateY(-2px); }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .card-top .order-name { font-size: 16px; font-weight: 700; color: #111827; }
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 700; white-space: nowrap;
+        }
+        .badge.paid { background: #dcfce7; color: #166534; }
+        .badge.failed { background: #fef2f2; color: #991b1b; }
+        .badge.in-progress { background: #eef2ff; color: #3730a3; }
+        .badge.refund-progress { background: #fef9c3; color: #854d0e; }
+        .badge.refunded { background: #f3f4f6; color: #6b7280; }
+        .badge-type {
+            display: inline-block; padding: 4px 8px; border-radius: 6px;
+            font-size: 11px; font-weight: 600; background: #f3f4f6; color: #374151;
+            margin-right: 6px;
+        }
+        .card-info { display: flex; justify-content: space-between; align-items: center; }
+        .card-info .amount { font-size: 18px; font-weight: 800; color: #111827; }
+        .card-info .date { font-size: 12px; color: #9ca3af; }
+
+        .detail-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        .detail-overlay.active { display: flex; }
+        .detail-card {
+            width: 440px; max-height: 90vh; overflow-y: auto;
+            background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+            padding: 28px 24px;
+        }
+        .detail-card .close-btn {
+            float: right; background: none; border: none; font-size: 20px;
+            cursor: pointer; color: #9ca3af; padding: 0;
+        }
+        .detail-card .close-btn:hover { color: #111827; }
+        .detail-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; }
+        .detail-row {
+            display: flex; justify-content: space-between; padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-size: 13px; color: #6b7280; }
+        .detail-value { font-size: 13px; font-weight: 700; color: #111827; text-align: right; }
+
+        .refund-btn {
+            width: 100%; margin-top: 18px; padding: 14px; border: none; border-radius: 12px;
+            background: #dc2626; color: #fff; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: .2s;
+        }
+        .refund-btn:hover { background: #b91c1c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,.3); }
+        .refund-btn:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: 12px 24px; border-radius: 12px;
+            font-size: 14px; font-weight: 600; z-index: 200;
+            opacity: 0; transition: opacity .3s;
+        }
+        .toast.show { opacity: 1; }
+
+        .loading { text-align: center; padding: 40px; color: #6b7280; font-size: 14px; }
+        .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 24px; }
+
+        .pagination {
+            display: flex; justify-content: center; gap: 8px; margin-top: 20px;
+        }
+        .pagination button {
+            padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 8px;
+            background: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+            color: #374151; transition: .2s;
+        }
+        .pagination button:hover:not(:disabled) { background: #f3f4f6; }
+        .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+        .pagination .current { background: #2563eb; color: #fff; border-color: #2563eb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>결제 내역</h1>
+        <button class="back-btn" onclick="location.href='/paymentRequest.html'">결제 페이지</button>
+    </div>
+
+    <div id="loginSection" class="login-card" style="display:none;">
+        <p>결제 내역을 조회하려면 액세스 토큰이 필요합니다.<br>로그인 후 발급받은 토큰을 입력해 주세요.</p>
+        <input type="text" id="tokenInput" placeholder="Access Token 입력" />
+        <button onclick="saveToken()">조회하기</button>
+    </div>
+
+    <div id="loadingSection" class="loading" style="display:none;">결제 내역을 불러오는 중...</div>
+    <div id="emptySection" class="empty" style="display:none;">결제 내역이 없습니다.</div>
+    <div id="listSection" style="display:none;"></div>
+
+    <div class="footer">Toss Payments</div>
+</div>
+
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+    <div class="detail-card" id="detailCard"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    let accessToken = localStorage.getItem("accessToken") || "";
+    let currentPage = 0;
+    const pageSize = 10;
+
+    function init() {
+        if (!accessToken) {
+            document.getElementById("loginSection").style.display = "block";
+            return;
+        }
+        loadPayments(0);
+    }
+
+    function saveToken() {
+        const val = document.getElementById("tokenInput").value.trim();
+        if (!val) return;
+        accessToken = val;
+        localStorage.setItem("accessToken", val);
+        document.getElementById("loginSection").style.display = "none";
+        loadPayments(0);
+    }
+
+    async function apiFetch(url, options = {}) {
+        const headers = {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+        };
+        if (accessToken) {
+            headers["Authorization"] = "Bearer " + accessToken;
+        }
+        const res = await fetch(url, { ...options, headers });
+        if (res.status === 401 || res.status === 403) {
+            accessToken = "";
+            localStorage.removeItem("accessToken");
+            document.getElementById("loginSection").style.display = "block";
+            document.getElementById("listSection").style.display = "none";
+            showToast("인증이 만료되었습니다. 토큰을 다시 입력해 주세요.");
+            throw new Error("Unauthorized");
+        }
+        return res;
+    }
+
+    async function loadPayments(page) {
+        currentPage = page;
+        document.getElementById("loadingSection").style.display = "block";
+        document.getElementById("listSection").style.display = "none";
+        document.getElementById("emptySection").style.display = "none";
+
+        try {
+            const res = await apiFetch(`/api/payments/v2?page=${page}&size=${pageSize}`);
+            const json = await res.json();
+
+            document.getElementById("loadingSection").style.display = "none";
+
+            if (!json.success) {
+                showToast(json.message || "조회 실패");
+                return;
+            }
+
+            const data = json.data;
+            const items = data.content || [];
+
+            if (items.length === 0 && page === 0) {
+                document.getElementById("emptySection").style.display = "block";
+                return;
+            }
+
+            renderList(items, data.hasNext, page);
+        } catch (e) {
+            document.getElementById("loadingSection").style.display = "none";
+            if (e.message !== "Unauthorized") {
+                showToast("결제 내역을 불러올 수 없습니다.");
+            }
+        }
+    }
+
+    function statusBadge(status) {
+        const map = {
+            // PaymentDisplayStatus (목록 API)
+            "PAID": { cls: "paid", label: "결제 완료" },
+            "FAILED": { cls: "failed", label: "결제 실패" },
+            "IN_PROGRESS": { cls: "in-progress", label: "결제 진행중" },
+            "REFUND_IN_PROGRESS": { cls: "refund-progress", label: "환불 처리중" },
+            "REFUNDED": { cls: "refunded", label: "환불 완료" },
+            // PaymentStatus (상세 API)
+            "READY": { cls: "in-progress", label: "결제 대기" },
+            "SUCCESS": { cls: "paid", label: "결제 완료" },
+            "FAIL": { cls: "failed", label: "결제 실패" },
+            "VERIFYING": { cls: "in-progress", label: "확인 중" },
+            "REFUND_REQUESTED": { cls: "refund-progress", label: "환불 처리중" }
+        };
+        const s = map[status] || { cls: "in-progress", label: status };
+        return `<span class="badge ${s.cls}">${s.label}</span>`;
+    }
+
+    function typeLabel(type) {
+        const map = { "DEPOSIT": "보증금", "DOWN_PAYMENT": "계약금", "BALANCE": "잔금" };
+        return map[type] || type;
+    }
+
+    function formatAmount(amount) {
+        return Number(amount).toLocaleString("ko-KR") + "원";
+    }
+
+    function formatDate(dt) {
+        if (!dt) return "-";
+        const d = new Date(dt);
+        return d.getFullYear() + "." +
+            String(d.getMonth() + 1).padStart(2, "0") + "." +
+            String(d.getDate()).padStart(2, "0") + " " +
+            String(d.getHours()).padStart(2, "0") + ":" +
+            String(d.getMinutes()).padStart(2, "0");
+    }
+
+    function renderList(items, hasNext, page) {
+        const section = document.getElementById("listSection");
+        let html = "";
+
+        items.forEach(item => {
+            html += `
+                <div class="payment-card" onclick="openDetail(${item.paymentId})">
+                    <div class="card-top">
+                        <div>
+                            <span class="badge-type">${typeLabel(item.type)}</span>
+                            <span class="order-name">${escapeHtml(item.orderName)}</span>
+                        </div>
+                        ${statusBadge(item.status)}
+                    </div>
+                    <div class="card-info">
+                        <span class="amount">${formatAmount(item.amount)}</span>
+                        <span class="date">${formatDate(item.approvedAt)}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `<div class="pagination">`;
+        html += `<button ${page === 0 ? "disabled" : ""} onclick="loadPayments(${page - 1})">이전</button>`;
+        html += `<button class="current" disabled>` + (page + 1) + `</button>`;
+        html += `<button ${!hasNext ? "disabled" : ""} onclick="loadPayments(${page + 1})">다음</button>`;
+        html += `</div>`;
+
+        section.innerHTML = html;
+        section.style.display = "block";
+    }
+
+    async function openDetail(paymentId) {
+        const overlay = document.getElementById("detailOverlay");
+        const card = document.getElementById("detailCard");
+        card.innerHTML = `<div class="loading">상세 정보를 불러오는 중...</div>`;
+        overlay.classList.add("active");
+
+        try {
+            const res = await apiFetch(`/api/payments/v2/${paymentId}`);
+            const json = await res.json();
+
+            if (!json.success) {
+                card.innerHTML = `<button class="close-btn" onclick="closeDetail()">&times;</button><p>${json.message || "조회 실패"}</p>`;
+                return;
+            }
+
+            const d = json.data;
+            const canRefund = d.type === "DEPOSIT" && d.status === "SUCCESS";
+
+            card.innerHTML = `
+                <button class="close-btn" onclick="closeDetail()">&times;</button>
+                <h2>${escapeHtml(d.orderName)}</h2>
+                <div class="detail-row"><span class="detail-label">결제 ID</span><span class="detail-value">${d.paymentId}</span></div>
+                <div class="detail-row"><span class="detail-label">결제 유형</span><span class="detail-value">${typeLabel(d.type)}</span></div>
+                <div class="detail-row"><span class="detail-label">결제 금액</span><span class="detail-value">${formatAmount(d.amount)}</span></div>
+                <div class="detail-row"><span class="detail-label">결제 상태</span><span class="detail-value">${statusBadge(d.status)}</span></div>
+                <div class="detail-row"><span class="detail-label">결제 수단</span><span class="detail-value">${d.paymentMethodType || "-"}</span></div>
+                <div class="detail-row"><span class="detail-label">결제 상세</span><span class="detail-value">${escapeHtml(d.methodDetail || "-")}</span></div>
+                <div class="detail-row"><span class="detail-label">승인 일시</span><span class="detail-value">${formatDate(d.approvedAt)}</span></div>
+                <div class="detail-row"><span class="detail-label">경매 ID</span><span class="detail-value">${d.auctionId || "-"}</span></div>
+                <div class="detail-row"><span class="detail-label">경매 상태</span><span class="detail-value">${d.auctionStatus || "-"}</span></div>
+                <div class="detail-row"><span class="detail-label">시작가</span><span class="detail-value">${d.startPrice ? formatAmount(d.startPrice) : "-"}</span></div>
+                ${canRefund ? `<button class="refund-btn" id="refundBtn" onclick="requestRefund(${d.paymentId})">환불 요청</button>` : ""}
+            `;
+        } catch (e) {
+            if (e.message !== "Unauthorized") {
+                card.innerHTML = `<button class="close-btn" onclick="closeDetail()">&times;</button><p>상세 정보를 불러올 수 없습니다.</p>`;
+            }
+        }
+    }
+
+    function closeDetail() {
+        document.getElementById("detailOverlay").classList.remove("active");
+    }
+
+    async function requestRefund(paymentId) {
+        const btn = document.getElementById("refundBtn");
+        if (btn) { btn.disabled = true; btn.textContent = "환불 요청 중..."; }
+
+        try {
+            const res = await apiFetch(`/api/payments/v2/${paymentId}/refund`, { method: "POST" });
+
+            if (res.status === 204 || res.ok) {
+                showToast("환불 요청이 완료되었습니다.");
+                closeDetail();
+                loadPayments(currentPage);
+            } else {
+                const json = await res.json();
+                showToast(json.message || "환불 요청에 실패했습니다.");
+                if (btn) { btn.disabled = false; btn.textContent = "환불 요청"; }
+            }
+        } catch (e) {
+            if (e.message !== "Unauthorized") {
+                showToast("환불 요청 중 오류가 발생했습니다.");
+                if (btn) { btn.disabled = false; btn.textContent = "환불 요청"; }
+            }
+        }
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    init();
+</script>
+
+</body>
+</html>
