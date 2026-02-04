@@ -55,4 +55,13 @@ public class PaymentController {
         return GlobalResponse.ok(response);
    }
 
+    @PostMapping("/{paymentId}/refund")
+    public ResponseEntity<GlobalResponse<Void>> requestRefund(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long paymentId
+    ) {
+        paymentService.requestRefundByUser(authUser.getUserId(), paymentId);
+        return GlobalResponse.noContent();
+    }
+
 }

@@ -6,11 +6,13 @@ import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
+import com.example.budongbudong.domain.payment.config.PaymentRefundMQConfig;
 import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.enums.*;
+import com.example.budongbudong.domain.payment.MQ.RefundRequestedEvent;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
@@ -21,9 +23,12 @@ import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.payment.utils.PaymentMethodDetailFormatter;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -40,6 +45,7 @@ public class PaymentService {
     private final PaymentAmountCalculator calculator;
     private final TossPaymentClient tossPaymentClient;
     private final PaymentVerifyPublisher verifyPublisher;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public PaymentTossReadyResponse requestPayment(Long userId, Long auctionId, PaymentType type) {
@@ -153,6 +159,36 @@ public class PaymentService {
         return ReadPaymentResponse.from(dto);
     }
 
+    @Transactional
+    public void requestRefundByUser(Long userId, Long paymentId) {
+        Payment payment = paymentRepository.getByIdOrThrow(paymentId);
+
+        if (!payment.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        requestRefund(paymentId);
+    }
+
+    @Transactional
+    public void requestRefund(Long paymentId) {
+
+        Payment payment = paymentRepository.getByIdOrThrow(paymentId);
+
+        payment.requestRefund();
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override
+            public void afterCommit() {
+                rabbitTemplate.convertAndSend(
+                        PaymentRefundMQConfig.REFUND_EXCHANGE,
+                        PaymentRefundMQConfig.REFUND_ROUTING_KEY,
+                        new RefundRequestedEvent(paymentId)
+                );
+            }
+        });
+
+    }
     /**
      * PG 승인 이후,서버가 결제 결과를 "확정"하는 단계
      * - 지금은 확정의 경계 역할만 한다.

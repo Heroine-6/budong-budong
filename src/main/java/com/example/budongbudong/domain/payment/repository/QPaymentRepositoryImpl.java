@@ -5,6 +5,7 @@ import com.example.budongbudong.domain.payment.dto.query.QReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +83,20 @@ public class QPaymentRepositoryImpl implements QPaymentRepository {
                 .fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public List<Long> findDepositPaymentIdsByAuctionIdAndNotWinnerUserId(Long auctionId, Long winnerUserId) {
+        return queryFactory
+                .select(payment.id)
+                .from(payment)
+                .where(
+                        payment.auction.id.eq(auctionId),
+                        payment.type.eq(PaymentType.DEPOSIT),
+                        payment.status.eq(PaymentStatus.SUCCESS),
+                        payment.user.id.ne(winnerUserId)
+                )
+                .fetch();
     }
 
     private BooleanExpression exposeStatus() {
