@@ -103,6 +103,10 @@
         잔금 결제
     </button>
 
+    <button class="pay-button" style="background:#6b7280;color:#fff;margin-top:4px;" onclick="location.href='/payments.html'">
+        결제 내역 보기
+    </button>
+
     <div class="footer">
         Toss Payments · Test Mode
     </div>
@@ -111,13 +115,19 @@
 <script>
     const clientKey = "test_ck_E92LAa5PVbqvvxYaZPPz37YmpXyJ";
     const auctionId = 4;
+    const accessToken = localStorage.getItem("accessToken") || "";
 
     async function pay(type) {
+        if (!accessToken) {
+            alert("로그인이 필요합니다. localStorage에 accessToken을 설정해 주세요.");
+            return;
+        }
         try {
             const response = await fetch(`/api/payments/v2/auctions/${auctionId}`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + accessToken
                 },
                 body: JSON.stringify({ type })
             });

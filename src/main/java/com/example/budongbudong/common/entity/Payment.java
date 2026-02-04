@@ -1,5 +1,7 @@
 package com.example.budongbudong.common.entity;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.payment.enums.*;
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
 import com.example.budongbudong.domain.payment.toss.enums.TossPaymentStatus;
@@ -133,11 +135,28 @@ public class Payment extends BaseEntity {
      * MQ 중복 및 재전송에 대한 멱등성 보장
      */
     public boolean isFinalized() {
-        return status == PaymentStatus.SUCCESS || status == PaymentStatus.FAIL;
+        return status == PaymentStatus.SUCCESS || status == PaymentStatus.FAIL
+                || status == PaymentStatus.REFUND_REQUESTED || status == PaymentStatus.REFUNDED;
     }
 
     public boolean isVerifiedTimeout(Duration limit) {
         return verifyingStartedAt != null && verifyingStartedAt.isBefore(LocalDateTime.now().minus(limit));
     }
 
+    /* --- 환불 --- */
+    public void requestRefund() {
+        if(this.type != PaymentType.DEPOSIT) {
+            throw new CustomException(ErrorCode.ONLY_CAN_REFUND_DEPOSIT);
+        }
+
+        if (this.status != PaymentStatus.SUCCESS) {
+            throw new CustomException(ErrorCode.INVALID_REFUND_STATUS);
+        }
+        this.status = PaymentStatus.REFUND_REQUESTED;
+    }
+
+    public void makeRefunded() {
+        if(this.status != PaymentStatus.REFUND_REQUESTED) return;
+        this.status = PaymentStatus.REFUNDED;
+    }
 }

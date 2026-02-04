@@ -29,7 +29,7 @@ public class PaymentFixture {
 
     public static Payment successPayment(User user, Auction auction, PaymentType type) {
         Payment payment = payment(user, auction, type);
-        payment.makeSuccess(PAYMENT_KEY, LocalDateTime.now());
+        payment.makeSuccess(PAYMENT_KEY, LocalDateTime.now(), null, null);
         return payment;
     }
 

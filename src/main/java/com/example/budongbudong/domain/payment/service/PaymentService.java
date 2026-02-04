@@ -11,6 +11,8 @@ import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.enums.*;
+import com.example.budongbudong.domain.payment.MQ.RefundRequestedMQEvent;
+import com.example.budongbudong.domain.payment.event.RefundRequestDomainEvent;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
@@ -21,6 +23,8 @@ import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.payment.utils.PaymentMethodDetailFormatter;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +44,8 @@ public class PaymentService {
     private final PaymentAmountCalculator calculator;
     private final TossPaymentClient tossPaymentClient;
     private final PaymentVerifyPublisher verifyPublisher;
+    private final RabbitTemplate rabbitTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public PaymentTossReadyResponse requestPayment(Long userId, Long auctionId, PaymentType type) {
@@ -153,6 +159,30 @@ public class PaymentService {
         return ReadPaymentResponse.from(dto);
     }
 
+    @Transactional
+    public void requestRefundByUser(Long userId, Long paymentId) {
+        Payment payment = paymentRepository.getByIdAndUserIdOrThrow(paymentId, userId);
+        requestRefund(paymentId, userId);
+    }
+
+    @Transactional
+    public void requestRefund(Long paymentId, Long userId) {
+
+        Payment payment = paymentRepository.getByIdAndUserIdOrThrow(paymentId, userId);
+        payment.requestRefund();
+
+        applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
+    }
+
+    /** 시스템 자동 환불 (경매 종료 시 낙찰 실패자 보증금 환불) */
+    @Transactional
+    public void requestRefund(Long paymentId) {
+
+        Payment payment = paymentRepository.getByIdOrThrow(paymentId);
+        payment.requestRefund();
+
+        applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
+    }
     /**
      * PG 승인 이후,서버가 결제 결과를 "확정"하는 단계
      * - 지금은 확정의 경계 역할만 한다.
