@@ -7,6 +7,7 @@ import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.notification.client.KakaoClient;
 import com.example.budongbudong.domain.notification.dto.CreateNotificationResponse;
 import com.example.budongbudong.domain.notification.dto.KakaoNotificationResponse;
+import com.example.budongbudong.domain.notification.dto.NotificationDto;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +58,7 @@ public class NotificationService {
         return CreateNotificationResponse.from(newNotification);
     }
 
-    public String createTextMessage(String content) {
+    private String createTextMessage(String content) {
 
         // TODO: 우리 서비스로 연결 가능한 url 변경 예정
         String webUrl = "https://developers.kakao.com";
@@ -81,7 +82,13 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("[알림] to: {}, 카카오톡 나에게 보내기 실패: {}", userId, e.getMessage());
         }
-
     }
 
+    @Transactional(readOnly = true)
+    public NotificationDto getNotification(Long auctionId, NotificationType type) {
+
+        Notification notification = notificationRepository.getByAuctionIdAndTypeEqualsOrThrow(auctionId, type);
+
+        return NotificationDto.from(notification);
+    }
 }
