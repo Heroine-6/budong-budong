@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.auction.service;
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
+import com.example.budongbudong.domain.notification.event.AuctionEndingSoonEvent;
 import com.example.budongbudong.domain.notification.event.AuctionOpenEvent;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +16,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 자정 기준 경매 상태 전환 책임을 가지는 서비스
- * - 시작 시간 도달 → SCHEDULED → OPEN
- * - 종료 시간 도달 → OPEN → ENDED
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,6 +26,10 @@ public class AuctionSchedulerService {
     private final EntityManager entityManager;
 
     /**
+     * 자정 기준 경매 상태 전환 책임을 가지는 메서드
+     * - 시작 시간 도달 → SCHEDULED → OPEN
+     * - 종료 시간 도달 → OPEN → ENDED
+     * <p>
      * 처리 순서
      * 1. 시작 도달한 경매 OPEN
      * 2. OPEN 된 경매에 대해 이벤트 발행
@@ -96,4 +96,25 @@ public class AuctionSchedulerService {
         willCloseAuctionIds.forEach(id -> eventPublisher.publishEvent(new AuctionClosedEvent(id)));
     }
 
+    /**
+     * 오늘이 종료일인 경매에 대해 알림 이벤트 발행
+     * - 종료 임박 대상 경매 ID 조회
+     * - 종료 임박 이벤트 발행
+     */
+    @Transactional(readOnly = true)
+    public void notifyAuctionsEndingSoon() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime todayStart = today.atStartOfDay();
+
+        List<Long> endingSoonAuctionIds = auctionRepository.findEndingSoonAuctionIds(todayStart);
+
+        if (endingSoonAuctionIds.isEmpty()) {
+            log.info("[Scheduling] 종료 임박 대상 없음");
+            return;
+        }
+
+        //이벤트 발행
+        endingSoonAuctionIds.forEach(id
+                -> eventPublisher.publishEvent(new AuctionEndingSoonEvent(id, NotificationType.AUCTION_END_SOON)));
+    }
 }

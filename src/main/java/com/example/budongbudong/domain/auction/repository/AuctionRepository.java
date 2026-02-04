@@ -150,4 +150,12 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 where a.id = :auctionId
             """)
     Optional<Auction> findByIdWithProperty(Long auctionId);
+
+    @Query("""
+                select a.id
+                from Auction a
+                where a.status = 'OPEN'
+                  and a.endedAt = :today
+            """)
+    List<Long> findEndingSoonAuctionIds(LocalDateTime today);
 }

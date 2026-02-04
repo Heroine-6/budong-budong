@@ -15,12 +15,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
-/**
- * 알림(Notification) 처리를 담당하는 이벤트 리스너
- * - 도메인 이벤트 발생 이후 알림 생성 및 전송 처리
- * - 모든 이벤트는 트랜잭션 커밋 이후(AFTER_COMMIT)에 처리됨
- * - 비즈니스 로직과 알림 로직을 분리하기 위한 구성
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -56,6 +50,7 @@ public class NotificationEventListener {
 
     /**
      * 입찰 생성 이벤트 처리
+     * - 새로운 입찰자 수신 등록
      * - 알림 수신에 동의한 판매자 + 입찰자 대상 알림
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -79,7 +74,21 @@ public class NotificationEventListener {
     }
 
     /**
+     * 경매 종료 임박 이벤트 처리
+     * - 경매에 참여한 모든 입찰자 수신 등록
+     * - 알림 수신에 동의한 판매자 + 입찰자 대상 알림
+     */
+    @TransactionalEventListener
+    public void sendNotificationEndingSoonAuction(AuctionEndingSoonEvent event) {
+
+        NotificationDto dto = userNotificationService.createUserNotificationAllBidders(event.getAuctionId(), event.getType());
+
+        sendNotification(dto);
+    }
+
+    /**
      * 경매 종료 이벤트 처리
+     * - 경매에 참여한 모든 입찰자 수신 등록
      * - 알림 수신에 동의한 판매자 + 입찰자 대상 알림
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
