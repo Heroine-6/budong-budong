@@ -24,18 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
- * defaultRequeueRejected=true 설정 시 무한 재시도 문제를 시뮬레이션하는 테스트
- *
- * 이 테스트는 RabbitMQ의 실제 requeue 동작을 시뮬레이션합니다:
- * - defaultRequeueRejected=true: 예외 발생 시 메시지가 즉시 큐로 다시 들어감
- * - 이로 인해 Consumer가 동일 메시지를 무한히 재처리하게 됨
- *
- * 참고: 현재 코드는 개선되어 예외를 던지지 않으므로, 이 테스트는 "이전 방식의 문제점"을
- * 보여주기 위한 시뮬레이션입니다.
+ * defaultRequeueRejected=true 설정 시 무한 재시도 테스트
  */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("무한 재시도 시뮬레이션 테스트 (defaultRequeueRejected=true) - 이전 방식 문제점 시뮬레이션")
-@Disabled("현재 코드는 개선되어 예외를 던지지 않음. 이전 방식의 문제점을 보여주기 위한 테스트")
+@DisplayName("무한 재시도 시뮬레이션 테스트 (defaultRequeueRejected=true)")
+@Disabled("현재 코드는 개선되어 예외를 던지지 않음. 이전 방식 문서화를 위해  남겨논 테스트")
 class PaymentRefundInfiniteRetryTest {
 
     @Mock
@@ -113,14 +106,6 @@ class PaymentRefundInfiniteRetryTest {
 
         // Toss API가 100번 호출됨 (실제로는 무한대)
         verify(tossPaymentClient, times(maxSimulatedRetries)).refund(any(), any(), any());
-
-        System.out.println("==============================================");
-        System.out.println("    무한 재시도 시뮬레이션 결과:");
-        System.out.println("   - 재시도 횟수: " + retryCount.get() + "회 (제한됨)");
-        System.out.println("   - 실제 RabbitMQ에서는 무한히 반복됨");
-        System.out.println("   - CPU/메모리 사용량 급증");
-        System.out.println("   - 결제 상태: " + payment.getStatus() + " (변화 없음)");
-        System.out.println("==============================================");
     }
 
     @Test
@@ -136,7 +121,7 @@ class PaymentRefundInfiniteRetryTest {
         // when - 1초 동안 얼마나 많은 재시도가 발생하는지 측정
         long startTime = System.currentTimeMillis();
         int retryCount = 0;
-        long duration = 100; // 100ms로 제한 (실제로는 1초면 수만 번)
+        long duration = 100; // 100ms로 제한
 
         while (System.currentTimeMillis() - startTime < duration) {
             try {
@@ -147,14 +132,7 @@ class PaymentRefundInfiniteRetryTest {
         }
 
         // then
-        System.out.println("==============================================");
-        System.out.println("    CPU 폭주 시뮬레이션 결과:");
-        System.out.println("   - " + duration + "ms 동안 재시도 횟수: " + retryCount + "회");
-        System.out.println("   - 초당 약 " + (retryCount * 1000 / duration) + "회 재시도");
-        System.out.println("   - 실제 환경에서는 더 많은 오버헤드 발생");
-        System.out.println("==============================================");
-
-        // 100ms 동안 최소 10번 이상 재시도됨 (실제로는 훨씬 더 많음)
+        // 100ms 동안 최소 10번 이상 재시도됨
         assertThat(retryCount).isGreaterThan(10);
     }
 
@@ -199,16 +177,6 @@ class PaymentRefundInfiniteRetryTest {
         }
 
         // then
-        System.out.println("==============================================");
-        System.out.println("   시스템 멈춤 시뮬레이션 결과:");
-        System.out.println("   - 3개 메시지의 총 재시도: " + totalRetries.get() + "회");
-        System.out.println("   - 모든 Consumer 스레드가 재시도에 점유됨");
-        System.out.println("   - 새로운 정상 메시지 처리 불가");
-        System.out.println("   - payment1 상태: " + payment1.getStatus());
-        System.out.println("   - payment2 상태: " + payment2.getStatus());
-        System.out.println("   - payment3 상태: " + payment3.getStatus());
-        System.out.println("==============================================");
-
         assertThat(totalRetries.get()).isEqualTo(maxPerMessage * 3);
         assertThat(payment1.getStatus()).isEqualTo(PaymentStatus.REFUND_REQUESTED);
         assertThat(payment2.getStatus()).isEqualTo(PaymentStatus.REFUND_REQUESTED);

@@ -2,7 +2,6 @@ package com.example.budongbudong.domain.payment.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import lombok.Getter;
 
 import java.math.BigDecimal;
 

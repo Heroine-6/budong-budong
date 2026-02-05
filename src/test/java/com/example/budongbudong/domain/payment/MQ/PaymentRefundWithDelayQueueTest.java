@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.payment.MQ;
 import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
+import com.example.budongbudong.domain.payment.log.enums.LogType;
 import com.example.budongbudong.domain.payment.log.service.PaymentLogService;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
@@ -20,12 +21,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
  * setDefaultRequeueRejected(false) + 지연 큐 방식 테스트
- *
- * 개선된 방식:
  * - 예외 발생 시 메시지를 버림 (requeue 안 함)
  * - 명시적으로 지연 큐에 발행 (30초 후 재시도)
  * - 최대 재시도 횟수 도달 시 중단
@@ -95,9 +96,6 @@ class PaymentRefundWithDelayQueueTest {
         verify(refundRetryPublisher).publish(1L);
         // 3. 재시도 횟수 증가
         assertThat(payment.getRefundRetryCount()).isEqualTo(1);
-
-        System.out.println(" 예외 대신 지연 큐 발행 확인");
-        System.out.println("   - refundRetryCount: " + payment.getRefundRetryCount());
     }
 
     @Test
@@ -126,13 +124,14 @@ class PaymentRefundWithDelayQueueTest {
         assertThat(payment.getRefundRetryCount()).isEqualTo(MAX_REFUND_RETRY);
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_REQUESTED);
 
-        System.out.println("==============================================");
-        System.out.println("   최대 재시도 제한 동작 확인:");
-        System.out.println("   - 재시도 횟수 이력: " + retryCountHistory);
-        System.out.println("   - 최종 retryCount: " + payment.getRefundRetryCount());
-        System.out.println("   - 지연 큐 발행 횟수: " + MAX_REFUND_RETRY + "회");
-        System.out.println("   - 상태: " + payment.getStatus() + " (수동 처리 필요)");
-        System.out.println("==============================================");
+        // 최대 재시도 초과 시 REFUND_FAILED 로그가 저장되었는지 검증
+        verify(paymentLogService, atLeastOnce()).saveLog(
+                eq(1L),
+                eq(PaymentStatus.REFUND_REQUESTED),
+                eq(PaymentStatus.REFUND_REQUESTED),
+                eq(LogType.REFUND_FAILED),
+                contains("최대 재시도 횟수 초과")
+        );
     }
 
     @Test
@@ -162,20 +161,6 @@ class PaymentRefundWithDelayQueueTest {
         }
 
         // then
-        System.out.println("==============================================");
-        System.out.println("   지연 큐 방식 결과:");
-        System.out.println("   - " + duration + "ms 동안 consume 횟수: " + consumeCount + "회");
-        System.out.println("   - 최대 재시도 도달 후 즉시 중단됨");
-        System.out.println("   - 실제 환경에서는 30초 간격으로 최대 5회만 재시도");
-        System.out.println("   - 총 소요 시간: 약 150초 (30초 x 5회)");
-        System.out.println("==============================================");
-        System.out.println("");
-        System.out.println("   이전 방식(무한 재시도) 비교:");
-        System.out.println("   - 100ms 동안 약 590회 재시도 (테스트 결과)");
-        System.out.println("   - 초당 약 5,900회 재시도");
-        System.out.println("   - CPU 100% 점유, 시스템 멈춤");
-        System.out.println("==============================================");
-
         // 최대 재시도 + 1 (초과 체크) 정도만 호출됨
         assertThat(consumeCount).isLessThanOrEqualTo(MAX_REFUND_RETRY + 3);
     }
@@ -225,20 +210,6 @@ class PaymentRefundWithDelayQueueTest {
         assertThat(payment2.getRefundRetryCount()).isEqualTo(MAX_REFUND_RETRY);
         assertThat(payment3.getRefundRetryCount()).isEqualTo(MAX_REFUND_RETRY);
 
-        System.out.println("==============================================");
-        System.out.println("   여러 결제 처리 결과:");
-        System.out.println("   - payment1 재시도: " + payment1.getRefundRetryCount() + "/" + MAX_REFUND_RETRY);
-        System.out.println("   - payment2 재시도: " + payment2.getRefundRetryCount() + "/" + MAX_REFUND_RETRY);
-        System.out.println("   - payment3 재시도: " + payment3.getRefundRetryCount() + "/" + MAX_REFUND_RETRY);
-        System.out.println("   - 총 지연 큐 발행: " + (MAX_REFUND_RETRY * 3) + "회");
-        System.out.println("   - 시스템 정상 동작 유지");
-        System.out.println("==============================================");
-        System.out.println("");
-        System.out.println("   이전 방식(무한 재시도) 비교:");
-        System.out.println("   - 3개 메시지가 무한 순환");
-        System.out.println("   - Consumer 스레드 100% 점유");
-        System.out.println("   - 새로운 정상 메시지 처리 불가");
-        System.out.println("==============================================");
     }
 
     @Test
@@ -266,14 +237,5 @@ class PaymentRefundWithDelayQueueTest {
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
         assertThat(payment.getRefundRetryCount()).isEqualTo(2); // 2번 실패 후 성공
         verify(refundRetryPublisher, times(2)).publish(1L); // 2번만 지연 큐 발행
-
-        System.out.println("==============================================");
-        System.out.println("   재시도 중 성공 케이스:");
-        System.out.println("   - 1번째 시도: 실패 → 지연 큐 발행");
-        System.out.println("   - 2번째 시도: 실패 → 지연 큐 발행");
-        System.out.println("   - 3번째 시도: 성공!");
-        System.out.println("   - 최종 상태: " + payment.getStatus());
-        System.out.println("   - 총 재시도: " + payment.getRefundRetryCount() + "회");
-        System.out.println("==============================================");
     }
 }
