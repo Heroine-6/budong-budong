@@ -20,7 +20,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
            where p.auction.id = :auctionId
            and p.status = 'SUCCESS'
            """)
-    BigDecimal sumPaidAmountByAuctionId(Long id);
+    BigDecimal sumPaidAmountByAuctionId(Long auctionId);
 
     Optional<Payment> findByOrderId(String orderId);
 

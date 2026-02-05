@@ -96,7 +96,7 @@ class PaymentRefundServiceTest {
                     .thenReturn(payment);
 
             //when
-            paymentService.requestRefund(user.getId(), payment.getId());
+            paymentService.requestRefundByUser(user.getId(), payment.getId());
 
             //then
             assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_REQUESTED);
@@ -111,7 +111,7 @@ class PaymentRefundServiceTest {
                     .thenThrow(CustomException.class);
 
             //when then
-            assertThatThrownBy(() -> paymentService.requestRefund(otherUser.getId(), payment.getId()))
+            assertThatThrownBy(() -> paymentService.requestRefundByUser(otherUser.getId(), payment.getId()))
                     .isInstanceOf(CustomException.class);
         }
     }
