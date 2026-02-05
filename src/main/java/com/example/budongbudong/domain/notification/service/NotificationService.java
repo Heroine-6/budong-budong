@@ -11,7 +11,6 @@ import com.example.budongbudong.domain.notification.dto.KakaoNotificationRespons
 import com.example.budongbudong.domain.notification.dto.NotificationDto;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
-import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +57,11 @@ public class NotificationService {
      * 알림 생성
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public CreateNotificationResponse createSellerNotification(Long auctionId, Long sellerId, NotificationType type) {
+    public CreateNotificationResponse createSellerNotification(
+            Long auctionId,
+            Long sellerId,
+            NotificationType type
+    ) {
 
         Auction auction = auctionRepository.getByIdOrThrow(auctionId);
 
@@ -84,10 +87,13 @@ public class NotificationService {
      * 결제 요청 알림 생성
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public CreateNotificationResponse createPaymentRequestNotification(Long auctionId, NotificationType notificationType, Long paymentId) {
+    public CreateNotificationResponse createPaymentRequestNotification(
+            Long auctionId,
+            NotificationType notificationType,
+            Long paymentId
+    ) {
 
         Payment payment = paymentRepository.getByIdOrThrow(paymentId);
-        PaymentType paymentType = payment.getType();
 
         // 결제 기한 문자열 변환
         String dueDateTime = getFormatDueDateTime(payment);
@@ -99,7 +105,7 @@ public class NotificationService {
      * 결제 완료 알림 생성
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public CreateNotificationResponse createPaymentCompletedNotification(Long auctionId, NotificationType notificationType, Long paymentId) {
+    public CreateNotificationResponse createPaymentCompletedNotification(NotificationType notificationType, Long paymentId) {
 
         Payment payment = paymentRepository.getByIdOrThrow(paymentId);
 
@@ -109,10 +115,15 @@ public class NotificationService {
 
         String approvedDateTime = approvedAt.format(formatter);
 
-        return savePaymentNotification(auctionId, notificationType, payment, approvedDateTime);
+        return savePaymentNotification(payment.getAuction().getId(), notificationType, payment, approvedDateTime);
     }
 
-    private CreateNotificationResponse savePaymentNotification(Long auctionId, NotificationType notificationType, Payment payment, String dateTime) {
+    private CreateNotificationResponse savePaymentNotification(
+            Long auctionId,
+            NotificationType notificationType,
+            Payment payment,
+            String dateTime
+    ) {
 
         Auction auction = auctionRepository.getByIdOrThrow(auctionId);
         Long sellerId = auction.getProperty().getUser().getId();

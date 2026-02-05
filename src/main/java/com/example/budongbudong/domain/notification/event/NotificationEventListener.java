@@ -130,7 +130,7 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendNotificationOnCompletedPayment(PaymentCompletedEvent event) {
 
-        CreateNotificationResponse response = notificationService.createPaymentCompletedNotification(event.auctionId(), NotificationType.PAYMENT_COMPLETED, event.paymentId());
+        CreateNotificationResponse response = notificationService.createPaymentCompletedNotification(NotificationType.PAYMENT_COMPLETED, event.paymentId());
 
         NotificationDto dto = userNotificationService.createUserNotification(response.getId(), event.userId());
 
