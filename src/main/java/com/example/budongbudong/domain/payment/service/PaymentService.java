@@ -1,6 +1,8 @@
 package com.example.budongbudong.domain.payment.service;
 
-import com.example.budongbudong.common.entity.*;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Payment;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
@@ -9,28 +11,36 @@ import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
 import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
-import com.example.budongbudong.domain.payment.dto.response.*;
-import com.example.budongbudong.domain.payment.enums.*;
+import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
+import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
+import com.example.budongbudong.domain.payment.dto.response.ReadPaymentResponse;
+import com.example.budongbudong.domain.payment.enums.PaymentMethodType;
+import com.example.budongbudong.domain.payment.enums.PaymentStatus;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
+import com.example.budongbudong.domain.payment.event.PaymentCompletedEvent;
+import com.example.budongbudong.domain.payment.event.PaymentRequestedEvent;
 import com.example.budongbudong.domain.payment.event.RefundRequestDomainEvent;
 import com.example.budongbudong.domain.payment.log.enums.LogType;
 import com.example.budongbudong.domain.payment.log.service.PaymentLogService;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
+import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
 import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
 import com.example.budongbudong.domain.payment.toss.exception.TossNetworkException;
-import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
 import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.payment.utils.PaymentMethodDetailFormatter;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,12 +65,12 @@ public class PaymentService {
         Auction auction = auctionRepository.getAuctionWithPropertyOrTrow(auctionId);
         User user = userRepository.getByIdOrThrow(userId);
 
-        paymentRepository.findByAuctionAndTypeAndStatus(auction,type, PaymentStatus.SUCCESS)
+        paymentRepository.findByAuctionAndTypeAndStatus(auction, type, PaymentStatus.SUCCESS)
                 .ifPresent(p -> {
                     throw new CustomException(ErrorCode.ALREADY_PAID);
                 });
 
-        Optional<Payment> inProgressPayment = paymentRepository.findByAuctionAndTypeAndStatus(auction,type,PaymentStatus.IN_PROGRESS);
+        Optional<Payment> inProgressPayment = paymentRepository.findByAuctionAndTypeAndStatus(auction, type, PaymentStatus.IN_PROGRESS);
         if (inProgressPayment.isPresent()) {
             return PaymentTossReadyResponse.from(inProgressPayment.get());
         }
@@ -97,12 +107,12 @@ public class PaymentService {
         if (payment.isFinalized()) return;
 
         // 결제 확인 중인 상태는 confirm 호출 차단
-        if (payment.getStatus().equals(PaymentStatus.VERIFYING)) return ;
+        if (payment.getStatus().equals(PaymentStatus.VERIFYING)) return;
 
         PaymentStatus prev = payment.getStatus();
 
         //금액 검증
-        if (payment.getAmount().compareTo(request.amount()) != 0){
+        if (payment.getAmount().compareTo(request.amount()) != 0) {
             payment.makeFail(PaymentFailureReason.AMOUNT_MISMATCH);
             saveLog(payment, prev, LogType.STATUS_CHANGE, "금액 불일치");
             throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
@@ -110,14 +120,14 @@ public class PaymentService {
 
         //toss 승인 호출
         TossConfirmResponse tossResponse;
-        try{
+        try {
             tossResponse = tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
-        } catch(TossClientException e) {
+        } catch (TossClientException e) {
             payment.makeFail(PaymentFailureReason.INVALID_PAYMENT_INFO);
             saveLog(payment, prev, LogType.TOSS_CLIENT_ERROR, e.getMessage());
             return;
-        } catch(TossNetworkException e) {
-            makeVerifyingAndPublish(payment,request,PaymentFailureReason.PG_NETWORK_ERROR);
+        } catch (TossNetworkException e) {
+            makeVerifyingAndPublish(payment, request, PaymentFailureReason.PG_NETWORK_ERROR);
             saveLog(payment, prev, LogType.TOSS_NETWORK_ERROR, e.getMessage());
             return;
         }
@@ -130,8 +140,16 @@ public class PaymentService {
             finalizePayment(payment, request);
             payment.makeSuccess(request.paymentKey(), LocalDateTime.now(), methodType, methodDetail);
             saveLog(payment, prev, LogType.PAYMENT_SUCCESS, null);
-        } catch(Exception e) {
-            makeVerifyingAndPublish(payment,request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
+
+            // 결제 완료 알림
+            applicationEventPublisher.publishEvent(new PaymentCompletedEvent(payment.getId(), payment.getUser().getId()));
+
+            // 계약금 납부 시 잔금 납부 알림
+            if (payment.getType().equals(PaymentType.DOWN_PAYMENT)) {
+                applicationEventPublisher.publishEvent(new PaymentRequestedEvent(payment.getAuction().getId(), payment.getUser().getId(), PaymentType.BALANCE, LocalDate.now()));
+            }
+        } catch (Exception e) {
+            makeVerifyingAndPublish(payment, request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
             saveLog(payment, prev, LogType.STATUS_CHANGE, "서버 확인 오류: " + e.getMessage());
         }
     }
@@ -168,7 +186,9 @@ public class PaymentService {
         return ReadPaymentResponse.from(dto);
     }
 
-    /** 시스템 수동 환불 (자동 환불 처리 실패 시) */
+    /**
+     * 시스템 수동 환불 (자동 환불 처리 실패 시)
+     */
     @Transactional
     public void requestRefundByUser(Long userId, Long paymentId) {
 
@@ -177,11 +197,13 @@ public class PaymentService {
 
         payment.requestRefund();
 
-        saveLog(payment,prev,LogType.MANUAL_REFUND_REQUESTED,null);
+        saveLog(payment, prev, LogType.MANUAL_REFUND_REQUESTED, null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 
-    /** 시스템 자동 환불 (경매 종료 시 낙찰 실패자 보증금 환불) */
+    /**
+     * 시스템 자동 환불 (경매 종료 시 낙찰 실패자 보증금 환불)
+     */
     @Transactional
     public void requestRefund(Long paymentId) {
 
@@ -190,9 +212,10 @@ public class PaymentService {
 
         payment.requestRefund();
 
-        saveLog(payment,prev,LogType.REFUND_REQUESTED,null);
+        saveLog(payment, prev, LogType.REFUND_REQUESTED, null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
+
     /**
      * PG 승인 이후,서버가 결제 결과를 "확정"하는 단계
      * - 지금은 확정의 경계 역할만 한다.

@@ -1,10 +1,9 @@
 package com.example.budongbudong.domain.auction.service;
 
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
+import com.example.budongbudong.domain.auction.event.AuctionEndingSoonEvent;
+import com.example.budongbudong.domain.auction.event.AuctionOpenEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.notification.enums.NotificationType;
-import com.example.budongbudong.domain.notification.event.AuctionEndingSoonEvent;
-import com.example.budongbudong.domain.notification.event.AuctionOpenEvent;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +68,7 @@ public class AuctionSchedulerService {
 
         //이벤트 발행
         willOpenAuctionIds.forEach(id
-                -> eventPublisher.publishEvent(new AuctionOpenEvent(id, NotificationType.AUCTION_START))
+                -> eventPublisher.publishEvent(new AuctionOpenEvent(id))
         );
     }
 
@@ -115,6 +114,6 @@ public class AuctionSchedulerService {
 
         //이벤트 발행
         endingSoonAuctionIds.forEach(id
-                -> eventPublisher.publishEvent(new AuctionEndingSoonEvent(id, NotificationType.AUCTION_END_SOON)));
+                -> eventPublisher.publishEvent(new AuctionEndingSoonEvent(id)));
     }
 }

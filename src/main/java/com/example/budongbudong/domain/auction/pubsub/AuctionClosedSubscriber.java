@@ -6,6 +6,8 @@ import com.example.budongbudong.domain.auction.event.DepositRefundEvent;
 import com.example.budongbudong.domain.auctionwinner.repository.AuctionWinnerRepository;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
+import com.example.budongbudong.domain.payment.event.PaymentRequestedEvent;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -36,30 +39,33 @@ public class AuctionClosedSubscriber {
         Long auctionId = event.auctionId();
         log.info("[Redis-Sub] auction.closed auctionId={}", auctionId);
 
-        if(auctionWinnerRepository.existsByAuctionId(auctionId)){
+        if (auctionWinnerRepository.existsByAuctionId(auctionId)) {
             log.warn("auctionId={} 이미 낙찰자가 존재합니다", auctionId);
             return;
         }
         bidRepository.findTopByAuctionIdOrderByPriceDescCreatedAtAsc(auctionId)
                 .ifPresentOrElse(bid -> {
-                    // 낙찰자 확정
-                    auctionWinnerRepository.save(AuctionWinner.create(bid.getAuction(),bid.getUser(),bid.getPrice()));
-                    bid.changeStatus(BidStatus.WON);
+                            // 낙찰자 확정
+                            auctionWinnerRepository.save(AuctionWinner.create(bid.getAuction(), bid.getUser(), bid.getPrice()));
+                            bid.changeStatus(BidStatus.WON);
 
-                    // 환불 대상 계산
-                    List<Long> loserPaymentId = paymentRepository.findDepositPaymentIdsByAuctionIdAndNotWinnerUserId(
-                            auctionId,
-                            bid.getUser().getId()
-                    );
+                            // 환불 대상 계산
+                            List<Long> loserPaymentId = paymentRepository.findDepositPaymentIdsByAuctionIdAndNotWinnerUserId(
+                                    auctionId,
+                                    bid.getUser().getId()
+                            );
 
-                    // 환불 대상이 있을 때만 보증금 환불 이벤트 발행
-                    if (!loserPaymentId.isEmpty()) {
-                        eventPublisher.publishEvent(
-                                new DepositRefundEvent(auctionId, bid.getUser().getId(), loserPaymentId)
-                        );
-                    }
-                },
-                ()-> log.info("auctionId={} 입찰이 없습니다",auctionId)
-        );
+                            // 환불 대상이 있을 때만 보증금 환불 이벤트 발행
+                            if (!loserPaymentId.isEmpty()) {
+                                eventPublisher.publishEvent(
+                                        new DepositRefundEvent(auctionId, bid.getUser().getId(), loserPaymentId)
+                                );
+                            }
+
+                            // 계약금 납부 알림 이벤트 발행
+                            eventPublisher.publishEvent(new PaymentRequestedEvent(auctionId, bid.getUser().getId(), PaymentType.DOWN_PAYMENT, LocalDate.now()));
+                        },
+                        () -> log.info("auctionId={} 입찰이 없습니다", auctionId)
+                );
     }
 }
