@@ -26,6 +26,7 @@ import java.time.Duration;
 public class PaymentVerifyConsumer {
 
     private static final Duration VERIFY_LIMIT = Duration.ofMinutes(3); //VERIFYING 상태 유지 시간
+    private static final int MAX_VERIFY_RETRY = 5; // 최대 재시도 횟수
 
     private final PaymentRepository paymentRepository;
     private final PaymentLogService paymentLogService;
@@ -59,6 +60,15 @@ public class PaymentVerifyConsumer {
             return;
         }
 
+        // 최대 재시도 횟수 초과 -> FAIL
+        if(payment.isVerifyRetryExceeded(MAX_VERIFY_RETRY)) {
+            PaymentStatus prev = payment.getStatus();
+            payment.makeFail(PaymentFailureReason.MAX_RETRY_EXCEEDED);
+            saveLog(payment, prev, LogType.STATUS_CHANGE, "최대 재시도 횟수 초과 (" + MAX_VERIFY_RETRY + "회)");
+            log.error("결제 검증 최대 재시도 초과 - paymentId: {}", payment.getId());
+            return;
+        }
+
         try {
             // PG 상태 재조회
             TossPaymentStatusResponse response = tossPaymentClient.getPayment(payment.getPaymentKey());
@@ -81,6 +91,7 @@ public class PaymentVerifyConsumer {
     }
     private void requeue (Payment payment) {
         //PG 조회 자체가 실패한 경우 재시도
+        payment.incrementVerifyRetryCount();
         verifyPublisher.publish(payment.getId(), 30000L);
     }
 

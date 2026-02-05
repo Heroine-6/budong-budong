@@ -67,6 +67,12 @@ public class Payment extends BaseEntity {
     @Column(name = "method_detail")
     private String methodDetail;
 
+    @Column(name = "verify_retry_count", nullable = false)
+    private int verifyRetryCount = 0;
+
+    @Column(name = "refund_retry_count", nullable = false)
+    private int refundRetryCount = 0;
+
     @Builder
     public Payment(User user, Auction auction, PaymentType type, String orderName, BigDecimal amount, String orderId) {
         this.user = user;
@@ -171,5 +177,21 @@ public class Payment extends BaseEntity {
         if (methodDetail == null) {
             throw new CustomException(ErrorCode.SUCCESS_BUT_METHOD_DETAIL_NULL);
         }
+    }
+    /* --- 재시도 관리 --- */
+    public void incrementVerifyRetryCount() {
+        this.verifyRetryCount++;
+    }
+
+    public void incrementRefundRetryCount() {
+        this.refundRetryCount++;
+    }
+
+    public boolean isVerifyRetryExceeded(int maxRetry) {
+        return this.verifyRetryCount >= maxRetry;
+    }
+
+    public boolean isRefundRetryExceeded(int maxRetry) {
+        return this.refundRetryCount >= maxRetry;
     }
 }

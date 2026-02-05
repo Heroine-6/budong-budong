@@ -18,7 +18,8 @@ public enum PaymentFailureReason {
     PG_NETWORK_ERROR(true, 202, "PG 네트워크 오류로 결제 확인이 지연되고 있습니다."),
     PG_TIMEOUT(true,202,"결제 승인 응답이 지연되고 있습니다."),
     SERVER_CONFIRM_ERROR(true, 202, "서버에서 결제 결과를 확인 중입니다."),
-    UNKNOWN(true,202,"결제 확인 중입니다.")
+    UNKNOWN(true,202,"결제 확인 중입니다."),
+    MAX_RETRY_EXCEEDED(false, 500, "최대 재시도 횟수를 초과했습니다. 관리자에게 문의하세요.")
     ;
     private final boolean retryable;
     private final int code;

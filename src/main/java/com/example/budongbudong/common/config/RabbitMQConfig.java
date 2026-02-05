@@ -85,6 +85,8 @@ public class RabbitMQConfig {
         factory.setMessageConverter(jackson2JsonMessageConverter());
         factory.setAutoStartup(true);
         factory.setMissingQueuesFatal(false);
+        // 예외 발생 시 즉시 requeue 방지 - 재시도는 명시적으로 지연 큐에 publish
+        factory.setDefaultRequeueRejected(false);
         return factory;
     }
 
