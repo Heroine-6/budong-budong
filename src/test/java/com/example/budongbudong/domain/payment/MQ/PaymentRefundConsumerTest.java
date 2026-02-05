@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.payment.MQ;
 import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
+import com.example.budongbudong.domain.payment.log.service.PaymentLogService;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
 import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
@@ -18,7 +19,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,7 +32,13 @@ class PaymentRefundConsumerTest {
     private PaymentRepository paymentRepository;
 
     @Mock
+    private PaymentLogService paymentLogService;
+
+    @Mock
     private TossPaymentClient tossPaymentClient;
+
+    @Mock
+    private PaymentRefundRetryPublisher refundRetryPublisher;
 
     User user;
     Auction auction;
@@ -112,7 +118,7 @@ class PaymentRefundConsumerTest {
         }
 
         @Test
-        @DisplayName("네트워크 오류 시 예외를 던져 RabbitMQ 재시도를 유도한다")
+        @DisplayName("네트워크 오류 시 지연 큐에 발행하여 재시도를 유도한다")
         void toss_network_exception_retry() {
             // given
             payment.requestRefund();
@@ -123,10 +129,13 @@ class PaymentRefundConsumerTest {
                     .when(tossPaymentClient)
                     .refund(any(), any(), any());
 
-            // when then
-            assertThatThrownBy(() -> paymentRefundConsumer.consume(message))
-                    .isInstanceOf(TossNetworkException.class);
+            // when
+            paymentRefundConsumer.consume(message);
+
+            // then
             assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_REQUESTED);
+            assertThat(payment.getRefundRetryCount()).isEqualTo(1);
+            verify(refundRetryPublisher).publish(1L);
         }
     }
 }
