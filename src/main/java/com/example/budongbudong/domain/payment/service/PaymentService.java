@@ -11,8 +11,9 @@ import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.enums.*;
-import com.example.budongbudong.domain.payment.MQ.RefundRequestedMQEvent;
 import com.example.budongbudong.domain.payment.event.RefundRequestDomainEvent;
+import com.example.budongbudong.domain.payment.log.enums.LogType;
+import com.example.budongbudong.domain.payment.log.service.PaymentLogService;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
@@ -23,7 +24,7 @@ import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.payment.utils.PaymentMethodDetailFormatter;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -41,10 +43,10 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
+    private final PaymentLogService paymentLogService;
     private final PaymentAmountCalculator calculator;
     private final TossPaymentClient tossPaymentClient;
     private final PaymentVerifyPublisher verifyPublisher;
-    private final RabbitTemplate rabbitTemplate;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
@@ -97,9 +99,12 @@ public class PaymentService {
         // 결제 확인 중인 상태는 confirm 호출 차단
         if (payment.getStatus().equals(PaymentStatus.VERIFYING)) return ;
 
+        PaymentStatus prev = payment.getStatus();
+
         //금액 검증
         if (payment.getAmount().compareTo(request.amount()) != 0){
             payment.makeFail(PaymentFailureReason.AMOUNT_MISMATCH);
+            saveLog(payment, prev, LogType.STATUS_CHANGE, "금액 불일치");
             throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
@@ -109,9 +114,11 @@ public class PaymentService {
             tossResponse = tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
         } catch(TossClientException e) {
             payment.makeFail(PaymentFailureReason.INVALID_PAYMENT_INFO);
+            saveLog(payment, prev, LogType.TOSS_CLIENT_ERROR, e.getMessage());
             return;
         } catch(TossNetworkException e) {
             makeVerifyingAndPublish(payment,request,PaymentFailureReason.PG_NETWORK_ERROR);
+            saveLog(payment, prev, LogType.TOSS_NETWORK_ERROR, e.getMessage());
             return;
         }
 
@@ -122,8 +129,10 @@ public class PaymentService {
 
             finalizePayment(payment, request);
             payment.makeSuccess(request.paymentKey(), LocalDateTime.now(), methodType, methodDetail);
+            saveLog(payment, prev, LogType.PAYMENT_SUCCESS, null);
         } catch(Exception e) {
             makeVerifyingAndPublish(payment,request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
+            saveLog(payment, prev, LogType.STATUS_CHANGE, "서버 확인 오류: " + e.getMessage());
         }
     }
 
@@ -159,18 +168,16 @@ public class PaymentService {
         return ReadPaymentResponse.from(dto);
     }
 
+    /** 시스템 수동 환불 (자동 환불 처리 실패 시) */
     @Transactional
     public void requestRefundByUser(Long userId, Long paymentId) {
-        Payment payment = paymentRepository.getByIdAndUserIdOrThrow(paymentId, userId);
-        requestRefund(paymentId, userId);
-    }
-
-    @Transactional
-    public void requestRefund(Long paymentId, Long userId) {
 
         Payment payment = paymentRepository.getByIdAndUserIdOrThrow(paymentId, userId);
+        PaymentStatus prev = payment.getStatus();
+
         payment.requestRefund();
 
+        saveLog(payment,prev,LogType.MANUAL_REFUND_REQUESTED,null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 
@@ -179,8 +186,11 @@ public class PaymentService {
     public void requestRefund(Long paymentId) {
 
         Payment payment = paymentRepository.getByIdOrThrow(paymentId);
+        PaymentStatus prev = payment.getStatus();
+
         payment.requestRefund();
 
+        saveLog(payment,prev,LogType.REFUND_REQUESTED,null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
     /**
@@ -190,5 +200,9 @@ public class PaymentService {
     private void finalizePayment(Payment payment, PaymentConfirmRequest request) {
 
         paymentRepository.save(payment);
+    }
+
+    private void saveLog(Payment payment, PaymentStatus prev, LogType type, String errorMessage) {
+        paymentLogService.saveLog(payment.getId(), prev, payment.getStatus(), type, errorMessage);
     }
 }
