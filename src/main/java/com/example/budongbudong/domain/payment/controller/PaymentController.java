@@ -32,8 +32,11 @@ public class PaymentController {
     }
 
     @PostMapping("/confirm")
-        public ResponseEntity<GlobalResponse<Void>>  confirmPayment(@RequestBody PaymentConfirmRequest request) {
-        paymentService.confirmPayment(request);
+    public ResponseEntity<GlobalResponse<Void>> confirmPayment(
+            @RequestBody PaymentConfirmRequest request,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        paymentService.confirmPayment(authUser.getUserId(), request);
         return GlobalResponse.noContent();
     }
 

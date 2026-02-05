@@ -157,9 +157,15 @@
         setUI("loading", "서버에 결제 승인을 요청하고 있어요…");
 
         try {
+            const accessToken = localStorage.getItem("accessToken") || "";
+            const headers = { "Content-Type": "application/json" };
+            if (accessToken) {
+                headers["Authorization"] = "Bearer " + accessToken;
+            }
+
             const res = await fetch("/api/payments/v2/confirm", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers,
                 body: JSON.stringify({ paymentKey, orderId, amount })
             });
 
