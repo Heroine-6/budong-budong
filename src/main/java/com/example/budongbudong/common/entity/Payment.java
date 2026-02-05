@@ -122,7 +122,10 @@ public class Payment extends BaseEntity {
         if(this.status != PaymentStatus.VERIFYING) return;
 
         switch (status) {
-            case SUCCESS -> makeSuccess(this.paymentKey, LocalDateTime.now(), paymentMethodType, methodDetail);
+            case SUCCESS -> {
+                validateSuccessFields(paymentMethodType, methodDetail);
+                makeSuccess(this.paymentKey, LocalDateTime.now(), paymentMethodType, methodDetail);
+            }
             case FAIL -> makeFail(PaymentFailureReason.UNKNOWN);
             case UNKNOWN -> {
                 //그대로 VERIFYING 유지
@@ -158,5 +161,15 @@ public class Payment extends BaseEntity {
     public void makeRefunded() {
         if(this.status != PaymentStatus.REFUND_REQUESTED) return;
         this.status = PaymentStatus.REFUNDED;
+    }
+
+    private void validateSuccessFields (PaymentMethodType paymentMethodType, String methodDetail) {
+
+        if (paymentMethodType == null) {
+            throw new CustomException(ErrorCode.SUCCESS_BUT_METHOD_DETAIL_NULL);
+        }
+        if (methodDetail == null) {
+            throw new CustomException(ErrorCode.SUCCESS_BUT_METHOD_DETAIL_NULL);
+        }
     }
 }
