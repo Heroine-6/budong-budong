@@ -116,7 +116,7 @@ public class NotificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendNotificationOnRequestedPayment(PaymentRequestedEvent event) {
 
-        CreateNotificationResponse response = notificationService.createPaymentRequestNotification(event.auctionId(), NotificationType.PAYMENT_REQUEST, event.paymentId());
+        CreateNotificationResponse response = notificationService.createPaymentRequestNotification(event.auctionId(), event.type(), NotificationType.PAYMENT_REQUEST, event.baseDate());
 
         NotificationDto dto = userNotificationService.createUserNotification(response.getId(), event.userId());
 

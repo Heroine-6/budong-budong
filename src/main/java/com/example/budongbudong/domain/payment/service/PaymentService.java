@@ -1,6 +1,8 @@
 package com.example.budongbudong.domain.payment.service;
 
-import com.example.budongbudong.common.entity.*;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Payment;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
@@ -17,8 +19,6 @@ import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.example.budongbudong.domain.payment.event.PaymentCompletedEvent;
 import com.example.budongbudong.domain.payment.event.PaymentRequestedEvent;
-import com.example.budongbudong.domain.payment.dto.response.*;
-import com.example.budongbudong.domain.payment.enums.*;
 import com.example.budongbudong.domain.payment.event.RefundRequestDomainEvent;
 import com.example.budongbudong.domain.payment.log.enums.LogType;
 import com.example.budongbudong.domain.payment.log.service.PaymentLogService;
@@ -28,7 +28,6 @@ import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResp
 import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
 import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
 import com.example.budongbudong.domain.payment.toss.exception.TossNetworkException;
-import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
 import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import com.example.budongbudong.domain.payment.utils.PaymentMethodDetailFormatter;
 import com.example.budongbudong.domain.user.repository.UserRepository;
@@ -41,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,8 +90,6 @@ public class PaymentService {
 
         paymentRepository.save(payment);
 
-        applicationEventPublisher.publishEvent(new PaymentRequestedEvent(auctionId, userId, payment.getId()));
-
         return PaymentTossReadyResponse.from(payment);
     }
 
@@ -129,7 +127,7 @@ public class PaymentService {
             saveLog(payment, prev, LogType.TOSS_CLIENT_ERROR, e.getMessage());
             return;
         } catch (TossNetworkException e) {
-            makeVerifyingAndPublish(payment,request,PaymentFailureReason.PG_NETWORK_ERROR);
+            makeVerifyingAndPublish(payment, request, PaymentFailureReason.PG_NETWORK_ERROR);
             saveLog(payment, prev, LogType.TOSS_NETWORK_ERROR, e.getMessage());
             return;
         }
@@ -143,9 +141,15 @@ public class PaymentService {
             payment.makeSuccess(request.paymentKey(), LocalDateTime.now(), methodType, methodDetail);
             saveLog(payment, prev, LogType.PAYMENT_SUCCESS, null);
 
+            // 결제 완료 알림
             applicationEventPublisher.publishEvent(new PaymentCompletedEvent(payment.getId(), payment.getUser().getId()));
-        } catch(Exception e) {
-            makeVerifyingAndPublish(payment,request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
+
+            // 계약금 납부 시 잔금 납부 알림
+            if (payment.getType().equals(PaymentType.DOWN_PAYMENT)) {
+                applicationEventPublisher.publishEvent(new PaymentRequestedEvent(payment.getAuction().getId(), payment.getUser().getId(), PaymentType.BALANCE, LocalDate.now()));
+            }
+        } catch (Exception e) {
+            makeVerifyingAndPublish(payment, request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
             saveLog(payment, prev, LogType.STATUS_CHANGE, "서버 확인 오류: " + e.getMessage());
         }
     }
@@ -182,7 +186,9 @@ public class PaymentService {
         return ReadPaymentResponse.from(dto);
     }
 
-    /** 시스템 수동 환불 (자동 환불 처리 실패 시) */
+    /**
+     * 시스템 수동 환불 (자동 환불 처리 실패 시)
+     */
     @Transactional
     public void requestRefundByUser(Long userId, Long paymentId) {
 
@@ -191,11 +197,13 @@ public class PaymentService {
 
         payment.requestRefund();
 
-        saveLog(payment,prev,LogType.MANUAL_REFUND_REQUESTED,null);
+        saveLog(payment, prev, LogType.MANUAL_REFUND_REQUESTED, null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 
-    /** 시스템 자동 환불 (경매 종료 시 낙찰 실패자 보증금 환불) */
+    /**
+     * 시스템 자동 환불 (경매 종료 시 낙찰 실패자 보증금 환불)
+     */
     @Transactional
     public void requestRefund(Long paymentId) {
 
@@ -204,7 +212,7 @@ public class PaymentService {
 
         payment.requestRefund();
 
-        saveLog(payment,prev,LogType.REFUND_REQUESTED,null);
+        saveLog(payment, prev, LogType.REFUND_REQUESTED, null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 

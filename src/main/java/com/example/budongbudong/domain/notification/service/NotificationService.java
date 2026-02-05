@@ -1,6 +1,5 @@
 package com.example.budongbudong.domain.notification.service;
 
-
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Notification;
 import com.example.budongbudong.common.entity.Payment;
@@ -11,7 +10,9 @@ import com.example.budongbudong.domain.notification.dto.KakaoNotificationRespons
 import com.example.budongbudong.domain.notification.dto.NotificationDto;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
+import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +35,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final AuctionRepository auctionRepository;
     private final PaymentRepository paymentRepository;
+    private final PaymentAmountCalculator calculator;
 
     private final KakaoClient kakaoClient;
 
@@ -40,17 +43,19 @@ public class NotificationService {
     @Value("${KAKAO_ACCESS_TOKEN}")
     private String accessToken;
 
-    private static String getFormatDueDateTime(Payment payment) {
-
-        LocalDate dueDate = payment.getCreatedAt()
-                .plusDays(payment.getType().getDueDays())
-                .toLocalDate();
-
-        LocalDateTime dueDateTime = dueDate.atTime(23, 59);
+    private String getFormatDateTime(LocalDateTime dateTime) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd. HH:mm");
 
-        return dueDateTime.format(formatter);
+        return dateTime.format(formatter);
+    }
+
+    private String getFormatDecimal(BigDecimal amount) {
+
+        // 결제 금액 3자리마다 콤마로 구분
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
+
+        return decimalFormat.format(amount);
     }
 
     /**
@@ -89,16 +94,37 @@ public class NotificationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public CreateNotificationResponse createPaymentRequestNotification(
             Long auctionId,
+            PaymentType paymentType,
             NotificationType notificationType,
-            Long paymentId
+            LocalDate baseDate
     ) {
 
-        Payment payment = paymentRepository.getByIdOrThrow(paymentId);
+        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
+        Long sellerId = auction.getProperty().getUser().getId();
 
-        // 결제 기한 문자열 변환
-        String dueDateTime = getFormatDueDateTime(payment);
+        BigDecimal amount = calculator.calculate(auction, paymentType);
+        String formattedAmount = getFormatDecimal(amount);
 
-        return savePaymentNotification(auctionId, notificationType, payment, dueDateTime);
+        LocalDate dueDate = baseDate.plusDays(paymentType.getDueDays());
+        LocalDateTime dueDateTime = dueDate.atTime(23, 59);
+
+        String content = notificationType.format(
+                auction.getProperty().getName(),
+                paymentType.getMessage(),
+                formattedAmount,
+                getFormatDateTime(dueDateTime)
+        );
+
+        Notification notification = Notification.create(
+                content,
+                notificationType,
+                sellerId,
+                auction
+        );
+
+        notificationRepository.save(notification);
+
+        return CreateNotificationResponse.from(notification);
     }
 
     /**
@@ -111,33 +137,19 @@ public class NotificationService {
 
         // 결제 승인 일시 문자열 변환
         LocalDateTime approvedAt = payment.getApprovedAt();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd. HH:mm");
+        String approvedDateTime = getFormatDateTime(approvedAt);
 
-        String approvedDateTime = approvedAt.format(formatter);
-
-        return savePaymentNotification(payment.getAuction().getId(), notificationType, payment, approvedDateTime);
-    }
-
-    private CreateNotificationResponse savePaymentNotification(
-            Long auctionId,
-            NotificationType notificationType,
-            Payment payment,
-            String dateTime
-    ) {
-
-        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
+        Auction auction = auctionRepository.getByIdOrThrow(payment.getAuction().getId());
         Long sellerId = auction.getProperty().getUser().getId();
 
-        // 결제 금액 3자리마다 콤마로 구분
-        DecimalFormat decimalFormat = new DecimalFormat("#,###");
-        String formattedAmount = decimalFormat.format(payment.getAmount());
+        String formattedAmount = getFormatDecimal(payment.getAmount());
 
-        String content = notificationType.paymentFormat(
+        String content = notificationType.format(
                 payment.getOrderName(),
                 payment.getType().getMessage(),
                 payment.getOrderId(),
                 formattedAmount,
-                dateTime
+                approvedDateTime
         );
 
         Notification notification = Notification.create(
