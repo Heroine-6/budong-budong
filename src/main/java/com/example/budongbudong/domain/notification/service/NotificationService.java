@@ -5,9 +5,9 @@ import com.example.budongbudong.common.entity.Notification;
 import com.example.budongbudong.common.entity.Payment;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.notification.client.KakaoClient;
-import com.example.budongbudong.domain.notification.dto.CreateNotificationResponse;
-import com.example.budongbudong.domain.notification.dto.KakaoNotificationResponse;
 import com.example.budongbudong.domain.notification.dto.NotificationDto;
+import com.example.budongbudong.domain.notification.dto.response.CreateNotificationResponse;
+import com.example.budongbudong.domain.notification.dto.response.KakaoNotificationResponse;
 import com.example.budongbudong.domain.notification.enums.NotificationType;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
@@ -98,7 +98,6 @@ public class NotificationService {
             NotificationType notificationType,
             LocalDate baseDate
     ) {
-
         Auction auction = auctionRepository.getByIdOrThrow(auctionId);
         Long sellerId = auction.getProperty().getUser().getId();
 

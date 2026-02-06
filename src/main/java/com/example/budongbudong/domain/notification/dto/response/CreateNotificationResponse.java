@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.notification.dto;
+package com.example.budongbudong.domain.notification.dto.response;
 
 import com.example.budongbudong.common.entity.Notification;
 import lombok.Getter;
