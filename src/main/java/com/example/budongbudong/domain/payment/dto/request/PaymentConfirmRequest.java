@@ -1,7 +1,6 @@
 package com.example.budongbudong.domain.payment.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
@@ -11,7 +10,7 @@ public record PaymentConfirmRequest(
         String paymentKey,
         @NotBlank(message = "orderId는 필수입니다.")
         String orderId,
-        @NotBlank(message = "amount는 필수입니다.")
+        @NotNull(message = "amount는 필수입니다.")
         @Positive
         BigDecimal amount
 ) {
