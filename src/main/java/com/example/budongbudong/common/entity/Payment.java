@@ -172,7 +172,7 @@ public class Payment extends BaseEntity {
     private void validateSuccessFields (PaymentMethodType paymentMethodType, String methodDetail) {
 
         if (paymentMethodType == null) {
-            throw new CustomException(ErrorCode.SUCCESS_BUT_METHOD_DETAIL_NULL);
+            throw new CustomException(ErrorCode.SUCCESS_BUT_PAYMENT_METHOD_NULL);
         }
         if (methodDetail == null) {
             throw new CustomException(ErrorCode.SUCCESS_BUT_METHOD_DETAIL_NULL);
