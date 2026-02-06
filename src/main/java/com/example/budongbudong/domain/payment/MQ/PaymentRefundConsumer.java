@@ -38,6 +38,11 @@ public class PaymentRefundConsumer {
 
         Payment payment = paymentRepository.getByIdOrThrow(event.getPaymentId());
 
+        if (event.getPaymentId() == null) {
+            log.error("잘못된 refund MQ message: paymentId is null. drop message.");
+            return; // ACK 처리됨
+        }
+
         if (payment.getStatus() == PaymentStatus.REFUNDED) return;
 
         // 최대 재시도 횟수 초과 체크
