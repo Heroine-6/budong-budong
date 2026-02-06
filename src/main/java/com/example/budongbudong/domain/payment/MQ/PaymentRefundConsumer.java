@@ -18,24 +18,41 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 환불 MQ 메시지를 소비해 실제 환불을 실행하는 Consumer
  * - Toss 결제 환불 API를 호출한다
- * - 재시도 여부는 예외 타입으로 제어한다
+ * - 네트워크 오류 시 지연 큐를 통해 재시도한다
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PaymentRefundConsumer {
 
+    private static final int MAX_REFUND_RETRY = 5; // 최대 재시도 횟수
+
     private final PaymentRepository paymentRepository;
     private final PaymentLogService paymentLogService;
     private final TossPaymentClient client;
+    private final PaymentRefundRetryPublisher refundRetryPublisher;
 
     @RabbitListener(queues = PaymentRefundMQConfig.REFUND_QUEUE)
     @Transactional
     public void consume(RefundRequestedMQEvent event) {
 
+        if (event.getPaymentId() == null) {
+            log.error("잘못된 refund MQ message: paymentId is null. drop message.");
+            return; // ACK 처리됨
+        }
+
         Payment payment = paymentRepository.getByIdOrThrow(event.getPaymentId());
 
         if (payment.getStatus() == PaymentStatus.REFUNDED) return;
+
+        // 최대 재시도 횟수 초과 체크
+        if (payment.isRefundRetryExceeded(MAX_REFUND_RETRY)) {
+            log.error("환불 최대 재시도 초과 - paymentId: {}, 수동 처리 필요", payment.getId());
+            saveLog(payment, payment.getStatus(), LogType.REFUND_FAILED,
+                    "최대 재시도 횟수 초과 (" + MAX_REFUND_RETRY + "회) - 수동 처리 필요");
+            return;
+        }
+
         executeRefund(payment);
     }
 
@@ -52,9 +69,12 @@ public class PaymentRefundConsumer {
             saveLog(payment, prev, LogType.REFUND_FAILED, e.getMessage());
 
         } catch (TossNetworkException e) {
-            log.warn("환불 네트워크 오류 - paymentId: {}, 재시도 필요", payment.getId());
+            payment.incrementRefundRetryCount();
+            log.warn("환불 네트워크 오류 - paymentId: {}, 재시도 {}/{}",
+                    payment.getId(), payment.getRefundRetryCount(), MAX_REFUND_RETRY);
             saveLog(payment, prev, LogType.REFUND_RETRY, e.getMessage());
-            throw e;
+            // 지연 큐를 통해 30초 후 재시도
+            refundRetryPublisher.publish(payment.getId());
         }
     }
 

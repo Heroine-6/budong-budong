@@ -7,6 +7,7 @@ import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest
 import com.example.budongbudong.domain.payment.dto.request.PaymentRequest;
 import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.service.PaymentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -32,8 +33,11 @@ public class PaymentController {
     }
 
     @PostMapping("/confirm")
-        public ResponseEntity<GlobalResponse<Void>>  confirmPayment(@RequestBody PaymentConfirmRequest request) {
-        paymentService.confirmPayment(request);
+    public ResponseEntity<GlobalResponse<Void>> confirmPayment(
+            @Valid @RequestBody PaymentConfirmRequest request,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        paymentService.confirmPayment(authUser.getUserId(), request);
         return GlobalResponse.noContent();
     }
 

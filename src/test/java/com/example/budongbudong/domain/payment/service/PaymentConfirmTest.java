@@ -80,7 +80,7 @@ public class PaymentConfirmTest {
         doNothing().when(tossPaymentClient).confirm(anyString(), anyString(), any(BigDecimal.class));
 
         //when
-        paymentService.confirmPayment(request);
+        paymentService.confirmPayment(user.getId(), request);
 
         //then
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
@@ -101,7 +101,7 @@ public class PaymentConfirmTest {
                 .thenReturn(payment);
 
         //when&then
-        assertThatThrownBy(() -> paymentService.confirmPayment(invalidRequest))
+        assertThatThrownBy(() -> paymentService.confirmPayment(user.getId(), invalidRequest))
                 .isInstanceOf(CustomException.class);
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAIL);
         verify(tossPaymentClient, never()).confirm(anyString(), anyString(), any(BigDecimal.class));
@@ -120,7 +120,7 @@ public class PaymentConfirmTest {
                 .confirm(anyString(), anyString(), any(BigDecimal.class));
 
         //when
-        paymentService.confirmPayment(request);
+        paymentService.confirmPayment(user.getId(), request);
 
         //then
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.VERIFYING);
@@ -143,7 +143,7 @@ public class PaymentConfirmTest {
                 .save(any());
 
         //when - 예외는 흡수, 이후 프로세스에 맡김
-        paymentService.confirmPayment(request);
+        paymentService.confirmPayment(user.getId(), request);
 
         //then
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.VERIFYING);
@@ -164,7 +164,7 @@ public class PaymentConfirmTest {
                 .thenReturn(payment);
 
         //when - 동일한 요청이 오면
-        paymentService.confirmPayment(request);
+        paymentService.confirmPayment(user.getId(), request);
 
         //then
         verify(tossPaymentClient, never()).confirm(anyString(), anyString(), any(BigDecimal.class));
@@ -186,7 +186,7 @@ public class PaymentConfirmTest {
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.VERIFYING);
 
         //when
-        paymentService.confirmPayment(request);
+        paymentService.confirmPayment(user.getId(), request);
 
         //then
         verify(tossPaymentClient, never()).confirm(anyString(), anyString(), any(BigDecimal.class));

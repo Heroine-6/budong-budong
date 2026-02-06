@@ -52,6 +52,8 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_MISMATCH(400, "결제 금액이 일치하지 않습니다."),
     ONLY_CAN_REFUND_DEPOSIT(400, "보증금만 환불 가능합니다."),
     INVALID_REFUND_STATUS(400, "환불 가능한 상태가 아닙니다."),
+    SUCCESS_BUT_PAYMENT_METHOD_NULL(400, "SUCCESS이나 결제 수단이 비어있습니다."),
+    SUCCESS_BUT_METHOD_DETAIL_NULL(400, "SUCCESS이나 결제 수단 상세(예.카드번호) 비어있습니다"),
 
     //------500-----------------------
     GEOCODING_FAILED(500, "지오코딩에 실패했습니다."),

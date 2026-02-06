@@ -32,18 +32,10 @@ public class TossPaymentClient {
     @Value("${spring.toss.api.confirm-url}")
     private String confirmUrl;
 
-//    @Value("${spring.toss.test.force-network-error:false}")
-//    private boolean forceNetworkError;
-
-    private final AtomicInteger verifyCount = new AtomicInteger(0);
-
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate tossRestTemplate;
 
     public TossConfirmResponse confirm(String paymentKey, String orderId, BigDecimal amount) {
 
-//        if(forceNetworkError) {
-//            throw new TossNetworkException("토스 장애");
-//        }
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(secretKey, "");
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -53,7 +45,7 @@ public class TossPaymentClient {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<TossConfirmResponse> response = restTemplate.postForEntity(confirmUrl, request, TossConfirmResponse.class);
+            ResponseEntity<TossConfirmResponse> response = tossRestTemplate.postForEntity(confirmUrl, request, TossConfirmResponse.class);
             TossConfirmResponse responseBody = response.getBody();
             if (responseBody == null) {
                 throw new TossNetworkException("토스 승인 응답 바디가 비어있습니다.");
@@ -86,7 +78,7 @@ public class TossPaymentClient {
         String cancelUrl = confirmUrl.replace("/confirm", "") + "/" + paymentKey + "/cancel";
 
         try {
-            restTemplate.postForEntity(cancelUrl, request, String.class);
+            tossRestTemplate.postForEntity(cancelUrl, request, String.class);
         } catch (HttpClientErrorException e) {
             throw new TossClientException(e.getResponseBodyAsString());
         } catch (ResourceAccessException | HttpServerErrorException e) {
@@ -96,14 +88,8 @@ public class TossPaymentClient {
 
     public TossPaymentStatusResponse getPayment(String paymentKey) {
 
-//        int count = verifyCount.incrementAndGet();
-//        if(count <= 2){
-//            throw new TossNetworkException("토스 장애");
-//        }
-//        return new TossPaymentStatusResponse("DONE");
-
         try {
-            return restTemplate.getForObject(String.format("%s/%s", confirmUrl,paymentKey), TossPaymentStatusResponse.class);
+            return tossRestTemplate.getForObject(String.format("%s/%s", confirmUrl,paymentKey), TossPaymentStatusResponse.class);
         } catch (ResourceAccessException  | HttpServerErrorException e) {
             throw new TossNetworkException(e);
         }

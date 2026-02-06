@@ -192,8 +192,7 @@ private void realDealAuth(
     private void paymentAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.POST, "/api/payments/v2/confirm").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/payments/v2/auctions/**")
+        auth.requestMatchers(HttpMethod.POST, "/api/payments/v2/auctions/**")
             .hasAnyRole(UserRole.GENERAL.name(), UserRole.ADMIN.name())
             .requestMatchers(HttpMethod.GET, "/api/payments/v2", "/api/payments/v2/*")
             .hasAnyRole(UserRole.GENERAL.name(), UserRole.ADMIN.name())

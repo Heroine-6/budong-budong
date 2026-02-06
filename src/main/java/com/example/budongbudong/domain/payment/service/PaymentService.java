@@ -99,9 +99,14 @@ public class PaymentService {
      * - 네트워크 장애 시 VERIFYING 전이 후 MQ 트리거 발행
      */
     @Transactional
-    public void confirmPayment(PaymentConfirmRequest request) {
+    public void confirmPayment(Long userId, PaymentConfirmRequest request) {
 
         Payment payment = paymentRepository.getByOrderIdOrThrow(request.orderId());
+
+        // 소유권 검증
+        if (!payment.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
 
         //이미 확정된 결제 중복 처리 방지
         if (payment.isFinalized()) return;
