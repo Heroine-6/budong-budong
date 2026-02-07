@@ -23,7 +23,7 @@ import java.time.Duration;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class PaymentVerifyConsumer {
+public class PaymentReconfirmConsumer {
 
     private static final Duration VERIFY_LIMIT = Duration.ofMinutes(3); //VERIFYING 상태 유지 시간
     private static final int MAX_VERIFY_RETRY = 5; // 최대 재시도 횟수
@@ -31,7 +31,7 @@ public class PaymentVerifyConsumer {
     private final PaymentRepository paymentRepository;
     private final PaymentLogService paymentLogService;
     private final TossPaymentClient tossPaymentClient;
-    private final PaymentVerifyPublisher verifyPublisher;
+    private final PaymentReconfirmPublisher reconfirmPublisher;
     private final TossPaymentStatusMapper mapper;
 
     @RabbitListener(
@@ -92,7 +92,7 @@ public class PaymentVerifyConsumer {
     private void requeue (Payment payment) {
         //PG 조회 자체가 실패한 경우 재시도
         payment.incrementVerifyRetryCount();
-        verifyPublisher.publish(payment.getId(), 30000L);
+        reconfirmPublisher.publish(payment.getId(), 30000L);
     }
 
     private void saveLog(Payment payment, PaymentStatus prev, LogType type, String errorMessage) {
