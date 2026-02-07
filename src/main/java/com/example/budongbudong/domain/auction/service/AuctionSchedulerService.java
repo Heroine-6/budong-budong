@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -37,15 +38,20 @@ public class AuctionSchedulerService {
      */
     @Transactional
     public void run() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime todayStart = today.atStartOfDay();
 
-        openScheduledAuctions(todayStart);
-        closeOpenedAuctions(todayStart);
+        LocalDateTime today = LocalDate.now().atStartOfDay();
 
-        //벌크 연산은 영속성 컨텍스트 우회, 이후 조회 일관성을 위해 명시적으로 초기화
-        entityManager.flush();
-        entityManager.clear();
+        try {
+            openScheduledAuctions(today);
+        } catch (Exception e) {
+            log.error("[경매 시작] 실패 - 종료 처리로 넘어갑니다.",e);
+        }
+
+        try {
+            closeOpenedAuctions(today);
+        } catch (Exception e) {
+            log.error("[경매 종료] 실패",e);
+        }
     }
 
     /**
@@ -54,7 +60,8 @@ public class AuctionSchedulerService {
      * - 단순 상태 전환 전용
      * - 실제 전환된 대상만 이벤트 발행
      */
-    private void openScheduledAuctions(LocalDateTime today) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void openScheduledAuctions(LocalDateTime today) {
 
         List<Long> willOpenAuctionIds = auctionRepository.findOpenAuctionIds(today);
 
@@ -67,9 +74,8 @@ public class AuctionSchedulerService {
         log.info("[경매 OPEN 처리] opened={}", opened);
 
         //이벤트 발행
-        willOpenAuctionIds.forEach(id
-                -> eventPublisher.publishEvent(new AuctionOpenEvent(id))
-        );
+        willOpenAuctionIds.forEach(id -> eventPublisher.publishEvent(new AuctionOpenEvent(id)));
+        flushAndClear();
     }
 
     /**
@@ -79,7 +85,8 @@ public class AuctionSchedulerService {
      * - 벌크 업데이트로 상태 전환
      * - 실제 전환된 대상만 이벤트 발행
      */
-    private void closeOpenedAuctions(LocalDateTime today) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void closeOpenedAuctions(LocalDateTime today) {
 
         List<Long> willCloseAuctionIds = auctionRepository.findEndedAuctionIds(today);
 
@@ -93,6 +100,7 @@ public class AuctionSchedulerService {
 
         //이벤트 발행
         willCloseAuctionIds.forEach(id -> eventPublisher.publishEvent(new AuctionClosedEvent(id)));
+        flushAndClear();
     }
 
     /**
@@ -102,10 +110,10 @@ public class AuctionSchedulerService {
      */
     @Transactional(readOnly = true)
     public void notifyAuctionsEndingSoon() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime todayStart = today.atStartOfDay();
 
-        List<Long> endingSoonAuctionIds = auctionRepository.findEndingSoonAuctionIds(todayStart);
+        LocalDateTime today = LocalDate.now().atStartOfDay();
+
+        List<Long> endingSoonAuctionIds = auctionRepository.findEndingSoonAuctionIds(today);
 
         if (endingSoonAuctionIds.isEmpty()) {
             log.info("[Scheduling] 종료 임박 대상 없음");
@@ -115,5 +123,12 @@ public class AuctionSchedulerService {
         //이벤트 발행
         endingSoonAuctionIds.forEach(id
                 -> eventPublisher.publishEvent(new AuctionEndingSoonEvent(id)));
+    }
+
+    private void flushAndClear() {
+
+        //벌크 연산은 영속성 컨텍스트 우회, 이후 조회 일관성을 위해 명시적으로 초기화
+        entityManager.flush();
+        entityManager.clear();
     }
 }
