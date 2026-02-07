@@ -12,7 +12,6 @@ public class NotificationMQConfig {
     public static final String NOTIFICATION_DLX = "notification.dlx";
 
     // Queue
-    public static final String AUCTION_CREATED_QUEUE = "auction.created.queue";
     public static final String AUCTION_OPEN_QUEUE = "auction.open.queue";
     public static final String AUCTION_ENDING_SOON_QUEUE = "auction.ending.soon.queue";
     public static final String AUCTION_CLOSED_QUEUE = "auction.closed.queue";
@@ -20,16 +19,21 @@ public class NotificationMQConfig {
     public static final String PAYMENT_REQUESTED_QUEUE = "payment.requested.queue";
     public static final String PAYMENT_COMPLETED_QUEUE = "payment.completed.queue";
 
+    public static final String NOTIFICATION_SEND_QUEUE = "notification.send.queue";
+    public static final String NOTIFICATION_SEND_DELAY_QUEUE = "notification.send.delay.queue";
+
     public static final String NOTIFICATION_DLQ = "notification.dlq";
 
     // Routing Key
-    public static final String AUCTION_CREATED_KEY = "auction.created";
     public static final String AUCTION_OPEN_KEY = "auction.open";
     public static final String AUCTION_ENDING_SOON_KEY = "auction.ending.soon";
     public static final String AUCTION_CLOSED_KEY = "auction.closed";
     public static final String BID_CREATED_KEY = "bid.created";
     public static final String PAYMENT_REQUESTED_KEY = "payment.requested";
     public static final String PAYMENT_COMPLETED_KEY = "payment.completed";
+
+    public static final String NOTIFICATION_SEND_KEY = "notification.send";
+    public static final String NOTIFICATION_SEND_DELAY_KEY = "notification.delay.send";
 
     /**
      * Exchange
@@ -47,14 +51,6 @@ public class NotificationMQConfig {
     /**
      * Queue + DLX
      */
-    @Bean
-    public Queue auctionCreatedQueue() {
-        return QueueBuilder.durable(AUCTION_CREATED_QUEUE)
-                .deadLetterExchange(NOTIFICATION_DLX)
-                .deadLetterRoutingKey("failed")
-                .build();
-    }
-
     @Bean
     public Queue auctionOpenQueue() {
         return QueueBuilder.durable(AUCTION_OPEN_QUEUE)
@@ -104,6 +100,22 @@ public class NotificationMQConfig {
     }
 
     @Bean
+    public Queue notificationSendQueue() {
+        return QueueBuilder.durable(NOTIFICATION_SEND_QUEUE)
+                .deadLetterExchange(NOTIFICATION_DLX)
+                .deadLetterRoutingKey("failed")
+                .build();
+    }
+
+    @Bean
+    public Queue notificationSendDelayQueue() {
+        return QueueBuilder.durable(NOTIFICATION_SEND_DELAY_QUEUE)
+                .deadLetterExchange(NOTIFICATION_EXCHANGE)
+                .deadLetterRoutingKey(NOTIFICATION_SEND_KEY)
+                .build();
+    }
+
+    @Bean
     public Queue notificationDlq() {
         return QueueBuilder.durable(NOTIFICATION_DLQ).build();
     }
@@ -111,14 +123,6 @@ public class NotificationMQConfig {
     /**
      * Exchange - Queue Binding
      */
-    @Bean
-    public Binding auctionCreatedBinding() {
-        return BindingBuilder
-                .bind(auctionCreatedQueue())
-                .to(notificationExchange())
-                .with(AUCTION_CREATED_KEY);
-    }
-
     @Bean
     public Binding auctionOpenBinding() {
         return BindingBuilder
@@ -165,6 +169,22 @@ public class NotificationMQConfig {
                 .bind(paymentCompletedQueue())
                 .to(notificationExchange())
                 .with(PAYMENT_COMPLETED_KEY);
+    }
+
+    @Bean
+    public Binding notificationSendBinding() {
+        return BindingBuilder
+                .bind(notificationSendQueue())
+                .to(notificationExchange())
+                .with(NOTIFICATION_SEND_KEY);
+    }
+
+    @Bean
+    public Binding notificationSendDelayBinding() {
+        return BindingBuilder
+                .bind(notificationSendDelayQueue())
+                .to(notificationExchange())
+                .with(NOTIFICATION_SEND_DELAY_KEY);
     }
 
     @Bean

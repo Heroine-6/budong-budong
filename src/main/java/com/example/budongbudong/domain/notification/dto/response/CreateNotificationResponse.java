@@ -9,8 +9,14 @@ import lombok.RequiredArgsConstructor;
 public class CreateNotificationResponse {
 
     private final Long id;
+    private final Long sellerId;
+    private final String content;
 
     public static CreateNotificationResponse from(Notification notification) {
-        return new CreateNotificationResponse(notification.getId());
+        return new CreateNotificationResponse(
+                notification.getId(),
+                notification.getSellerId(),
+                notification.getContent()
+        );
     }
 }

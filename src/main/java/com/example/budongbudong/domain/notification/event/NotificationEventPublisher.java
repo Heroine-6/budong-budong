@@ -1,7 +1,6 @@
 package com.example.budongbudong.domain.notification.event;
 
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
-import com.example.budongbudong.domain.auction.event.AuctionCreatedEvent;
 import com.example.budongbudong.domain.auction.event.AuctionEndingSoonEvent;
 import com.example.budongbudong.domain.auction.event.AuctionOpenEvent;
 import com.example.budongbudong.domain.bid.event.BidCreatedEvent;
@@ -26,22 +25,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class NotificationEventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
-
-    /**
-     * 경매 생성 이벤트 발행
-     */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishAuctionCreated(AuctionCreatedEvent event) {
-        log.info("경매 생성 이벤트 발행 - auctionId={}", event.auctionId());
-
-        AuctionCreatedMessage message = AuctionCreatedMessage.from(event);
-
-        rabbitTemplate.convertAndSend(
-                NotificationMQConfig.NOTIFICATION_EXCHANGE,
-                NotificationMQConfig.AUCTION_CREATED_KEY,
-                message
-        );
-    }
 
     /**
      * 경매 시작 이벤트 발행

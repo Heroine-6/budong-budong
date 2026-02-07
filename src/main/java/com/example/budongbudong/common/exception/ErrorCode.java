@@ -19,6 +19,7 @@ public enum ErrorCode {
     AUCTION_WINNER_NOT_FOUND(404, "존재하지 않는 경매 낙찰입니다."),
     PAYMENT_NOT_FOUND(404, "존재하지 않는 결제 이력입니다."),
     NOTIFICATION_NOT_FOUND(404, "존재하지 않는 알림입니다."),
+    USER_NOTIFICATION_NOT_FOUND(404, "존재하지 않는 사용자 알림입니다."),
 
     //------403-----------------------
     USER_NOT_MATCH(403, "소유자만 접근 가능합니다."),
