@@ -46,7 +46,7 @@ public class PaymentVerifyConsumerTest {
     private TossPaymentStatusMapper mapper;
 
     @InjectMocks
-    private PaymentVerifyConsumer consumer;
+    private PaymentReconfirmConsumer consumer;
 
     User user;
     Auction auction;

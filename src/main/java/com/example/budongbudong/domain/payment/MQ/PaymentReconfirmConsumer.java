@@ -23,7 +23,7 @@ import java.time.Duration;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class PaymentVerifyConsumer {
+public class PaymentReconfirmConsumer {
 
     private static final Duration VERIFY_LIMIT = Duration.ofMinutes(3); //VERIFYING 상태 유지 시간
     private static final int MAX_VERIFY_RETRY = 5; // 최대 재시도 횟수
