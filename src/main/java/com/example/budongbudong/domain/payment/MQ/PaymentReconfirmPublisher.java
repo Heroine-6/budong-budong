@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PaymentVerifyPublisher {
+public class PaymentReconfirmPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 

@@ -41,7 +41,7 @@ public class PaymentConfirmTest {
     private TossPaymentClient tossPaymentClient;
 
     @Mock
-    private PaymentVerifyPublisher publisher;
+    private PaymentReconfirmPublisher publisher;
 
     @InjectMocks
     private PaymentService paymentService;

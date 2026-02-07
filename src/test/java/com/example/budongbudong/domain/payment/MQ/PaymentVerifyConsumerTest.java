@@ -40,13 +40,13 @@ public class PaymentVerifyConsumerTest {
     private TossPaymentClient tossPaymentClient;
 
     @Mock
-    private PaymentVerifyPublisher publisher;
+    private PaymentReconfirmPublisher publisher;
 
     @Mock
     private TossPaymentStatusMapper mapper;
 
     @InjectMocks
-    private PaymentVerifyConsumer consumer;
+    private PaymentReconfirmConsumer consumer;
 
     User user;
     Auction auction;

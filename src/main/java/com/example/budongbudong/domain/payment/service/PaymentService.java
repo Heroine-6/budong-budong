@@ -7,7 +7,7 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.payment.MQ.PaymentVerifyPublisher;
+import com.example.budongbudong.domain.payment.MQ.PaymentReconfirmPublisher;
 import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
 import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
@@ -56,7 +56,7 @@ public class PaymentService {
     private final PaymentLogService paymentLogService;
     private final PaymentAmountCalculator calculator;
     private final TossPaymentClient tossPaymentClient;
-    private final PaymentVerifyPublisher verifyPublisher;
+    private final PaymentReconfirmPublisher reconfirmPublisher;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
@@ -175,7 +175,7 @@ public class PaymentService {
 
         payment.makeVerifying(reason, request.paymentKey());
         //일정 시간 후 재확인을 위한 MQ 트리거
-        verifyPublisher.publish(payment.getId(), 30000L);
+        reconfirmPublisher.publish(payment.getId(), 30000L);
     }
 
     @Transactional(readOnly = true)
