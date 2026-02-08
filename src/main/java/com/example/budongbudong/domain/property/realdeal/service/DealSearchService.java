@@ -106,12 +106,13 @@ public class DealSearchService {
 
         if (sortType == DealSortType.PRICE_PER_AREA_ASC || sortType == DealSortType.PRICE_PER_AREA_DESC) {
             SortOrder order = sortType == DealSortType.PRICE_PER_AREA_ASC ? SortOrder.Asc : SortOrder.Desc;
+            String fallback = sortType == DealSortType.PRICE_PER_AREA_ASC ? "Long.MAX_VALUE" : "0";
+            String scriptSource = "doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? "
+                    + fallback + " : doc['dealAmount'].value / doc['exclusiveArea'].value";
             queryBuilder.withSort(s -> s
                     .script(sc -> sc
                             .type(ScriptSortType.Number)
-                            .script(script -> script
-                                    .source("doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? 0 : doc['dealAmount'].value / doc['exclusiveArea'].value")
-                            )
+                            .script(script -> script.source(scriptSource))
                             .order(order)
                     )
             );
