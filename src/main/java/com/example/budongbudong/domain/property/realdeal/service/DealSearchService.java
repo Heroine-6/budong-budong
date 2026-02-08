@@ -49,11 +49,11 @@ public class DealSearchService {
      * @param size 조회 건수
      * @return 거리순 정렬된 실거래 목록
      */
-    public List<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size) {
+    public SearchHits<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size) {
         return findNearby(lat, lon, distanceKm, size, null, null, null, null, null, DealSortType.DISTANCE);
     }
 
-    public List<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size,
+    public SearchHits<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size,
                                              BigDecimal minArea, BigDecimal maxArea,
                                              BigDecimal minPrice, BigDecimal maxPrice,
                                              PropertyType propertyType, DealSortType sortType) {
@@ -125,17 +125,13 @@ public class DealSearchService {
             );
         }
 
-        SearchHits<RealDealDocument> hits = elasticsearchOperations.search(queryBuilder.build(), RealDealDocument.class);
-
-        return hits.getSearchHits().stream()
-                .map(SearchHit::getContent)
-                .toList();
+        return elasticsearchOperations.search(queryBuilder.build(), RealDealDocument.class);
     }
 
     /**
      * 특정 좌표 기준 반경 1km 내 실거래 데이터 조회 (기본값)
      */
-    public List<RealDealDocument> findNearby(double lat, double lon) {
+    public SearchHits<RealDealDocument> findNearby(double lat, double lon) {
         return findNearby(lat, lon, 1.0, 100);
     }
 
@@ -148,7 +144,7 @@ public class DealSearchService {
      * @param size 조회 건수
      * @return 반경 내 실거래 목록
      */
-    public List<RealDealDocument> findByAddress(String address, double distanceKm, int size,
+    public SearchHits<RealDealDocument> findByAddress(String address, double distanceKm, int size,
                                                 BigDecimal minArea, BigDecimal maxArea,
                                                 BigDecimal minPrice, BigDecimal maxPrice,
                                                 PropertyType propertyType, DealSortType sortType) {
@@ -163,7 +159,7 @@ public class DealSearchService {
     /**
      * 주소 입력으로 실거래 데이터 검색 (기본값: 1km, 100건)
      */
-    public List<RealDealDocument> findByAddress(String address) {
+    public SearchHits<RealDealDocument> findByAddress(String address) {
         return findByAddress(address, 1.0, 100, null, null, null, null, null, DealSortType.DISTANCE);
     }
 

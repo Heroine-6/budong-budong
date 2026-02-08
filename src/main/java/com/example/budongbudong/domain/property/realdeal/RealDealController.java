@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,16 +74,16 @@ public class RealDealController {
             @Parameter(description = "정렬 기준 (DISTANCE, PRICE_PER_AREA_ASC, PRICE_PER_AREA_DESC)")
             @RequestParam(defaultValue = "DISTANCE") DealSortType sortType
     ) {
-        List<RealDealDocument> results;
+        SearchHits<RealDealDocument> searchHits;
 
         // 좌표가 있으면 좌표 우선 (반경 검색)
         if (lat != null && lon != null) {
-            results = dealSearchService.findNearby(lat, lon, distanceKm, size,
+            searchHits = dealSearchService.findNearby(lat, lon, distanceKm, size,
                     minArea, maxArea, minPrice, maxPrice, propertyType, sortType);
         }
         // 주소가 있으면 지오코딩 → 반경 검색
         else if (address != null && !address.isBlank()) {
-            results = dealSearchService.findByAddress(address, distanceKm, size,
+            searchHits = dealSearchService.findByAddress(address, distanceKm, size,
                     minArea, maxArea, minPrice, maxPrice, propertyType, sortType);
         }
         // 둘 다 없으면 에러
@@ -89,6 +91,11 @@ public class RealDealController {
             throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
-        return GlobalResponse.ok(RealDealSearchResponse.of(results));
+        long totalCount = searchHits.getTotalHits();
+        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        return GlobalResponse.ok(RealDealSearchResponse.of(totalCount, deals));
     }
 }

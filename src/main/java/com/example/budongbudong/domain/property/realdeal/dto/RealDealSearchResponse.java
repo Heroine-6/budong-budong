@@ -13,9 +13,9 @@ public class RealDealSearchResponse {
     private final long totalCount;
     private final List<RealDealDocument> deals;
 
-    public static RealDealSearchResponse of(List<RealDealDocument> deals) {
+    public static RealDealSearchResponse of(long totalCount, List<RealDealDocument> deals) {
         return RealDealSearchResponse.builder()
-                .totalCount(deals.size())
+                .totalCount(totalCount)
                 .deals(deals)
                 .build();
     }
