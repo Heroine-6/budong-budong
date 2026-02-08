@@ -1,6 +1,6 @@
 package com.example.budongbudong.domain.notification.client;
 
-import com.example.budongbudong.domain.notification.dto.KakaoNotificationResponse;
+import com.example.budongbudong.domain.notification.dto.response.KakaoNotificationResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;

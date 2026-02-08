@@ -18,9 +18,4 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         return findById(notificationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
     }
-
-    default Notification getByAuctionIdAndTypeEqualsOrThrow(Long auctionId, NotificationType type) {
-        return findByAuctionIdAndTypeEquals(auctionId, type)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
-    }
 }
