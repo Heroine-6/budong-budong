@@ -3,12 +3,16 @@ package com.example.budongbudong.domain.notification.usernotification.service;
 import com.example.budongbudong.common.entity.Notification;
 import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.entity.UserNotification;
+import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.notification.repository.NotificationRepository;
 import com.example.budongbudong.domain.notification.usernotification.dto.NotificationTargetResponse;
+import com.example.budongbudong.domain.notification.usernotification.dto.UserNotificationResponse;
 import com.example.budongbudong.domain.notification.usernotification.repository.UserNotificationRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,4 +65,14 @@ public class UserNotificationService {
                 })
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public CustomSliceResponse<UserNotificationResponse> getAllUserNotificationList(Long userId, Pageable pageable) {
+
+        Slice<UserNotification> userNotifications = userNotificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Slice<UserNotificationResponse> response = userNotifications.map(UserNotificationResponse::from);
+
+        return CustomSliceResponse.from(response.getContent(), pageable.getPageSize(), pageable.getPageNumber(), response.hasNext());
+    }
+
 }
