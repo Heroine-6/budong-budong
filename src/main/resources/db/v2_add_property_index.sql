@@ -10,3 +10,9 @@ CREATE INDEX idx_property_type_list
 -- 가격 범위
 CREATE INDEX idx_property_price
     ON properties(price);
+
+-- 매물 조회 복합 인덱스
+CREATE INDEX idx_property_created_at_is_deleted
+    ON properties (created_at DESC, is_deleted);
+
+ANALYZE TABLE properties;

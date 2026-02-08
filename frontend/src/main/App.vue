@@ -106,7 +106,7 @@
                 <span v-if="item.privateArea" class="meta-sep">전용 {{ item.privateArea }}m&sup2;</span>
               </div>
               <div v-if="item.auction" class="card-price">
-                {{ formatPrice(item.auction.startPrice) }}
+                경매 시작가 {{ formatPrice(item.auction.startPrice) }}
               </div>
             </div>
           </a>

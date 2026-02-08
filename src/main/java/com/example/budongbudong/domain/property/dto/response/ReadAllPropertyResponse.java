@@ -38,4 +38,28 @@ public class ReadAllPropertyResponse {
                 auction
         );
     }
+
+    public static ReadAllPropertyResponse fromCached(
+            Long id,
+            String name,
+            String address,
+            PropertyType type,
+            String description,
+            BigDecimal supplyArea,
+            BigDecimal privateArea,
+            String thumbnailImage,
+            AuctionResponse auction
+    ) {
+        return new ReadAllPropertyResponse(
+                id,
+                name,
+                address,
+                type,
+                description,
+                supplyArea,
+                privateArea,
+                thumbnailImage,
+                auction
+        );
+    }
 }

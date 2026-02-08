@@ -2,7 +2,7 @@ package com.example.budongbudong.domain.auction.dto.response;
 
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import com.example.budongbudong.domain.property.document.AuctionSummary;
+import com.example.budongbudong.domain.property.search.document.AuctionSummary;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

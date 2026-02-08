@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.property.document;
+package com.example.budongbudong.domain.property.search.document;
 
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;

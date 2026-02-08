@@ -2,10 +2,9 @@ package com.example.budongbudong.domain.property.service;
 
 import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.property.document.AuctionSummary;
-import com.example.budongbudong.domain.property.document.PropertySearchDocument;
+import com.example.budongbudong.domain.property.search.document.AuctionSummary;
+import com.example.budongbudong.domain.property.search.document.PropertySearchDocument;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
-import com.example.budongbudong.domain.property.repository.PropertySearchRepository;
 import com.example.budongbudong.domain.propertyimage.repository.PropertyImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.property.dto.response;
 
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
-import com.example.budongbudong.domain.property.document.PropertySearchDocument;
+import com.example.budongbudong.domain.property.search.document.PropertySearchDocument;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

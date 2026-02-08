@@ -11,6 +11,7 @@ import com.example.budongbudong.domain.property.client.AptClient;
 import com.example.budongbudong.domain.property.client.AptItem;
 import com.example.budongbudong.domain.property.client.OffiClient;
 import com.example.budongbudong.domain.property.client.VillaClient;
+import com.example.budongbudong.domain.property.dto.cache.CachedPropertyListDto;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.event.PropertyEventType;
@@ -29,15 +30,18 @@ import com.example.budongbudong.domain.property.dto.response.ReadPropertyRespons
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.propertyimage.service.PropertyImageService;
 import com.example.budongbudong.domain.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -57,6 +61,8 @@ public class PropertyService {
     private final PropertyEventPublisher propertyEventPublisher;
     private final NaverGeoClient naverGeoClient;
     private final KakaoGeoClient kakaoGeoClient;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${external.api.service-key}")
     private String serviceKey;
@@ -102,8 +108,35 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList( Pageable pageable) {
 
+        String cacheKey = generateCacheKey(pageable);
+
+        String cache = redisTemplate.opsForValue().get(cacheKey);
+        if (cache != null) {
+            try{
+                CachedPropertyListDto dto = objectMapper.readValue(cache, CachedPropertyListDto.class);
+                log.info("[REDIS][HIT] {}", cacheKey);
+
+                return dto.toResponse(pageable);
+            } catch (Exception e){
+                //캐시가 깨지면 DB조회
+                log.warn("[REDIS][DESERIALIZE_FAIL] key={}", cacheKey, e);
+            }
+        } else {
+            log.info("[REDIS][MISS] {}", cacheKey);
+        }
         Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(pageable);
-        return CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
+        CustomSliceResponse<ReadAllPropertyResponse> response = CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
+
+        try{
+            CachedPropertyListDto dto = CachedPropertyListDto.from(slice);
+            String json = objectMapper.writeValueAsString(dto);
+
+            redisTemplate.opsForValue().set(cacheKey, json, Duration.ofSeconds(20)); //TTL 20
+        }catch (Exception e){
+            // 로직에 영향 없음
+
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -287,6 +320,12 @@ public class PropertyService {
 
         // 둘 다 실패 시 좌표 없이 진행 (null 유지)
         log.warn("지오코딩 실패 - 좌표 없이 매물 등록: {}", address);
+    }
+
+    // 메인 매물 조회 캐시 키 생성 메서드
+    private String generateCacheKey(Pageable pageable) {
+        return "home:property:list:p=" + pageable.getPageNumber()
+                + ":s=" + pageable.getPageSize();
     }
 
 }
