@@ -74,6 +74,13 @@ public class RealDealController {
             @Parameter(description = "정렬 기준 (DISTANCE, PRICE_PER_AREA_ASC, PRICE_PER_AREA_DESC)")
             @RequestParam(defaultValue = "DISTANCE") DealSortType sortType
     ) {
+        if (minArea != null && maxArea != null && minArea.compareTo(maxArea) > 0) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
         SearchHits<RealDealDocument> searchHits;
 
         // 좌표가 있으면 좌표 우선 (반경 검색)
