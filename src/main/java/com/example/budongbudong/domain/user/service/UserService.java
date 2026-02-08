@@ -1,4 +1,28 @@
 package com.example.budongbudong.domain.user.service;
 
+import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.domain.user.dto.response.UpdatePushAllowedResponse;
+import com.example.budongbudong.domain.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
+
+    private final UserRepository userRepository;
+
+    /**
+     * 알림 수신 동의 변경
+     */
+    @Transactional
+    public UpdatePushAllowedResponse updatePushAllowed(Long userId) {
+
+        User user = userRepository.getByIdOrThrow(userId);
+        user.updatePushAllowed();
+
+        return UpdatePushAllowedResponse.from(user.isPushAllowed());
+    }
 }

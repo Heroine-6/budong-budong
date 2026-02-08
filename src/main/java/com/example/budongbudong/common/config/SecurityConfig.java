@@ -57,6 +57,7 @@ public class SecurityConfig {
                     paymentAuth(auth);
                     chatServerAuth(auth);
                     notificationAuth(auth);
+                    userAuth(auth);
                     auth.anyRequest().authenticated();
                 })
                 .exceptionHandling(ex -> ex
@@ -212,6 +213,13 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.GET, "/api/notifications/v2/my")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name());
+    }
+
+    private void userAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.PATCH, "/api/users/v2/notifications")
                 .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name());
     }
 }
