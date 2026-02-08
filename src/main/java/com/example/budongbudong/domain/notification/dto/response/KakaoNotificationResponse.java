@@ -1,11 +1,11 @@
-package com.example.budongbudong.domain.notification.dto;
+package com.example.budongbudong.domain.notification.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class KakaoNotificationResponse {
 
     @JsonProperty("result_code")
