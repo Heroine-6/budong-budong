@@ -110,7 +110,7 @@ public class DealSearchService {
                     .script(sc -> sc
                             .type(ScriptSortType.Number)
                             .script(script -> script
-                                    .source("doc['dealAmount'].value / doc['exclusiveArea'].value")
+                                    .source("doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? 0 : doc['dealAmount'].value / doc['exclusiveArea'].value")
                             )
                             .order(order)
                     )
