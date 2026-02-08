@@ -177,6 +177,9 @@ public class NotificationService {
         }
 
         userNotification.updateSendAt();
+
+        userNotificationRepository.save(userNotification);
+        userNotificationRepository.flush();
     }
 
     private String createTextMessage(String content) {
