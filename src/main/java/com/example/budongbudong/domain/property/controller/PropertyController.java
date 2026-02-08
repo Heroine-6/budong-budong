@@ -3,11 +3,13 @@ package com.example.budongbudong.domain.property.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.*;
 import com.example.budongbudong.common.storage.PresignedUrlInfo;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.PresignedUrlRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.*;
+import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,15 +56,11 @@ public class PropertyController {
 
     @GetMapping
     public ResponseEntity<GlobalResponse<CustomSliceResponse<ReadAllPropertyResponse>>> getAllPropertyList(
-            @PageableDefault(
-                    page = 0,
-                    size = 10,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
+            @RequestParam(required = false) PropertyType type,
+            @RequestParam(name="status",required = false) AuctionStatus auctionStatus,
             Pageable pageable
     ) {
-        CustomSliceResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(pageable);
+        CustomSliceResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(type, auctionStatus, pageable);
         return GlobalResponse.ok(response);
     }
 

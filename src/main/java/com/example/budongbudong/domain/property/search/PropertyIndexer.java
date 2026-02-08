@@ -48,9 +48,6 @@ public class PropertyIndexer {
                         .migrateDate(property.getMigrateDate())
 
                         // 응답 전용 필드 (검색/필터 대상 아님)
-                        .description(property.getDescription())
-                        .supplyArea(property.getSupplyArea())
-                        .privateArea(property.getPrivateArea())
                         .thumbnailImage(thumbnailImage)
 
                         // 검색/정렬용 필드

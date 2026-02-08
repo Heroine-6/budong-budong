@@ -106,9 +106,13 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList( Pageable pageable) {
+    public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList(
+            PropertyType type,
+            AuctionStatus auctionStatus,
+            Pageable pageable
+    ) {
 
-        String cacheKey = generateCacheKey(pageable);
+        String cacheKey = generateCacheKey(type, auctionStatus, pageable);
 
         String cache = redisTemplate.opsForValue().get(cacheKey);
         if (cache != null) {
@@ -124,7 +128,7 @@ public class PropertyService {
         } else {
             log.info("[REDIS][MISS] {}", cacheKey);
         }
-        Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(pageable);
+        Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(type, auctionStatus,pageable);
         CustomSliceResponse<ReadAllPropertyResponse> response = CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
 
         try{
@@ -323,9 +327,19 @@ public class PropertyService {
     }
 
     // 메인 매물 조회 캐시 키 생성 메서드
-    private String generateCacheKey(Pageable pageable) {
-        return "home:property:list:p=" + pageable.getPageNumber()
-                + ":s=" + pageable.getPageSize();
+    private String generateCacheKey(
+            PropertyType type,
+            AuctionStatus status,
+            Pageable pageable
+    ) {
+        return String.format(
+                "home:property:list:type=%s:status=%s:page=%d:size=%d",
+                type != null ? type.name() : "ALL",
+                status != null ? status.name() : "ALL",
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
     }
+
 
 }

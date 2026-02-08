@@ -2,9 +2,11 @@ package com.example.budongbudong.domain.property.repository;
 
 import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.QReadAllPropertyDto;
 import com.example.budongbudong.domain.property.dto.ReadAllPropertyDto;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
+import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -34,7 +36,11 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
      * - Slice 기반 페이징 (count 쿼리 없음)
      */
     @Override
-    public Slice<ReadAllPropertyResponse> findPropertyList(Pageable pageable) {
+    public Slice<ReadAllPropertyResponse> findPropertyList(
+            PropertyType type,
+            AuctionStatus auctionStatus,
+            Pageable pageable
+    ) {
 
         int pageSize = pageable.getPageSize();
         int requestSize = pageSize + 1; // 다음 페이지 존재 여부 판단을 위해 +1 조회
@@ -67,8 +73,6 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                                 auction.id,
                                 auction.startPrice,
                                 auction.status,
-                                auction.startedAt,
-                                auction.endedAt,
                                 thumbnailSubquery
                         ))
                         .from(property)
@@ -76,7 +80,11 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                                 auction.property.id.eq(property.id),
                                 auction.isDeleted.isFalse()
                         )
-                        .where(property.isDeleted.isFalse())
+                        .where(
+                                property.isDeleted.isFalse(),
+                                typeEq(type),
+                                auctionStatusEq(auctionStatus)
+                        )
                         .orderBy(property.createdAt.desc())
                         .offset(pageable.getOffset())
                         .limit(requestSize)
@@ -135,8 +143,6 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                         auction.id,
                         auction.startPrice,
                         auction.status,
-                        auction.startedAt,
-                        auction.endedAt,
                         thumbnailSubquery
                 ))
                 .from(property)
@@ -178,9 +184,7 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                 ? new AuctionResponse(
                 dto.getAuctionId(),
                 dto.getStartPrice(),
-                dto.getStatus(),
-                dto.getStartedAt(),
-                dto.getEndedAt()
+                dto.getStatus()
         )
                 : null;
 
@@ -195,5 +199,13 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                 dto.getThumbnailUrl(),
                 response
         );
+    }
+
+    private BooleanExpression typeEq(PropertyType type) {
+        return type != null ? property.type.eq(type) : null;
+    }
+
+    private BooleanExpression auctionStatusEq(AuctionStatus status) {
+        return status != null ? auction.status.eq(status) : null;
     }
 }

@@ -46,15 +46,6 @@ public class PropertySearchDocument {
 
     // --- 응답 전용 ( 검색 대상 아님) ---
     @Field(type = FieldType.Keyword, index = false)
-    private String description;
-
-    @Field(type = FieldType.Double, index = false)
-    private BigDecimal supplyArea;
-
-    @Field(type = FieldType.Double, index = false)
-    private BigDecimal privateArea;
-
-    @Field(type = FieldType.Keyword, index = false)
     private String thumbnailImage;
 
     // --- 검색/정렬 ---
