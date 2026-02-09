@@ -84,7 +84,7 @@ public class RealDealController {
         return GlobalResponse.ok(RealDealSearchResponse.of(totalCount, deals));
     }
 
-    @Operation(summary = "입찰가 주변시세 비교", description = "경매 시작가, 현재 최고 입찰가, 희망 입찰가를 주변 실거래 평단가와 비교합니다.")
+    @Operation(summary = "입찰가 주변시세 비교", description = "경매 시작가·최고입찰가·희망입찰가 각각의 m²당 평단가를 주변 실거래 중앙값 평단가와 비교하여 시세 대비 비율(%)을 반환합니다.")
     @GetMapping("/compare/{auctionId}")
     public ResponseEntity<GlobalResponse<MarketCompareResponse>> compareWithMarket(
             @PathVariable Long auctionId,
