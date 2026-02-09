@@ -63,4 +63,8 @@ public class User extends BaseEntity {
         user.role = role;
         return user;
     }
+
+    public void updatePushAllowed() {
+        this.isPushAllowed = !this.isPushAllowed;
+    }
 }
