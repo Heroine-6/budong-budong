@@ -10,6 +10,7 @@ import com.example.budongbudong.domain.property.realdeal.service.DealSearchServi
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ public class RealDealController {
     @Operation(summary = "주변 시세 검색", description = "주소 또는 좌표 기준으로 반경 내 실거래가를 조회합니다.")
     @GetMapping("/nearby")
     public ResponseEntity<GlobalResponse<RealDealSearchResponse>> searchNearby(
-            @ModelAttribute RealDealSearchRequest request
+            @ParameterObject @ModelAttribute RealDealSearchRequest request
     ) {
         if (request.getMinArea() != null && request.getMaxArea() != null
                 && request.getMinArea().compareTo(request.getMaxArea()) > 0) {
