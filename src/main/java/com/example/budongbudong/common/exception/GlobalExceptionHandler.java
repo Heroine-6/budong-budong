@@ -6,6 +6,7 @@ import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.PessimisticLockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -48,6 +49,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<GlobalResponse<Void>> handleLockExceptions(Exception e) {
         log.error("락 관련 예외 발생. ", e);
         ErrorCode errorCode = ErrorCode.BID_LOCK_TIMEOUT;
+        GlobalResponse<Void> response = GlobalResponse.exception(errorCode, null);
+        return ResponseEntity.status(errorCode.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(UncategorizedElasticsearchException.class)
+    public ResponseEntity<GlobalResponse<Void>> handleElasticsearchException(UncategorizedElasticsearchException e) {
+        log.error("Elasticsearch 예외 발생. ", e);
+        ErrorCode errorCode = ErrorCode.ELASTICSEARCH_ERROR;
         GlobalResponse<Void> response = GlobalResponse.exception(errorCode, null);
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }

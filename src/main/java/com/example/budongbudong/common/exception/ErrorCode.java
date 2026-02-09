@@ -57,6 +57,7 @@ public enum ErrorCode {
     SUCCESS_BUT_METHOD_DETAIL_NULL(400, "SUCCESS이나 결제 수단 상세(예.카드번호) 비어있습니다"),
 
     //------500-----------------------
+    ELASTICSEARCH_ERROR(500, "검색 서비스에 일시적인 문제가 발생했습니다."),
     GEOCODING_FAILED(500, "지오코딩에 실패했습니다."),
     DEAL_COLLECT_FAILED(500, "실거래 데이터 수집에 실패했습니다."),
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),

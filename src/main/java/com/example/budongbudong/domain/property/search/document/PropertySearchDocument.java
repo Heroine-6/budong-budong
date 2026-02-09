@@ -1,4 +1,4 @@
-package com.example.budongbudong.domain.property.document;
+package com.example.budongbudong.domain.property.search.document;
 
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import lombok.*;
@@ -45,15 +45,6 @@ public class PropertySearchDocument {
     private LocalDate migrateDate;
 
     // --- 응답 전용 ( 검색 대상 아님) ---
-    @Field(type = FieldType.Keyword, index = false)
-    private String description;
-
-    @Field(type = FieldType.Double, index = false)
-    private BigDecimal supplyArea;
-
-    @Field(type = FieldType.Double, index = false)
-    private BigDecimal privateArea;
-
     @Field(type = FieldType.Keyword, index = false)
     private String thumbnailImage;
 
