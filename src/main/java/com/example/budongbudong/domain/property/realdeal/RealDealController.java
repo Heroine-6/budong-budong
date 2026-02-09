@@ -95,7 +95,7 @@ public class RealDealController {
             @Parameter(description = "조회 건수", example = "50")
             @RequestParam(defaultValue = "50") int size,
 
-            @Parameter(description = "희망 입찰가 (선택)", example = "50000")
+            @Parameter(description = "희망 입찰가, 만원 단위 (선택)", example = "50000")
             @RequestParam(required = false) BigDecimal inputPrice
     ) {
         MarketCompareResponse response = dealSearchService.compareWithAuction(auctionId, distanceKm, size, inputPrice);
