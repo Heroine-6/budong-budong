@@ -106,7 +106,7 @@
                 <span v-if="item.privateArea" class="meta-sep">전용 {{ item.privateArea }}m&sup2;</span>
               </div>
               <div v-if="item.auction" class="card-price">
-                {{ formatPrice(item.auction.startPrice) }}
+                경매 시작가 {{ formatPrice(item.auction.startPrice) }}
               </div>
             </div>
           </a>
@@ -203,9 +203,7 @@ async function fetchProperties() {
   page.value = 0
   try {
     const params = buildSearchParams()
-    const useSearch = searchKeyword.value || selectedType.value || selectedStatus.value
-    const endpoint = useSearch ? '/api/v1/properties/search' : '/api/v1/properties'
-    const res = await fetch(`${endpoint}?${params}`)
+    const res = await fetch(`/api/v1/properties?${params}`)
     const json = await res.json()
     if (json.success && json.data) {
       properties.value = json.data.content || []
@@ -223,9 +221,7 @@ async function loadMore() {
   page.value++
   try {
     const params = buildSearchParams()
-    const useSearch = searchKeyword.value || selectedType.value || selectedStatus.value
-    const endpoint = useSearch ? '/api/v1/properties/search' : '/api/v1/properties'
-    const res = await fetch(`${endpoint}?${params}`)
+    const res = await fetch(`/api/v1/properties?${params}`)
     const json = await res.json()
     if (json.success && json.data) {
       properties.value.push(...(json.data.content || []))
@@ -239,10 +235,6 @@ async function loadMore() {
 }
 
 function doSearch() {
-  if (searchKeyword.value) {
-    window.location.href = `/search?keyword=${encodeURIComponent(searchKeyword.value)}`
-    return
-  }
   fetchProperties()
 }
 

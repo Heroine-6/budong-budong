@@ -2,6 +2,7 @@ package com.example.budongbudong.domain.property.repository;
 
 import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.domain.auction.dto.response.AuctionResponse;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.QReadAllPropertyDto;
 import com.example.budongbudong.domain.property.dto.ReadAllPropertyDto;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
@@ -12,13 +13,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
-import java.time.Year;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.example.budongbudong.common.entity.QAuction.auction;
 import static com.example.budongbudong.common.entity.QProperty.property;
@@ -40,88 +36,74 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
      * - Slice 기반 페이징 (count 쿼리 없음)
      */
     @Override
-    public Slice<ReadAllPropertyResponse> findPropertyList(Pageable pageable) {
+    public Slice<ReadAllPropertyResponse> findPropertyList(
+            PropertyType type,
+            AuctionStatus auctionStatus,
+            Pageable pageable
+    ) {
 
         int pageSize = pageable.getPageSize();
         int requestSize = pageSize + 1; // 다음 페이지 존재 여부 판단을 위해 +1 조회
 
+        var thumbnailSubquery =
+                JPAExpressions
+                        .select(propertyImage.imageUrl)
+                        .from(propertyImage)
+                        .where(propertyImage.id.eq(
+                                JPAExpressions
+                                        .select(propertyImage.id.min())
+                                        .from(propertyImage)
+                                        .where(
+                                                propertyImage.property.id.eq(property.id),
+                                                propertyImage.isDeleted.isFalse()
+                                        )
+                        ));
+
         //Property Slice 조회
-        List<Property> properties =
+        List<ReadAllPropertyDto> results =
                 queryFactory
-                        .selectFrom(property)
-                        .where(property.isDeleted.isFalse())
+                        .select(new QReadAllPropertyDto(
+                                property.id,
+                                property.name,
+                                property.address,
+                                property.type,
+                                property.description,
+                                property.supplyArea,
+                                property.privateArea,
+                                auction.id,
+                                auction.startPrice,
+                                auction.status,
+                                thumbnailSubquery
+                        ))
+                        .from(property)
+                        .leftJoin(auction).on(
+                                auction.property.id.eq(property.id),
+                                auction.isDeleted.isFalse()
+                        )
+                        .where(
+                                property.isDeleted.isFalse(),
+                                typeEq(type),
+                                auctionStatusEq(auctionStatus)
+                        )
                         .orderBy(property.createdAt.desc())
                         .offset(pageable.getOffset())
                         .limit(requestSize)
                         .fetch();
 
         //Slice의 다음 페이지 존재 여부 판단
-        boolean hasNext = properties.size() > pageSize;
+        boolean hasNext = results.size() > pageSize;
         if (hasNext) {
-            properties = properties.subList(0, pageSize);
+            results = results.subList(0, pageSize);
         }
 
-        if (properties.isEmpty()) {
+        if (results.isEmpty()) {
             return new SliceImpl<>(List.of(), pageable, false);
         }
 
-        //propertyIds 수집 - 경매, 대표 이미지 조회를 IN 쿼리로 처리하기 위해
-        List<Long> propertyIds = properties.stream().map(Property::getId).toList();
-
-        //Auction IN 조회
-        Map<Long, Auction> auctionMap =
-                queryFactory
-                        .selectFrom(auction)
-                        .where(
-                                auction.property.id.in(propertyIds),
-                                auction.isDeleted.isFalse()
-                        )
-                        .fetch()
-                        .stream()
-                        .collect(Collectors.toMap(
-                                a -> a.getProperty().getId(),
-                                a -> a,
-                                (a, b) -> a
-                        ));
-
-        //대표 이미지 조회(Querydsl 서브 쿼리)
-        QPropertyImage piSub = new QPropertyImage("piSub"); //서브쿼리 별칭
-
-        Map<Long, String> thumbnailMap =
-                queryFactory
-                        .select(propertyImage.property.id, propertyImage.imageUrl)
-                        .from(propertyImage)
-                        .where(
-                                propertyImage.property.id.in(propertyIds),
-                                propertyImage.isDeleted.isFalse(),
-                                propertyImage.id.eq(
-                                        JPAExpressions
-                                                .select(piSub.id.min())
-                                                .from(piSub)
-                                                .where(
-                                                        piSub.property.id.eq(propertyImage.property.id),
-                                                        piSub.isDeleted.isFalse()
-                                                )
-                                )
-                        )
-                        .fetch()
-                        .stream()
-                        .collect(Collectors.toMap(
-                                tuple -> tuple.get(propertyImage.property.id),
-                                tuple -> tuple.get(propertyImage.imageUrl)
-                        ));
-
         //DTO 변환
-        List<ReadAllPropertyResponse> content =
-                properties.stream()
-                        .map(p -> {
-                            Auction auction = auctionMap.get(p.getId());
-                            AuctionResponse auctionResponse =
-                                    auction != null ? AuctionResponse.from(auction) : null;
-
-                            return ReadAllPropertyResponse.from(p, auctionResponse, thumbnailMap.get(p.getId()));
-                        })
-                        .toList();
+        List<ReadAllPropertyResponse> content = results.stream()
+                .map(this::toResponse)
+                .toList();
 
         return new SliceImpl<>(content, pageable, hasNext);
     }
@@ -161,8 +143,6 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                         auction.id,
                         auction.startPrice,
                         auction.status,
-                        auction.startedAt,
-                        auction.endedAt,
                         thumbnailSubquery
                 ))
                 .from(property)
@@ -204,9 +184,7 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                 ? new AuctionResponse(
                 dto.getAuctionId(),
                 dto.getStartPrice(),
-                dto.getStatus(),
-                dto.getStartedAt(),
-                dto.getEndedAt()
+                dto.getStatus()
         )
                 : null;
 
@@ -221,5 +199,13 @@ public class QPropertyRepositoryImpl implements QPropertyRepository {
                 dto.getThumbnailUrl(),
                 response
         );
+    }
+
+    private BooleanExpression typeEq(PropertyType type) {
+        return type != null ? property.type.eq(type) : null;
+    }
+
+    private BooleanExpression auctionStatusEq(AuctionStatus status) {
+        return status != null ? auction.status.eq(status) : null;
     }
 }

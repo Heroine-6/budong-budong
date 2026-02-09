@@ -2,7 +2,7 @@ package com.example.budongbudong.domain.property.service;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.budongbudong.common.response.CustomSliceResponse;
-import com.example.budongbudong.domain.property.document.PropertySearchDocument;
+import com.example.budongbudong.domain.property.search.document.PropertySearchDocument;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.response.SearchPropertyResponse;
 import com.example.budongbudong.domain.property.search.PropertySearchQueryBuilder;
