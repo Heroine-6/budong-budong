@@ -189,10 +189,12 @@ public class DealSearchService {
         if (property.getLatitude() != null && property.getLongitude() != null) {
             lat = property.getLatitude().doubleValue();
             lon = property.getLongitude().doubleValue();
-        } else {
+        } else if (property.getAddress() != null && !property.getAddress().isBlank()) {
             double[] coords = geocode(property.getAddress());
             lat = coords[0];
             lon = coords[1];
+        } else {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
         }
 
         SearchHits<RealDealDocument> searchHits = findNearby(
