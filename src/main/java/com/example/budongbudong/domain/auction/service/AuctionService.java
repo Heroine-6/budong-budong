@@ -11,7 +11,6 @@ import com.example.budongbudong.domain.auction.dto.response.CancelAuctionRespons
 import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
 import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
-import com.example.budongbudong.domain.auction.event.AuctionCreatedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
@@ -73,9 +72,6 @@ public class AuctionService {
         );
 
         auctionRepository.save(auction);
-
-        // 알림 생성용 이벤트 발행
-        eventPublisher.publishEvent(new AuctionCreatedEvent(auction.getId(), userId));
 
         return CreateAuctionResponse.from(auction);
     }
