@@ -65,73 +65,16 @@ public class DealSearchService {
                                              BigDecimal minPrice, BigDecimal maxPrice,
                                              PropertyType propertyType, DealSortType sortType) {
         BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
-
-        boolBuilder.filter(f -> f
-                .geoDistance(g -> g
-                        .field("location")
-                        .distance(distanceKm + "km")
-                        .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
-                        .distanceType(GeoDistanceType.Arc)
-                )
-        );
-
-        if (propertyType != null) {
-            boolBuilder.filter(f -> f
-                    .term(t -> t.field("propertyType").value(propertyType.name()))
-            );
-        }
-
-        if (minArea != null || maxArea != null) {
-            boolBuilder.filter(f -> f
-                    .range(r -> r
-                            .number(n -> {
-                                n.field("exclusiveArea");
-                                if (minArea != null) n.gte(minArea.doubleValue());
-                                if (maxArea != null) n.lte(maxArea.doubleValue());
-                                return n;
-                            })
-                    )
-            );
-        }
-
-        if (minPrice != null || maxPrice != null) {
-            boolBuilder.filter(f -> f
-                    .range(r -> r
-                            .number(n -> {
-                                n.field("dealAmount");
-                                if (minPrice != null) n.gte(minPrice.doubleValue());
-                                if (maxPrice != null) n.lte(maxPrice.doubleValue());
-                                return n;
-                            })
-                    )
-            );
-        }
+        addGeoDistanceFilter(boolBuilder, lat, lon, distanceKm);
+        addPropertyTypeFilter(boolBuilder, propertyType);
+        addRangeFilter(boolBuilder, "exclusiveArea", minArea, maxArea);
+        addRangeFilter(boolBuilder, "dealAmount", minPrice, maxPrice);
 
         NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(q -> q.bool(boolBuilder.build()))
                 .withPageable(PageRequest.of(0, size));
 
-        if (sortType == DealSortType.PRICE_PER_AREA_ASC || sortType == DealSortType.PRICE_PER_AREA_DESC) {
-            SortOrder order = sortType == DealSortType.PRICE_PER_AREA_ASC ? SortOrder.Asc : SortOrder.Desc;
-            String fallback = sortType == DealSortType.PRICE_PER_AREA_ASC ? "Long.MAX_VALUE" : "0";
-            String scriptSource = "doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? "
-                    + fallback + " : doc['dealAmount'].value / doc['exclusiveArea'].value";
-            queryBuilder.withSort(s -> s
-                    .script(sc -> sc
-                            .type(ScriptSortType.Number)
-                            .script(script -> script.source(scriptSource))
-                            .order(order)
-                    )
-            );
-        } else {
-            queryBuilder.withSort(s -> s
-                    .geoDistance(g -> g
-                            .field("location")
-                            .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
-                            .order(SortOrder.Asc)
-                    )
-            );
-        }
+        applySort(queryBuilder, sortType, lat, lon);
 
         return elasticsearchOperations.search(queryBuilder.build(), RealDealDocument.class);
     }
@@ -213,6 +156,62 @@ public class DealSearchService {
                 property.getPrivateArea(), inputPrice,
                 totalCount, deals
         );
+    }
+
+    private void addGeoDistanceFilter(BoolQuery.Builder builder, double lat, double lon, double distanceKm) {
+        builder.filter(f -> f
+                .geoDistance(g -> g
+                        .field("location")
+                        .distance(distanceKm + "km")
+                        .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
+                        .distanceType(GeoDistanceType.Arc)
+                )
+        );
+    }
+
+    private void addPropertyTypeFilter(BoolQuery.Builder builder, PropertyType propertyType) {
+        if (propertyType == null) return;
+        builder.filter(f -> f
+                .term(t -> t.field("propertyType").value(propertyType.name()))
+        );
+    }
+
+    private void addRangeFilter(BoolQuery.Builder builder, String field, BigDecimal min, BigDecimal max) {
+        if (min == null && max == null) return;
+        builder.filter(f -> f
+                .range(r -> r
+                        .number(n -> {
+                            n.field(field);
+                            if (min != null) n.gte(min.doubleValue());
+                            if (max != null) n.lte(max.doubleValue());
+                            return n;
+                        })
+                )
+        );
+    }
+
+    private void applySort(NativeQueryBuilder queryBuilder, DealSortType sortType, double lat, double lon) {
+        if (sortType == DealSortType.PRICE_PER_AREA_ASC || sortType == DealSortType.PRICE_PER_AREA_DESC) {
+            SortOrder order = sortType == DealSortType.PRICE_PER_AREA_ASC ? SortOrder.Asc : SortOrder.Desc;
+            String fallback = sortType == DealSortType.PRICE_PER_AREA_ASC ? "Long.MAX_VALUE" : "0";
+            String scriptSource = "doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? "
+                    + fallback + " : doc['dealAmount'].value / doc['exclusiveArea'].value";
+            queryBuilder.withSort(s -> s
+                    .script(sc -> sc
+                            .type(ScriptSortType.Number)
+                            .script(script -> script.source(scriptSource))
+                            .order(order)
+                    )
+            );
+        } else {
+            queryBuilder.withSort(s -> s
+                    .geoDistance(g -> g
+                            .field("location")
+                            .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
+                            .order(SortOrder.Asc)
+                    )
+            );
+        }
     }
 
     /**
