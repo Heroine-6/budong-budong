@@ -4,21 +4,16 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.dto.request.CreateBidMessageRequest;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
-import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
-import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,11 +32,6 @@ public class BidService {
     private final RedissonClient redissonClient;
     private final BidTxService bidTxService;
     private final RabbitTemplate rabbitTemplate;
-
-    @Value("${rabbitmq.exchange.name}")
-    private String exchangeName;
-    @Value("${rabbitmq.routing.key}")
-    private String routingKey;
 
     /**
      * 입찰 등록 - Lock
@@ -109,26 +99,5 @@ public class BidService {
 
         Page<ReadMyBidsResponse> page = bidRepository.findMyBids(userId, status, pageable);
         return CustomPageResponse.from(page);
-    }
-
-    /**
-     * Queue 로 입찰 메세지 발행
-     */
-    public CreateBidMessageResponse publishBid(CreateBidRequest request, Long auctionId, Long userId) {
-
-        CreateBidMessageRequest messageRequest = CreateBidMessageRequest.from(auctionId, userId, request);
-        rabbitTemplate.convertAndSend(exchangeName, routingKey, messageRequest);
-
-        return CreateBidMessageResponse.from(BidStatus.PLACED, "입찰 요청 완료");
-    }
-
-    /**
-     * Queue에 발행된 입찰 메시지 구독
-     */
-    @RabbitListener(queues = "${rabbitmq.queue.name}")
-    public void receiveCreateBidMessage(CreateBidMessageRequest request) {
-
-        createBid(request.getCreateBidRequest(), request.getAuctionId(), request.getUserId());
-
     }
 }
