@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.bid.MQ;
 
 import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.bid.config.BidMQConfig;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidMessage;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
@@ -39,11 +40,13 @@ public class BidConsumer {
                     response.getAuctionId(), response.getBidId(), response.getBidStatus(), request.getRetryCount());
 
         } catch (CustomException e) {
+            if (e.getErrorCode() == ErrorCode.BID_LOCK_TIMEOUT) {
+                bidPublisher.publishRetry(request);
+                return;
+            }
             log.info("[입찰] 처리 실패 - auctionId={}, error={}", request.getAuctionId(), e.getMessage());
 
         } catch (Exception e) {
-            log.info("[입찰] 처리 실패 - auctionId={}, error={}", request.getAuctionId(), e.getMessage());
-
             bidPublisher.publishRetry(request);
         }
     }

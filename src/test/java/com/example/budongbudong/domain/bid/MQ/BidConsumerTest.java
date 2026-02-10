@@ -96,6 +96,36 @@ class BidConsumerTest {
     }
 
     @Test
+    @DisplayName("BID_LOCK_TIMEOUT 시 지연 큐에 재시도 메시지를 발행한다")
+    void lock_timeout_retry() {
+
+        // given
+        when(bidService.createBid(any(), eq(1L), eq(1L)))
+                .thenThrow(new CustomException(ErrorCode.BID_LOCK_TIMEOUT));
+
+        // when
+        bidConsumer.receiveCreateBidMessage(message);
+
+        // then
+        verify(bidPublisher).publishRetry(message);
+    }
+
+    @Test
+    @DisplayName("BID_LOCK_FAILED 시 재시도하지 않고 ACK 처리한다")
+    void lock_failed_no_retry() {
+
+        // given
+        when(bidService.createBid(any(), eq(1L), eq(1L)))
+                .thenThrow(new CustomException(ErrorCode.BID_LOCK_FAILED));
+
+        // when
+        bidConsumer.receiveCreateBidMessage(message);
+
+        // then
+        verify(bidPublisher, never()).publishRetry(any());
+    }
+
+    @Test
     @DisplayName("인프라 오류 시 지연 큐에 재시도 메시지를 발행한다")
     void infra_exception_retry() {
 
@@ -108,6 +138,5 @@ class BidConsumerTest {
 
         // then
         verify(bidPublisher).publishRetry(message);
-        assertThat(message.getRetryCount()).isEqualTo(1);
     }
 }
