@@ -65,7 +65,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "${{ secrets.APPLICATION_B64 }}" | base64 -d > .env
+          echo "${{ secrets.APPLICATION_B64 }}" > .env
 
       - name: Run new container
         run: |
