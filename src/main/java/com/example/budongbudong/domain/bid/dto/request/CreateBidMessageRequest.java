@@ -14,6 +14,7 @@ public class CreateBidMessageRequest {
     private Long userId;
     private CreateBidRequest createBidRequest;
     private LocalDateTime bidAt;
+    private int retryCount;
 
     public static CreateBidMessageRequest from(
             Long auctionId,
@@ -24,7 +25,12 @@ public class CreateBidMessageRequest {
                 auctionId,
                 userId,
                 createBidRequest,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                0
         );
+    }
+
+    public void incrementRetryCount() {
+        this.retryCount++;
     }
 }

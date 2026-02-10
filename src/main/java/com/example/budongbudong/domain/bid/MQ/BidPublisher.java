@@ -36,5 +36,25 @@ public class BidPublisher {
         return CreateBidMessageResponse.from(BidStatus.PLACED, "입찰 요청 완료");
     }
 
+    /**
+     * Delay Queue 로 재시도 메시지 발행
+     */
+    public void publishRetry(CreateBidMessageRequest request, long delayMillis) {
+        log.info("[입찰] 재시도 메시지 발행 | auctionId={}, userId={}, retryCount={}",
+                request.getAuctionId(), request.getUserId(), request.getRetryCount());
+
+        rabbitTemplate.convertAndSend(
+                BidMQConfig.BID_DELAY_QUEUE,
+                request,
+                m -> {
+                    m.getMessageProperties().setExpiration(String.valueOf(delayMillis));
+                    return m;
+                }
+        );
+    }
+
+    public void publishRetry(CreateBidMessageRequest request) {
+        publishRetry(request, DEFAULT_DELAY_MILLIS);
+    }
 }
 
