@@ -1,9 +1,6 @@
 package com.example.budongbudong.domain.property.realdeal;
 
-import com.example.budongbudong.common.exception.CustomException;
-import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.GlobalResponse;
-import com.example.budongbudong.domain.property.realdeal.document.RealDealDocument;
 import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
 import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchRequest;
 import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchResponse;
@@ -13,13 +10,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * 실거래가 검색 API
@@ -44,44 +38,8 @@ public class RealDealController {
     public ResponseEntity<GlobalResponse<RealDealSearchResponse>> searchNearby(
             @ParameterObject @ModelAttribute RealDealSearchRequest request
     ) {
-        if (request.getMinArea() != null && request.getMaxArea() != null
-                && request.getMinArea().compareTo(request.getMaxArea()) > 0) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
-        }
-        if (request.getMinPrice() != null && request.getMaxPrice() != null
-                && request.getMinPrice().compareTo(request.getMaxPrice()) > 0) {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
-        }
-
-        SearchHits<RealDealDocument> searchHits;
-
-        // 좌표가 있으면 좌표 우선 (반경 검색)
-        if (request.getLat() != null && request.getLon() != null) {
-            searchHits = dealSearchService.findNearby(
-                    request.getLat(), request.getLon(), request.getDistanceKm(), request.getSize(),
-                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
-                    request.getPropertyType(), request.getSortType()
-            );
-        }
-        // 주소가 있으면 지오코딩 → 반경 검색
-        else if (request.getAddress() != null && !request.getAddress().isBlank()) {
-            searchHits = dealSearchService.findByAddress(
-                    request.getAddress(), request.getDistanceKm(), request.getSize(),
-                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
-                    request.getPropertyType(), request.getSortType()
-            );
-        }
-        // 둘 다 없으면 에러
-        else {
-            throw new CustomException(ErrorCode.INVALID_REQUEST);
-        }
-
-        long totalCount = searchHits.getTotalHits();
-        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
-                .map(SearchHit::getContent)
-                .toList();
-
-        return GlobalResponse.ok(RealDealSearchResponse.of(totalCount, deals));
+        RealDealSearchResponse response = dealSearchService.searchNearby(request);
+        return GlobalResponse.ok(response);
     }
 
     @Operation(summary = "입찰가 주변시세 비교", description = "경매 시작가·최고입찰가·희망입찰가 각각의 m²당 평단가를 주변 실거래 중앙값 평단가와 비교하여 시세 대비 비율(%)을 반환합니다.")
