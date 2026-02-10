@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.bid.MQ;
 
 import com.example.budongbudong.domain.bid.config.BidMQConfig;
-import com.example.budongbudong.domain.bid.dto.request.CreateBidMessageRequest;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidMessage;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
@@ -26,11 +26,11 @@ public class BidPublisher {
     public CreateBidMessageResponse publishBid(CreateBidRequest request, Long auctionId, Long userId) {
         log.info("[입찰] 생성 메시지 발행 | auctionId={}, userId={}, bidPrice={}", auctionId, userId, request.getPrice());
 
-        CreateBidMessageRequest messageRequest = CreateBidMessageRequest.from(auctionId, userId, request);
+        CreateBidMessage message = CreateBidMessage.from(auctionId, userId, request);
         rabbitTemplate.convertAndSend(
                 BidMQConfig.BID_EXCHANGE,
                 BidMQConfig.BID_CREATE_KEY,
-                messageRequest
+                message
         );
 
         return CreateBidMessageResponse.from(BidStatus.PLACED, "입찰 요청 완료");
@@ -39,13 +39,27 @@ public class BidPublisher {
     /**
      * Delay Queue 로 재시도 메시지 발행
      */
-    public void publishRetry(CreateBidMessageRequest request, long delayMillis) {
+    public void publishRetry(CreateBidMessage message) {
+
+        int retryCount = message.getRetryCount();
+        if (retryCount >= MAX_RETRY_COUNT) {
+            log.error("[입찰] 최대 재시도 초과 - auctionId={}, userId={}, retryCount={}",
+                    message.getAuctionId(), message.getUserId(), message.getRetryCount());
+
+            rabbitTemplate.convertAndSend(BidMQConfig.BID_DLQ, message);
+
+            return;
+        }
+
+        message.incrementRetryCount();
+        long delayMillis = (long) Math.pow(2, retryCount) * DEFAULT_DELAY_MILLIS;
+
         log.info("[입찰] 재시도 메시지 발행 | auctionId={}, userId={}, retryCount={}",
-                request.getAuctionId(), request.getUserId(), request.getRetryCount());
+                message.getAuctionId(), message.getUserId(), message.getRetryCount());
 
         rabbitTemplate.convertAndSend(
                 BidMQConfig.BID_DELAY_QUEUE,
-                request,
+                message,
                 m -> {
                     m.getMessageProperties().setExpiration(String.valueOf(delayMillis));
                     return m;
@@ -53,8 +67,5 @@ public class BidPublisher {
         );
     }
 
-    public void publishRetry(CreateBidMessageRequest request) {
-        publishRetry(request, DEFAULT_DELAY_MILLIS);
-    }
 }
 

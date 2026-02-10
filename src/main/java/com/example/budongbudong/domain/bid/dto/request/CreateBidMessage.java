@@ -9,19 +9,19 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateBidMessageRequest {
+public class CreateBidMessage {
     private Long auctionId;
     private Long userId;
     private CreateBidRequest createBidRequest;
     private LocalDateTime bidAt;
     private int retryCount;
 
-    public static CreateBidMessageRequest from(
+    public static CreateBidMessage from(
             Long auctionId,
             Long userId,
             CreateBidRequest createBidRequest
     ) {
-        return new CreateBidMessageRequest(
+        return new CreateBidMessage(
                 auctionId,
                 userId,
                 createBidRequest,

@@ -5,7 +5,7 @@ import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
-import com.example.budongbudong.domain.bid.dto.request.CreateBidMessageRequest;
+import com.example.budongbudong.domain.bid.dto.request.CreateBidMessage;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.service.BidService;
@@ -43,7 +43,7 @@ class BidConsumerTest {
     @Mock
     private BidPublisher bidPublisher;
 
-    private CreateBidMessageRequest message;
+    private CreateBidMessage message;
     private Bid bid;
 
     @BeforeEach
@@ -52,7 +52,7 @@ class BidConsumerTest {
         CreateBidRequest bidRequest = new CreateBidRequest();
         ReflectionTestUtils.setField(bidRequest, "price", BigDecimal.valueOf(500_000_000));
 
-        message = CreateBidMessageRequest.from(1L, 1L, bidRequest);
+        message = CreateBidMessage.from(1L, 1L, bidRequest);
 
         User seller = UserFixture.sellerUser();
         User bidder = UserFixture.generalUser();
