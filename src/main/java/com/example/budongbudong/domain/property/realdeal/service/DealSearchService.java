@@ -12,6 +12,8 @@ import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
+import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchRequest;
+import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchResponse;
 import com.example.budongbudong.domain.property.realdeal.enums.DealSortType;
 import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoClient;
 import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoResponse;
@@ -48,14 +50,34 @@ public class DealSearchService {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
 
-    /**
-     * 특정 좌표 기준 반경 내 실거래 데이터 조회
-     * @param lat 위도
-     * @param lon 경도
-     * @param distanceKm 반경 (km)
-     * @param size 조회 건수
-     * @return 거리순 정렬된 실거래 목록
-     */
+    public RealDealSearchResponse searchNearby(RealDealSearchRequest request) {
+        request.validate();
+
+        SearchHits<RealDealDocument> searchHits;
+
+        if (request.getLat() != null && request.getLon() != null) {
+            searchHits = findNearby(
+                    request.getLat(), request.getLon(), request.getDistanceKm(), request.getSize(),
+                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
+                    request.getPropertyType(), request.getSortType()
+            );
+        } else if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            searchHits = findByAddress(
+                    request.getAddress(), request.getDistanceKm(), request.getSize(),
+                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
+                    request.getPropertyType(), request.getSortType()
+            );
+        } else {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        return RealDealSearchResponse.of(searchHits.getTotalHits(), deals);
+    }
+
     public SearchHits<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size) {
         return findNearby(lat, lon, distanceKm, size, null, null, null, null, null, DealSortType.DISTANCE);
     }
@@ -65,73 +87,16 @@ public class DealSearchService {
                                              BigDecimal minPrice, BigDecimal maxPrice,
                                              PropertyType propertyType, DealSortType sortType) {
         BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
-
-        boolBuilder.filter(f -> f
-                .geoDistance(g -> g
-                        .field("location")
-                        .distance(distanceKm + "km")
-                        .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
-                        .distanceType(GeoDistanceType.Arc)
-                )
-        );
-
-        if (propertyType != null) {
-            boolBuilder.filter(f -> f
-                    .term(t -> t.field("propertyType").value(propertyType.name()))
-            );
-        }
-
-        if (minArea != null || maxArea != null) {
-            boolBuilder.filter(f -> f
-                    .range(r -> r
-                            .number(n -> {
-                                n.field("exclusiveArea");
-                                if (minArea != null) n.gte(minArea.doubleValue());
-                                if (maxArea != null) n.lte(maxArea.doubleValue());
-                                return n;
-                            })
-                    )
-            );
-        }
-
-        if (minPrice != null || maxPrice != null) {
-            boolBuilder.filter(f -> f
-                    .range(r -> r
-                            .number(n -> {
-                                n.field("dealAmount");
-                                if (minPrice != null) n.gte(minPrice.doubleValue());
-                                if (maxPrice != null) n.lte(maxPrice.doubleValue());
-                                return n;
-                            })
-                    )
-            );
-        }
+        addGeoDistanceFilter(boolBuilder, lat, lon, distanceKm);
+        addPropertyTypeFilter(boolBuilder, propertyType);
+        addRangeFilter(boolBuilder, "exclusiveArea", minArea, maxArea);
+        addRangeFilter(boolBuilder, "dealAmount", minPrice, maxPrice);
 
         NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(q -> q.bool(boolBuilder.build()))
                 .withPageable(PageRequest.of(0, size));
 
-        if (sortType == DealSortType.PRICE_PER_AREA_ASC || sortType == DealSortType.PRICE_PER_AREA_DESC) {
-            SortOrder order = sortType == DealSortType.PRICE_PER_AREA_ASC ? SortOrder.Asc : SortOrder.Desc;
-            String fallback = sortType == DealSortType.PRICE_PER_AREA_ASC ? "Long.MAX_VALUE" : "0";
-            String scriptSource = "doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? "
-                    + fallback + " : doc['dealAmount'].value / doc['exclusiveArea'].value";
-            queryBuilder.withSort(s -> s
-                    .script(sc -> sc
-                            .type(ScriptSortType.Number)
-                            .script(script -> script.source(scriptSource))
-                            .order(order)
-                    )
-            );
-        } else {
-            queryBuilder.withSort(s -> s
-                    .geoDistance(g -> g
-                            .field("location")
-                            .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
-                            .order(SortOrder.Asc)
-                    )
-            );
-        }
+        applySort(queryBuilder, sortType, lat, lon);
 
         return elasticsearchOperations.search(queryBuilder.build(), RealDealDocument.class);
     }
@@ -213,6 +178,62 @@ public class DealSearchService {
                 property.getPrivateArea(), inputPrice,
                 totalCount, deals
         );
+    }
+
+    private void addGeoDistanceFilter(BoolQuery.Builder builder, double lat, double lon, double distanceKm) {
+        builder.filter(f -> f
+                .geoDistance(g -> g
+                        .field("location")
+                        .distance(distanceKm + "km")
+                        .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
+                        .distanceType(GeoDistanceType.Arc)
+                )
+        );
+    }
+
+    private void addPropertyTypeFilter(BoolQuery.Builder builder, PropertyType propertyType) {
+        if (propertyType == null) return;
+        builder.filter(f -> f
+                .term(t -> t.field("propertyType").value(propertyType.name()))
+        );
+    }
+
+    private void addRangeFilter(BoolQuery.Builder builder, String field, BigDecimal min, BigDecimal max) {
+        if (min == null && max == null) return;
+        builder.filter(f -> f
+                .range(r -> r
+                        .number(n -> {
+                            n.field(field);
+                            if (min != null) n.gte(min.doubleValue());
+                            if (max != null) n.lte(max.doubleValue());
+                            return n;
+                        })
+                )
+        );
+    }
+
+    private void applySort(NativeQueryBuilder queryBuilder, DealSortType sortType, double lat, double lon) {
+        if (sortType == DealSortType.PRICE_PER_AREA_ASC || sortType == DealSortType.PRICE_PER_AREA_DESC) {
+            SortOrder order = sortType == DealSortType.PRICE_PER_AREA_ASC ? SortOrder.Asc : SortOrder.Desc;
+            String fallback = sortType == DealSortType.PRICE_PER_AREA_ASC ? "Long.MAX_VALUE" : "0";
+            String scriptSource = "doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? "
+                    + fallback + " : doc['dealAmount'].value / doc['exclusiveArea'].value";
+            queryBuilder.withSort(s -> s
+                    .script(sc -> sc
+                            .type(ScriptSortType.Number)
+                            .script(script -> script.source(scriptSource))
+                            .order(order)
+                    )
+            );
+        } else {
+            queryBuilder.withSort(s -> s
+                    .geoDistance(g -> g
+                            .field("location")
+                            .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
+                            .order(SortOrder.Asc)
+                    )
+            );
+        }
     }
 
     /**
