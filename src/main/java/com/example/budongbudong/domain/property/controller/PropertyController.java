@@ -13,6 +13,7 @@ import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,7 +24,7 @@ import java.util.List;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/properties")
@@ -60,6 +61,9 @@ public class PropertyController {
             @RequestParam(name="status",required = false) AuctionStatus auctionStatus,
             Pageable pageable
     ) {
+        //TODO 전체 기능 구현 완료후 삭제 예정입니다.
+        log.info("alloy loki test log");
+        log.error("alloy loki error test");
         CustomSliceResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(type, auctionStatus, pageable);
         return GlobalResponse.ok(response);
     }
