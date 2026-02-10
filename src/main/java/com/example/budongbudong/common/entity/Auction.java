@@ -1,6 +1,7 @@
 package com.example.budongbudong.common.entity;
 
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.enums.AuctionType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -25,6 +26,10 @@ public class Auction extends BaseEntity {
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;
 
+    @Column(length = 50, nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AuctionType type;
+
     @Column(name = "start_price", nullable = false)
     private BigDecimal startPrice;
 
@@ -38,6 +43,9 @@ public class Auction extends BaseEntity {
     //통화는 원 단위 정수로 처리하고 소수점은 사용하지 않음
     @Column(name = "min_bid_increment")
     private BigDecimal minBidIncrement;
+
+    @Column(name = "decrease_price")
+    private BigDecimal decreasePrice;
 
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
