@@ -4,9 +4,14 @@ import co.elastic.clients.elasticsearch._types.GeoDistanceType;
 import co.elastic.clients.elasticsearch._types.ScriptSortType;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.property.enums.PropertyType;
+import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
 import com.example.budongbudong.domain.property.realdeal.enums.DealSortType;
 import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoClient;
 import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoResponse;
@@ -40,6 +45,8 @@ public class DealSearchService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final NaverGeoClient naverGeoClient;
     private final KakaoGeoClient kakaoGeoClient;
+    private final AuctionRepository auctionRepository;
+    private final BidRepository bidRepository;
 
     /**
      * 특정 좌표 기준 반경 내 실거래 데이터 조회
@@ -162,6 +169,50 @@ public class DealSearchService {
      */
     public SearchHits<RealDealDocument> findByAddress(String address) {
         return findByAddress(address, 1.0, 100, null, null, null, null, null, DealSortType.DISTANCE);
+    }
+
+    /**
+     * 경매 입찰가 vs 주변 시세 비교
+     * @param inputPrice 사용자가 입력한 희망 입찰가 (nullable)
+     */
+    public MarketCompareResponse compareWithAuction(Long auctionId, double distanceKm, int size,
+                                                    BigDecimal inputPrice) {
+        Auction auction = auctionRepository.getAuctionWithPropertyOrTrow(auctionId);
+        Property property = auction.getProperty();
+
+        BigDecimal highestBidPrice = bidRepository.getHighestPriceOrStartPrice(
+                auctionId, auction.getStartPrice()
+        );
+
+        double lat;
+        double lon;
+        if (property.getLatitude() != null && property.getLongitude() != null) {
+            lat = property.getLatitude().doubleValue();
+            lon = property.getLongitude().doubleValue();
+        } else if (property.getAddress() != null && !property.getAddress().isBlank()) {
+            double[] coords = geocode(property.getAddress());
+            lat = coords[0];
+            lon = coords[1];
+        } else {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        SearchHits<RealDealDocument> searchHits = findNearby(
+                lat, lon, distanceKm, size,
+                null, null, null, null,
+                property.getType(), DealSortType.DISTANCE
+        );
+
+        long totalCount = searchHits.getTotalHits();
+        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        return MarketCompareResponse.of(
+                auction.getStartPrice(), highestBidPrice,
+                property.getPrivateArea(), inputPrice,
+                totalCount, deals
+        );
     }
 
     /**
