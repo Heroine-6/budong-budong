@@ -12,12 +12,12 @@ public class NotificationMQConfig {
     public static final String NOTIFICATION_DLX = "notification.dlx";
 
     // Queue
-    public static final String AUCTION_OPEN_QUEUE = "auction.open.queue";
-    public static final String AUCTION_ENDING_SOON_QUEUE = "auction.ending.soon.queue";
-    public static final String AUCTION_CLOSED_QUEUE = "auction.closed.queue";
-    public static final String BID_CREATED_QUEUE = "bid.created.queue";
-    public static final String PAYMENT_REQUESTED_QUEUE = "payment.requested.queue";
-    public static final String PAYMENT_COMPLETED_QUEUE = "payment.completed.queue";
+    public static final String AUCTION_OPEN_QUEUE = "notification.auction.open.queue";
+    public static final String AUCTION_ENDING_SOON_QUEUE = "notification.auction.ending.soon.queue";
+    public static final String AUCTION_CLOSED_QUEUE = "notification.auction.closed.queue";
+    public static final String BID_CREATED_QUEUE = "notification.bid.created.queue";
+    public static final String PAYMENT_REQUESTED_QUEUE = "notification.payment.requested.queue";
+    public static final String PAYMENT_COMPLETED_QUEUE = "notification.payment.completed.queue";
 
     public static final String NOTIFICATION_SEND_QUEUE = "notification.send.queue";
     public static final String NOTIFICATION_SEND_DELAY_QUEUE = "notification.send.delay.queue";

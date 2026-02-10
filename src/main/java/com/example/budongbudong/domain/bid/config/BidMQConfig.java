@@ -9,7 +9,7 @@ public class BidMQConfig {
 
     public static final String BID_EXCHANGE = "bid.exchange";
 
-    public static final String BID_CREATE_QUEUE = "bid.create.queue";
+    public static final String BID_CREATE_QUEUE = "bid.created.queue";
     public static final String BID_DELAY_QUEUE = "bid.delay.queue";
 
     public static final String BID_DLQ = "bid.dlq";
