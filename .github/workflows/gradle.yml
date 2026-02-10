@@ -35,50 +35,41 @@ jobs:
         with:
           arguments: clean bootJar
 
+      - name: Docker image build
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/budong-container .
+
       - name: Docker login
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Docker image build & push
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/budong-container:${{ github.sha }} .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/budong-container:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/budong-container:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/budong-container:${{ github.sha }}
-          docker push ${{ secrets.DOCKER_USERNAME }}/budong-container:latest
+      - name: Docker Hub push
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/budong-container
 
   run-docker-image-on-ec2:
     needs: build-docker-image
     runs-on: self-hosted
 
     steps:
-      - name: Docker pull latest
-        run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/budong-container:latest
+      - name: Docker pull
+        run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/budong-container
 
-      - name: Stop and remove existing container
+      - name: Stop and remove existing containers
         run: |
-          sudo docker rm -f budong-container || true
+          CONTAINER_IDS=$(sudo docker ps -aq --filter "name=budong-container")
+          if [ -n "$CONTAINER_IDS" ]; then
+            sudo docker stop $CONTAINER_IDS || true
+            sudo docker rm -f $CONTAINER_IDS || true
+          fi
 
-      - name: Create .env file (safe)
+      - name: Create .env file
         run: |
           echo "${{ secrets.APPLICATION_B64 }}" | base64 -d > .env
 
       - name: Run new container
         run: |
           sudo docker run --name budong-container -d \
-            --restart unless-stopped \
             --env-file .env \
-            -e SPRING_PROFILES_ACTIVE=prod \
             -p 8080:8080 \
-            ${{ secrets.DOCKER_USERNAME }}/budong-container:latest
-
-      - name: Check container status
-        run: |
-          sleep 2
-          sudo docker ps --filter "name=budong-container"
-          sudo docker logs --tail 80 budong-container
-
-      - name: Cleanup dangling images
-        run: |
-          sudo docker image prune -f
+            ${{ secrets.DOCKER_USERNAME }}/budong-container
