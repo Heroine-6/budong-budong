@@ -32,10 +32,11 @@ public class BidConsumer {
         try {
             CreateBidResponse response = bidService.createBid(
                     request.getCreateBidRequest(), request.getAuctionId(), request.getUserId());
-            log.info("[입찰] 처리 완료 - bidStatus={}", response.getBidStatus());
+            log.info("[입찰] 처리 완료 - auctionId={}, bidId={}, bidStatus={}, retryCount={}",
+                    response.getAuctionId(), response.getBidId(), response.getBidStatus(), request.getRetryCount());
 
         } catch (CustomException e) {
-            log.info("[입찰] 비즈니스 거절 - auctionId={}, 사유={}", request.getAuctionId(), e.getMessage());
+            log.info("[입찰] 처리 실패 - auctionId={}, error={}", request.getAuctionId(), e.getMessage());
 
         } catch (Exception e) {
             handleRetry(request, e);
@@ -46,7 +47,7 @@ public class BidConsumer {
         request.incrementRetryCount();
 
         if (request.getRetryCount() > MAX_RETRY_COUNT) {
-            log.error("[입찰] 최대 재시도 초과 - auctionId={}, userId={}, retryCount={}, 수동 처리 필요",
+            log.error("[입찰] 최대 재시도 초과 - auctionId={}, userId={}, retryCount={}",
                     request.getAuctionId(), request.getUserId(), request.getRetryCount());
             return;
         }
