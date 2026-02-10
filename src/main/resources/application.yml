@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: local
   application:
     name: budong-budong
 
@@ -13,33 +11,29 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        format_sql: true
+        format_sql: ${HIBERNATE_FORMAT_SQL:false}
         dialect: org.hibernate.dialect.MySQL8Dialect
     defer-datasource-initialization: true
-
-  sql:
-    init:
-      mode: always
 
   config:
     import: optional:file:.env[.properties]
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   elasticsearch:
-    uris: ${ELASTIC_SEARCH}
+    uris: ${ELASTIC_SEARCH:http://localhost:9200}
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
   toss:
     api:
@@ -53,11 +47,6 @@ rabbitmq:
     name: bid.exchange
   routing:
     key: bid.key
-
-  toss:
-    api:
-      confirm-url: https://api.tosspayments.com/v1/payments/confirm
-    secret-key: ${TOSS_SECRET_KEY}
 
 external:
   api:

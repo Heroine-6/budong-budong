@@ -39,6 +39,9 @@ out/
 ### env ###
 .env
 
+### env ###
+.env.prod
+
 ###csv ###
 .csv
 
