@@ -26,12 +26,15 @@ public class BidConsumer {
     )
     public void receiveCreateBidMessage(CreateBidMessageRequest request) {
         log.info("[입찰] 메시지 수신 - auctionId={}, userId={}, bidPrice={}, retryCount={}",
-                request.getAuctionId(), request.getUserId(),
-                request.getCreateBidRequest().getPrice(), request.getRetryCount());
+                request.getAuctionId(), request.getUserId(), request.getCreateBidRequest().getPrice(), request.getRetryCount());
 
         try {
             CreateBidResponse response = bidService.createBid(
-                    request.getCreateBidRequest(), request.getAuctionId(), request.getUserId());
+                    request.getCreateBidRequest(),
+                    request.getAuctionId(),
+                    request.getUserId()
+            );
+
             log.info("[입찰] 처리 완료 - auctionId={}, bidId={}, bidStatus={}, retryCount={}",
                     response.getAuctionId(), response.getBidId(), response.getBidStatus(), request.getRetryCount());
 
