@@ -6,21 +6,19 @@ import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
-import com.example.budongbudong.domain.auction.dto.response.AuctionInfoResponse;
-import com.example.budongbudong.domain.auction.dto.response.CancelAuctionResponse;
-import com.example.budongbudong.domain.auction.dto.response.CreateAuctionResponse;
-import com.example.budongbudong.domain.auction.dto.response.GetStatisticsResponse;
+import com.example.budongbudong.domain.auction.dto.request.CreateDutchAuctionRequest;
+import com.example.budongbudong.domain.auction.dto.response.*;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +31,6 @@ public class AuctionService {
     private final AuctionRepository auctionRepository;
     private final PropertyRepository propertyRepository;
     private final BidRepository bidRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 경매 등록
@@ -64,7 +61,7 @@ public class AuctionService {
             throw new CustomException(ErrorCode.MAX_AUCTION_PERIOD_EXCEEDED);
         }
 
-        Auction auction = Auction.create(
+        Auction auction = Auction.createEnglish(
                 property,
                 startPrice,
                 startedAt,
@@ -151,5 +148,46 @@ public class AuctionService {
                 priceIncrease,
                 createdAt
         );
+    }
+
+
+    /**
+     * 네덜란드식 경매 등록
+     */
+    @Transactional
+    public CreateDutchAuctionResponse createDutchAuction(CreateDutchAuctionRequest request, Long userId) {
+
+        Long propertyId = request.getPropertyId();
+        LocalDateTime startedAt = request.getStartedAt();
+        BigDecimal startPrice = request.getStartPrice();
+        BigDecimal endPrice = request.getEndPrice();
+        int decreaseRate = request.getDecreaseRate();
+
+        Property property = propertyRepository.getByIdAndNotDeletedOrThrow(propertyId);
+
+        if (!userId.equals(property.getUser().getId())) {
+            throw new CustomException(ErrorCode.USER_NOT_MATCH);
+        }
+
+        auctionRepository.getByPropertyIdOrThrowIfExists(property.getId());
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime possibleStartDate = today.atStartOfDay().plusDays(1);
+
+        if (startedAt.isBefore(possibleStartDate)) {
+            throw new CustomException(ErrorCode.INVALID_AUCTION_PERIOD);
+        }
+
+        Auction auction = Auction.createDutch(
+                property,
+                startPrice,
+                endPrice,
+                decreaseRate,
+                startedAt
+        );
+
+        auctionRepository.save(auction);
+
+        return CreateDutchAuctionResponse.from(auction);
     }
 }

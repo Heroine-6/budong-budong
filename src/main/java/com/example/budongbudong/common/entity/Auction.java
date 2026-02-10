@@ -63,7 +63,7 @@ public class Auction extends BaseEntity {
         this.endedAt = endedAt;
     }
 
-    public static Auction create(
+    public static Auction createEnglish(
             Property property,
             BigDecimal startPrice,
             LocalDateTime startedAt,
@@ -71,6 +71,7 @@ public class Auction extends BaseEntity {
     ) {
         Auction auction = new Auction();
         auction.property = property;
+        auction.type = AuctionType.ENGLISH;
         auction.startPrice = startPrice;
         auction.minBidIncrement = calculateMinBidIncrement(startPrice);
         auction.status = AuctionStatus.SCHEDULED;
@@ -79,9 +80,35 @@ public class Auction extends BaseEntity {
         return auction;
     }
 
+    public static Auction createDutch(
+            Property property,
+            BigDecimal startPrice,
+            BigDecimal endPrice,
+            int decreaseRate,
+            LocalDateTime startedAt
+    ) {
+        Auction auction = new Auction();
+        auction.property = property;
+        auction.type = AuctionType.DUTCH;
+        auction.startPrice = startPrice;
+        auction.endPrice = endPrice;
+        auction.decreasePrice = calculateDecreasePrice(startPrice, decreaseRate);
+        auction.status = AuctionStatus.SCHEDULED;
+        auction.startedAt = startedAt;
+        auction.endedAt = startedAt;
+        return auction;
+    }
+
     private static BigDecimal calculateMinBidIncrement(BigDecimal startPrice) {
         // 시작가의 10%를 올림한 값을 최소 입찰 단위로 사용.
         return startPrice.divide(BigDecimal.TEN, RoundingMode.HALF_EVEN);
+    }
+
+    private static BigDecimal calculateDecreasePrice(BigDecimal startPrice, int decreaseRate) {
+        // 시작가 기준 감가율(%)에 해당하는 감가 금액
+        return startPrice.multiply(
+                BigDecimal.valueOf(decreaseRate).divide(BigDecimal.valueOf(100), RoundingMode.HALF_EVEN)
+        );
     }
 
     public void updateStatus(AuctionStatus auctionStatus) {
