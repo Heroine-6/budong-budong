@@ -4,10 +4,12 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.property.realdeal.document.RealDealDocument;
+import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
 import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchRequest;
 import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchResponse;
 import com.example.budongbudong.domain.property.realdeal.service.DealSearchService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -16,6 +18,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -79,5 +82,23 @@ public class RealDealController {
                 .toList();
 
         return GlobalResponse.ok(RealDealSearchResponse.of(totalCount, deals));
+    }
+
+    @Operation(summary = "입찰가 주변시세 비교", description = "경매 시작가·최고입찰가·희망입찰가 각각의 m²당 평단가를 주변 실거래 중앙값 평단가와 비교하여 시세 대비 비율(%)을 반환합니다.")
+    @GetMapping("/compare/{auctionId}")
+    public ResponseEntity<GlobalResponse<MarketCompareResponse>> compareWithMarket(
+            @PathVariable Long auctionId,
+
+            @Parameter(description = "검색 반경 (km)", example = "1.0")
+            @RequestParam(defaultValue = "1.0") double distanceKm,
+
+            @Parameter(description = "조회 건수", example = "50")
+            @RequestParam(defaultValue = "50") int size,
+
+            @Parameter(description = "희망 입찰가, 만원 단위 (선택)", example = "50000")
+            @RequestParam(required = false) BigDecimal inputPrice
+    ) {
+        MarketCompareResponse response = dealSearchService.compareWithAuction(auctionId, distanceKm, size, inputPrice);
+        return GlobalResponse.ok(response);
     }
 }

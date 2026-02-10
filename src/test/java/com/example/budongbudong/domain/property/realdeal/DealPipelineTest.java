@@ -3,6 +3,8 @@ package com.example.budongbudong.domain.property.realdeal;
 import com.example.budongbudong.domain.property.realdeal.repository.RealDealRepository;
 import com.example.budongbudong.domain.property.realdeal.document.RealDealDocument;
 import com.example.budongbudong.domain.property.realdeal.enums.GeoStatus;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import com.example.budongbudong.domain.property.realdeal.service.DealCollectService;
 import com.example.budongbudong.domain.property.realdeal.service.DealGeoCodingService;
 import com.example.budongbudong.domain.property.realdeal.service.DealIndexService;
@@ -159,7 +161,10 @@ class DealPipelineTest {
         double lon = 126.9769;
 
         // when - 반경 1km 내 검색
-        List<RealDealDocument> results = searchService.findNearby(lat, lon, 1.0, 50);
+        SearchHits<RealDealDocument> searchHits = searchService.findNearby(lat, lon, 1.0, 50);
+        List<RealDealDocument> results = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
 
         // then
         System.out.println("=== 주변 시세 검색 결과 (반경 1km) ===");
