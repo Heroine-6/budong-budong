@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    volumes:
+      - ./logs:/var/log/app
+      - ./alloy/alloy.yml:/etc/alloy/alloy.yml
+    command: >
+      run /etc/alloy/alloy.yml
