@@ -12,6 +12,8 @@ import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
+import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchRequest;
+import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchResponse;
 import com.example.budongbudong.domain.property.realdeal.enums.DealSortType;
 import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoClient;
 import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoResponse;
@@ -48,14 +50,34 @@ public class DealSearchService {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
 
-    /**
-     * 특정 좌표 기준 반경 내 실거래 데이터 조회
-     * @param lat 위도
-     * @param lon 경도
-     * @param distanceKm 반경 (km)
-     * @param size 조회 건수
-     * @return 거리순 정렬된 실거래 목록
-     */
+    public RealDealSearchResponse searchNearby(RealDealSearchRequest request) {
+        request.validate();
+
+        SearchHits<RealDealDocument> searchHits;
+
+        if (request.getLat() != null && request.getLon() != null) {
+            searchHits = findNearby(
+                    request.getLat(), request.getLon(), request.getDistanceKm(), request.getSize(),
+                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
+                    request.getPropertyType(), request.getSortType()
+            );
+        } else if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            searchHits = findByAddress(
+                    request.getAddress(), request.getDistanceKm(), request.getSize(),
+                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
+                    request.getPropertyType(), request.getSortType()
+            );
+        } else {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        return RealDealSearchResponse.of(searchHits.getTotalHits(), deals);
+    }
+
     public SearchHits<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size) {
         return findNearby(lat, lon, distanceKm, size, null, null, null, null, null, DealSortType.DISTANCE);
     }

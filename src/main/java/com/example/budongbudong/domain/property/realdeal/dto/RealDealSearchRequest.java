@@ -1,5 +1,7 @@
 package com.example.budongbudong.domain.property.realdeal.dto;
 
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.realdeal.enums.DealSortType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,4 +46,13 @@ public class RealDealSearchRequest {
 
     @Schema(description = "정렬 기준", example = "DISTANCE", defaultValue = "DISTANCE")
     private DealSortType sortType = DealSortType.DISTANCE;
+
+    public void validate() {
+        if (minArea != null && maxArea != null && minArea.compareTo(maxArea) > 0) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+    }
 }
