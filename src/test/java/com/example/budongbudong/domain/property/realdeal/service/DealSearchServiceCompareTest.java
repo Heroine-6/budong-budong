@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitsImpl;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
+import org.springframework.data.elasticsearch.core.query.Query;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -53,21 +54,22 @@ class DealSearchServiceCompareTest {
     @DisplayName("비교 API는 실거래 0건이어도 0값으로 응답한다")
     void 비교_API_실거래_0건_응답() {
         // given
-        Auction auction = Auction.builder()
+        Property property = Property.builder()
+                .address("서울특별시 송파구 잠실동")
+                .type(PropertyType.APARTMENT)
+                .privateArea(new BigDecimal("84.0"))
+                .build();
+        property.applyGeoCode(new BigDecimal("37.5145"), new BigDecimal("127.1059"));
+
+        Auction auction = Auction.testBuilder()
                 .startPrice(new BigDecimal("100000000"))
-                .property(Property.builder()
-                        .address("서울특별시 송파구 잠실동")
-                        .type(PropertyType.APARTMENT)
-                        .privateArea(new BigDecimal("84.0"))
-                        .latitude(new BigDecimal("37.5145"))
-                        .longitude(new BigDecimal("127.1059"))
-                        .build())
+                .property(property)
                 .build();
 
         when(auctionRepository.getAuctionWithPropertyOrTrow(1L)).thenReturn(auction);
         when(bidRepository.getHighestPriceOrStartPrice(1L, auction.getStartPrice()))
                 .thenReturn(auction.getStartPrice());
-        when(elasticsearchOperations.search(any(), eq(RealDealDocument.class)))
+        when(elasticsearchOperations.search(any(Query.class), eq(RealDealDocument.class)))
                 .thenReturn(new SearchHitsImpl<>(0, TotalHitsRelation.EQUAL_TO, 0f, Duration.ZERO,
                         null, null, List.of(), null, null, null));
 
