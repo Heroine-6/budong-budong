@@ -33,6 +33,9 @@ public class Auction extends BaseEntity {
     @Column(name = "start_price", nullable = false)
     private BigDecimal startPrice;
 
+    @Column(name = "current_price")
+    private BigDecimal currentPrice;
+
     @Column(name = "end_price")
     private BigDecimal endPrice;
 
@@ -91,6 +94,7 @@ public class Auction extends BaseEntity {
         auction.property = property;
         auction.type = AuctionType.DUTCH;
         auction.startPrice = startPrice;
+        auction.currentPrice = startPrice;
         auction.endPrice = endPrice;
         auction.decreasePrice = calculateDecreasePrice(startPrice, decreaseRate);
         auction.status = AuctionStatus.SCHEDULED;
