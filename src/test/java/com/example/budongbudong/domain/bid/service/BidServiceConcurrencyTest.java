@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class eBidServiceConcurrencyTest {
+class BidServiceConcurrencyTest {
 
     int userNum = 10;
     @Autowired
