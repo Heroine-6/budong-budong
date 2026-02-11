@@ -40,14 +40,6 @@ spring:
       confirm-url: https://api.tosspayments.com/v1/payments/confirm
     secret-key: ${TOSS_SECRET_KEY}
 
-rabbitmq:
-  queue:
-    name: bid.queue
-  exchange:
-    name: bid.exchange
-  routing:
-    key: bid.key
-
 external:
   api:
     service-key: ${API_SERVICE_KEY}
