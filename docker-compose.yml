@@ -9,8 +9,8 @@ services:
       - LOKI_ENV=${LOKI_ENV}
       - LOKI_SERVICE_NAME=budongbudong
     volumes:
-      - ./logs:/var/log/app
-      - ./alloy.yml:/etc/alloy/alloy.yml
+      - ./logs:/var/log/budongbudong
+      - ./logging/alloy.yml:/etc/alloy/alloy.yml
     command: run /etc/alloy/alloy.yml
     restart: unless-stopped
 

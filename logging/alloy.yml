@@ -11,7 +11,7 @@ loki.write "default" {
 loki.source.file "app_logs" {
   targets = [
     {
-      __path__ = "/var/log/app/application.log",
+      __path__ = "/var/log/budongbudong/application.log",
       service  = env("LOKI_SERVICE_NAME"),
       env      = env("LOKI_ENV"),
       server   = env("SERVER_NAME"),
@@ -36,8 +36,8 @@ loki.process "app" {
   }
 
   stage.timestamp {
-    source = "@timestamp"
-    format = "RFC3339"
+    source = "timestamp"
+    format = "RFC3339Nano"
   }
 
   stage.labels {

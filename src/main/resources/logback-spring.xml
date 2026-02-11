@@ -3,7 +3,7 @@
                     name="SLACK_WEBHOOK"
                     source="logging.slack.webhook"/>
 
-    <property name="LOG_DIR" value="./logging/logs"/>
+    <property name="LOG_DIR" value="./logs"/>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/application.log</file>
@@ -17,6 +17,12 @@
             <customFields>{"service":"budongbudong","env":"dev"}</customFields>
         </encoder>
     </appender>
+
+    <turboFilter
+            class="com.example.budongbudong.logging.SlackDedupTurboFilter">
+        <!-- 같은 에러 30초 차단 -->
+        <suppressSeconds>30</suppressSeconds>
+    </turboFilter>
 
     <!-- Slack 알림 (ERROR 전용) -->
     <appender name="SLACK"
