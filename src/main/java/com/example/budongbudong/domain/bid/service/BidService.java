@@ -9,12 +9,12 @@ import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.auctionwinner.repository.AuctionWinnerRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
+import com.example.budongbudong.domain.bid.event.BidCreatedEvent;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,6 @@ public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
-    private final AuctionWinnerRepository auctionWinnerRepository;
     private final RedissonClient redissonClient;
     private final BidTxService bidTxService;
     private final ApplicationEventPublisher eventPublisher;
@@ -140,6 +139,10 @@ public class BidService {
         bid.changeStatus(BidStatus.WINNING);
 
         Bid savedBid = bidRepository.save(bid);
+
+        log.debug("[입찰] 성공 - auctionId={}, bidId={}", auctionId, bid.getId());
+
+        eventPublisher.publishEvent(new BidCreatedEvent(auctionId, bid.getId()));
 
         // 경매 종료
         auctionRepository.closeIfOpen(auctionId);
