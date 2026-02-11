@@ -9,6 +9,7 @@ import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
+import com.example.budongbudong.domain.bid.MQ.BidPublisher;
 import com.example.budongbudong.domain.bid.service.BidService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class BidController {
 
     private final BidService bidService;
+    private final BidPublisher bidPublisher;
 
     /**
      * 입찰 등록
@@ -91,7 +93,7 @@ public class BidController {
             @PathVariable Long auctionId,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        CreateBidMessageResponse response = bidService.publishBid(request, auctionId, authUser.getUserId());
+        CreateBidMessageResponse response = bidPublisher.publishBid(request, auctionId, authUser.getUserId());
 
         return response.getBidStatus().equals(BidStatus.REJECTED)
                 ? GlobalResponse.okButRejected(response.getMessage())
