@@ -1,39 +1,20 @@
-version: "3.9"
-
+name: budongbudong
 services:
-  loki:
-    image: grafana/loki:2.9.4
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - logging
-
-  grafana:
-    image: grafana/grafana:10.3.1
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - loki
-    networks:
-      - logging
-
   alloy:
     image: grafana/alloy:latest
     container_name: alloy
+    environment:
+      - LOKI_URL=${LOKI_URL}
+      - SERVER_NAME=budongbudong
+      - LOKI_ENV=${LOKI_ENV}
+      - LOKI_SERVICE_NAME=budongbudong
     volumes:
-      - ./logs:/var/log/app/main
-      - ../../chat-server/logs:/var/log/app/chat
-      - ../../batch-server/logs:/var/log/app/batch
-      - ./alloy/alloy.yml:/etc/alloy/alloy.yml
+      - ./logs:/var/log/app
+      - ./alloy.yml:/etc/alloy/alloy.yml
     command: run /etc/alloy/alloy.yml
-    depends_on:
-      - loki
-    networks:
-      - logging
+    restart: unless-stopped
 
 networks:
-  logging:
-    driver: bridge
+  default:
+    name: budong-network
+    external: true
