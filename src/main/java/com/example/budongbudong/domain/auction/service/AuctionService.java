@@ -153,6 +153,8 @@ public class AuctionService {
 
     /**
      * 네덜란드식 경매 등록
+     * - 본인 소유의 매물만 경매 등록 가능
+     * - 시작일은 익일부터 가능하며, 경매 기간은 하루(시작 당일 종료)
      */
     @Transactional
     public CreateDutchAuctionResponse createDutchAuction(CreateDutchAuctionRequest request, Long userId) {
