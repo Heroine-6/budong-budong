@@ -1,7 +1,10 @@
 package com.example.budongbudong.domain.user.service;
 
 import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.domain.auth.dto.response.KakaoTokenResponse;
+import com.example.budongbudong.domain.auth.service.KakaoTokenService;
 import com.example.budongbudong.domain.user.dto.response.UpdatePushAllowedResponse;
+import com.example.budongbudong.domain.user.enums.LoginType;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final KakaoTokenService kakaoTokenService;
 
     /**
      * 알림 수신 동의 변경
@@ -24,5 +28,18 @@ public class UserService {
         user.updatePushAllowed();
 
         return UpdatePushAllowedResponse.from(user.isPushAllowed());
+    }
+
+    /**
+     * 카카오 계정 연동
+     */
+    @Transactional
+    public void linkKakao(Long userId, String authorizationCode) {
+        KakaoTokenResponse tokenResponse = kakaoTokenService.issueToken(authorizationCode);
+
+        kakaoTokenService.saveTokens(userId, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
+
+        User user = userRepository.getByIdOrThrow(userId);
+        user.linkKakao(LoginType.KAKAO, String.valueOf(userId));
     }
 }

@@ -220,6 +220,8 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.PATCH, "/api/users/v2/notifications")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/users/v2/kakao/link")
                 .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name());
     }
 }
