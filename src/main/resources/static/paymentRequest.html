@@ -261,7 +261,7 @@
         btn.textContent = "로그인 중...";
 
         try {
-            const res = await fetch("/api/v1/auth/signin", {
+            const res = await fetch("/api/auth/v1/signin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
