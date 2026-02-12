@@ -5,6 +5,7 @@ import com.example.budongbudong.common.entity.Notification;
 import com.example.budongbudong.common.entity.Payment;
 import com.example.budongbudong.common.entity.UserNotification;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.auth.service.KakaoTokenService;
 import com.example.budongbudong.domain.notification.client.KakaoClient;
 import com.example.budongbudong.domain.notification.dto.response.CreateNotificationResponse;
 import com.example.budongbudong.domain.notification.dto.response.KakaoNotificationResponse;
@@ -16,7 +17,6 @@ import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.utils.PaymentAmountCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +40,7 @@ public class NotificationService {
     private final UserNotificationRepository userNotificationRepository;
 
     private final KakaoClient kakaoClient;
-
-    // TODO: OAuth 로그인 구현 후 토큰 주입 방식 변경 예정
-    @Value("${KAKAO_ACCESS_TOKEN}")
-    private String accessToken;
+    private final KakaoTokenService kakaoTokenService;
 
     private String getFormatDateTime(LocalDateTime dateTime) {
 
@@ -173,6 +170,14 @@ public class NotificationService {
         UserNotification userNotification = userNotificationRepository.getByIdOrThrow(userNotificationId);
 
         if (userNotification.getSendAt() == null) {
+            Long userId = userNotification.getUser().getId();
+            String accessToken = kakaoTokenService.getAccessToken(userId);
+
+            if (accessToken == null) {
+                log.debug("[알림 발송] 카카오 미연동 유저 스킵 - userId={}, userNotificationId={}", userId, userNotificationId);
+                return;
+            }
+
             KakaoNotificationResponse response = kakaoClient.sendToMeMessage("Bearer " + accessToken, createTextMessage(content));
         }
 
