@@ -1,5 +1,17 @@
 name: budongbudong
+
 services:
+  spring:
+    image: ${DOCKER_USERNAME}/budong-container:latest
+    container_name: spring
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    restart: unless-stopped
+
   alloy:
     image: grafana/alloy:latest
     container_name: alloy
