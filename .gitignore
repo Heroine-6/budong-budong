@@ -52,3 +52,10 @@ src/main/resources/static/index.html
 src/main/resources/static/search.html
 src/main/resources/static/signin.html
 src/main/resources/static/signup.html
+
+### Logs ###
+logging/logs/*.log
+*.log
+
+### macOS ###
+.DS_Store

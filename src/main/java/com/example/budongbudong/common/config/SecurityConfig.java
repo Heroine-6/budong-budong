@@ -163,16 +163,16 @@ public class SecurityConfig {
     private void auctionAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.POST, "/api/v1/auctions")
+        auth.requestMatchers(HttpMethod.POST, "/api/auctions/v1", "/api/auctions/v3/dutch")
                 .hasRole(UserRole.SELLER.name())
 
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/auctions/*")
+                .requestMatchers(HttpMethod.PATCH, "/api/auctions/v1*")
                 .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
                 .requestMatchers(
                         HttpMethod.GET,
-                        "/api/v1/auctions/*/statistics",
-                        "/api/v1/auctions/*/info"
+                        "/api/auctions/v1/*/statistics",
+                        "/api/auctions/v1/*/info"
                 ).permitAll();
     }
 

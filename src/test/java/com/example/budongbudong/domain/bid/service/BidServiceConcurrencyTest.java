@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class eBidServiceConcurrencyTest {
+class BidServiceConcurrencyTest {
 
     int userNum = 10;
     @Autowired
@@ -100,7 +100,7 @@ class eBidServiceConcurrencyTest {
                 .build();
         propertyRepository.save(property);
 
-        Auction auction = Auction.create(
+        Auction auction = Auction.createEnglish(
                 property,
                 BigDecimal.valueOf(1_000L),
                 LocalDateTime.now(),

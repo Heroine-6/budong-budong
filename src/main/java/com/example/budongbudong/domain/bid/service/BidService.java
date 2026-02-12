@@ -1,29 +1,34 @@
 package com.example.budongbudong.domain.bid.service;
 
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Bid;
+import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.dto.request.CreateBidMessageRequest;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
-import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
+import com.example.budongbudong.domain.bid.event.BidCreatedEvent;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
+import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
@@ -34,14 +39,10 @@ public class BidService {
 
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
+    private final UserRepository userRepository;
     private final RedissonClient redissonClient;
     private final BidTxService bidTxService;
-    private final RabbitTemplate rabbitTemplate;
-
-    @Value("${rabbitmq.exchange.name}")
-    private String exchangeName;
-    @Value("${rabbitmq.routing.key}")
-    private String routingKey;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 입찰 등록 - Lock
@@ -112,23 +113,41 @@ public class BidService {
     }
 
     /**
-     * Queue 로 입찰 메세지 발행
+     * 네덜란드식 경매 입찰 등록
+     * - 입찰가(현재가) 계산
+     * - 입찰 -> 경매 종료(이벤트 발행) -> (이벤트리스너)낙찰 처리
      */
-    public CreateBidMessageResponse publishBid(CreateBidRequest request, Long auctionId, Long userId) {
+    @Transactional
+    public CreateBidResponse createDutchBid(Long auctionId, Long userId) {
 
-        CreateBidMessageRequest messageRequest = CreateBidMessageRequest.from(auctionId, userId, request);
-        rabbitTemplate.convertAndSend(exchangeName, routingKey, messageRequest);
+        User user = userRepository.getByIdOrThrow(userId);
 
-        return CreateBidMessageResponse.from(BidStatus.PLACED, "입찰 요청 완료");
-    }
+        Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
 
-    /**
-     * Queue에 발행된 입찰 메시지 구독
-     */
-    @RabbitListener(queues = "${rabbitmq.queue.name}")
-    public void receiveCreateBidMessage(CreateBidMessageRequest request) {
+        // 현재 시각 기준으로 가격 재계산
+        long minutesElapsed = Duration.between(auction.getStartedAt(), LocalDateTime.now()).toMinutes();
+        auction.recalculateCurrentPrice(minutesElapsed);
 
-        createBid(request.getCreateBidRequest(), request.getAuctionId(), request.getUserId());
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
+        }
 
+        BigDecimal bidPrice = auction.getCurrentPrice();
+
+        Bid bid = new Bid(user, auction, bidPrice);
+        bid.markHighest();
+        bid.changeStatus(BidStatus.WINNING);
+
+        Bid savedBid = bidRepository.save(bid);
+
+        log.debug("[입찰] 성공 - auctionId={}, bidId={}", auctionId, bid.getId());
+
+        eventPublisher.publishEvent(new BidCreatedEvent(auctionId, bid.getId()));
+
+        // 경매 종료
+        auctionRepository.closeIfOpen(auctionId);
+        eventPublisher.publishEvent(new AuctionClosedEvent(auctionId));
+
+        return CreateBidResponse.from(savedBid);
     }
 }

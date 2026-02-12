@@ -1,0 +1,20 @@
+name: budongbudong
+services:
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    environment:
+      - LOKI_URL=${LOKI_URL}
+      - SERVER_NAME=budongbudong
+      - LOKI_ENV=${LOKI_ENV}
+      - LOKI_SERVICE_NAME=budongbudong
+    volumes:
+      - ./logs:/var/log/budongbudong
+      - ./logging/alloy.yml:/etc/alloy/alloy.yml
+    command: run /etc/alloy/alloy.yml
+    restart: unless-stopped
+
+networks:
+  default:
+    name: budong-network
+    external: true
