@@ -103,7 +103,9 @@ public class QPaymentRepositoryImpl implements QPaymentRepository {
         return payment.status.in(
                 PaymentStatus.VERIFYING,
                 PaymentStatus.SUCCESS,
-                PaymentStatus.FAIL
+                PaymentStatus.FAIL,
+                PaymentStatus.REFUND_REQUESTED,
+                PaymentStatus.REFUNDED
         );
     }
 }
