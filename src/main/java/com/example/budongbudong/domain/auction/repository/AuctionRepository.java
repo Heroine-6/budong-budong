@@ -4,6 +4,7 @@ import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.enums.AuctionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -158,4 +159,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                   and a.endedAt = :today
             """)
     List<Long> findEndingSoonAuctionIds(LocalDateTime today);
+
+    List<Auction> findAllByStatusAndType(AuctionStatus status, AuctionType type);
 }
