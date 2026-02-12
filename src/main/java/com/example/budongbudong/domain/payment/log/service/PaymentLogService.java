@@ -19,6 +19,7 @@ public class PaymentLogService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveLog(Long paymentId, PaymentStatus prev, PaymentStatus current, LogType type, String errorMessage) {
+        log.info("[결제 로그] paymentId={}, {} -> {}, type={}, error={}", paymentId, prev, current, type, errorMessage);
         try {
             paymentLogRepository.save(PaymentLog.create(paymentId, prev, current, type, errorMessage));
         } catch (Exception e) {

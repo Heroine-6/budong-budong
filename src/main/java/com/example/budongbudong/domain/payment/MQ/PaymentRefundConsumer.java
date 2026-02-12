@@ -48,7 +48,7 @@ public class PaymentRefundConsumer {
         // 최대 재시도 횟수 초과 체크
         if (payment.isRefundRetryExceeded(MAX_REFUND_RETRY)) {
             log.error("환불 최대 재시도 초과 - paymentId: {}, 수동 처리 필요", payment.getId());
-            saveLog(payment, payment.getStatus(), LogType.REFUND_FAILED,
+            saveLog(payment, payment.getStatus(), PaymentStatus.FAIL, LogType.REFUND_FAILED,
                     "최대 재시도 횟수 초과 (" + MAX_REFUND_RETRY + "회) - 수동 처리 필요");
             return;
         }
@@ -62,23 +62,24 @@ public class PaymentRefundConsumer {
         try {
             client.refund(payment.getPaymentKey(), payment.getAmount(), "경매 낙찰 실패에 따른 보증금 환불");
             payment.makeRefunded();
-            saveLog(payment, prev, LogType.REFUND_SUCCESS, null);
+            saveLog(payment, prev, PaymentStatus.REFUNDED, LogType.REFUND_SUCCESS, null);
 
         } catch (TossClientException e) {
             log.error("환불 요청 거절 - paymentId: {}, 사유: {}", payment.getId(), e.getMessage());
-            saveLog(payment, prev, LogType.REFUND_FAILED, e.getMessage());
+            saveLog(payment, prev, PaymentStatus.FAIL, LogType.REFUND_FAILED, e.getMessage());
 
         } catch (TossNetworkException e) {
             payment.incrementRefundRetryCount();
             log.warn("환불 네트워크 오류 - paymentId: {}, 재시도 {}/{}",
                     payment.getId(), payment.getRefundRetryCount(), MAX_REFUND_RETRY);
-            saveLog(payment, prev, LogType.REFUND_RETRY, e.getMessage());
+            saveLog(payment, prev, PaymentStatus.REFUNDED, LogType.REFUND_RETRY, e.getMessage());
             // 지연 큐를 통해 30초 후 재시도
             refundRetryPublisher.publish(payment.getId());
         }
     }
 
-    private void saveLog(Payment payment, PaymentStatus prev, LogType type, String errorMessage) {
+    private void saveLog(Payment payment, PaymentStatus prev, PaymentStatus current, LogType type, String errorMessage) {
+        log.info("[결제 로그] paymentId={}, {} -> {}, type={}, error={}", payment.getId(), prev, current, type, errorMessage);
         paymentLogService.saveLog(payment.getId(), prev, payment.getStatus(), type, errorMessage);
     }
 
