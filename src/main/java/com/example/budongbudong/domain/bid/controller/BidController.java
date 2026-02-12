@@ -3,13 +3,13 @@ package com.example.budongbudong.domain.bid.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.domain.bid.MQ.BidPublisher;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
-import com.example.budongbudong.domain.bid.MQ.BidPublisher;
 import com.example.budongbudong.domain.bid.service.BidService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -99,4 +99,18 @@ public class BidController {
                 ? GlobalResponse.okButRejected(response.getMessage())
                 : GlobalResponse.created(response);
     }
+
+    /**
+     * 네덜란드식 경매 입찰 등록
+     */
+    @PostMapping("/v3/auctions/dutch/{auctionId}")
+    public ResponseEntity<GlobalResponse<CreateBidResponse>> createDutchBid(
+            @PathVariable Long auctionId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        CreateBidResponse response = bidService.createDutchBid(auctionId, authUser.getUserId());
+
+        return GlobalResponse.created(response);
+    }
+
 }

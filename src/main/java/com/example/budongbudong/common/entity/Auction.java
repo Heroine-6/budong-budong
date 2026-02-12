@@ -33,6 +33,9 @@ public class Auction extends BaseEntity {
     @Column(name = "start_price", nullable = false)
     private BigDecimal startPrice;
 
+    @Column(name = "current_price")
+    private BigDecimal currentPrice;
+
     @Column(name = "end_price")
     private BigDecimal endPrice;
 
@@ -91,6 +94,7 @@ public class Auction extends BaseEntity {
         auction.property = property;
         auction.type = AuctionType.DUTCH;
         auction.startPrice = startPrice;
+        auction.currentPrice = startPrice;
         auction.endPrice = endPrice;
         auction.decreasePrice = calculateDecreasePrice(startPrice, decreaseRate);
         auction.status = AuctionStatus.SCHEDULED;
@@ -111,5 +115,30 @@ public class Auction extends BaseEntity {
 
     public void updateStatus(AuctionStatus auctionStatus) {
         this.status = auctionStatus;
+    }
+
+    /**
+     * 현재가 계산
+     * 1. 회차: dropCount = (현재 시간 - 시작 시간) / 가격 하락 간격(30분)
+     * 2. currentPrice = 시작가 - (하락금액 * dropCount)
+     */
+    public void recalculateCurrentPrice(long minutesElapsed) {
+        if (this.status != AuctionStatus.OPEN) return;
+
+        long dropCount = minutesElapsed / 30;
+        if (dropCount <= 0) return;
+
+        BigDecimal totalDiscount = this.decreasePrice.multiply(BigDecimal.valueOf(dropCount));
+        BigDecimal targetPrice = this.startPrice.subtract(totalDiscount);
+
+        if (targetPrice.compareTo(this.endPrice) < 0) {
+            this.currentPrice = this.endPrice;
+
+            // 하한가 도달 유찰
+            this.status = AuctionStatus.FAILED;
+
+        } else if (targetPrice.compareTo(this.currentPrice) < 0) {
+            this.currentPrice = targetPrice;
+        }
     }
 }
