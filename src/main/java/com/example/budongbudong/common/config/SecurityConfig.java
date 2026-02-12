@@ -13,7 +13,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -144,7 +143,9 @@ public class SecurityConfig {
     private void propertyAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/*").permitAll()
+        auth.requestMatchers(HttpMethod.POST, "/api/v1/properties/lookup").permitAll()
+
+                .requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/properties/my")
                 .hasRole(UserRole.SELLER.name())
 

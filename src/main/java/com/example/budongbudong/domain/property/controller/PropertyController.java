@@ -7,8 +7,10 @@ import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.PresignedUrlRequest;
+import com.example.budongbudong.domain.property.dto.request.PropertyLookupRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.response.*;
+import com.example.budongbudong.domain.property.dto.response.PropertyLookupResponse;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.service.*;
 import jakarta.validation.Valid;
@@ -45,6 +47,14 @@ public class PropertyController {
         propertyService.createProperty(request, images, imageUrls, authUser.getUserId());
 
         return GlobalResponse.created(null);
+    }
+
+    @PostMapping("/lookup")
+    public ResponseEntity<GlobalResponse<PropertyLookupResponse>> lookupProperty(
+            @Valid @RequestBody PropertyLookupRequest request
+    ) {
+        PropertyLookupResponse response = propertyService.lookupProperty(request);
+        return GlobalResponse.ok(response);
     }
 
     @PostMapping("/images/presign")
