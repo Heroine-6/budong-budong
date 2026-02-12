@@ -6,16 +6,10 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(
-        name = "kakaoAuthClient",
-        url = "https://kauth.kakao.com"
-)
+@FeignClient(name = "kakaoAuthClient", url = "https://kauth.kakao.com")
 public interface KakaoAuthClient {
 
-    @PostMapping(
-            value = "/oauth/token",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE
-    )
+    @PostMapping(value = "/oauth/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     KakaoTokenResponse getToken(
             @RequestParam("grant_type") String grantType,
             @RequestParam("client_id") String clientId,
@@ -24,10 +18,7 @@ public interface KakaoAuthClient {
             @RequestParam("client_secret") String clientSecret
     );
 
-    @PostMapping(
-            value = "/oauth/token",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE
-    )
+    @PostMapping(value = "/oauth/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     KakaoTokenResponse refreshToken(
             @RequestParam("grant_type") String grantType,
             @RequestParam("client_id") String clientId,

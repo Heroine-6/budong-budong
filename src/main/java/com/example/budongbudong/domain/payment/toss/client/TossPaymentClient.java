@@ -2,18 +2,12 @@ package com.example.budongbudong.domain.payment.toss.client;
 
 import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
 import com.example.budongbudong.domain.payment.toss.dto.response.TossPaymentStatusResponse;
-import com.example.budongbudong.domain.payment.toss.exception.TossClientException;
-import com.example.budongbudong.domain.payment.toss.exception.TossNetworkException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.*;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 토스 결제 승인 전용 클라이언트
@@ -26,72 +20,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class TossPaymentClient {
 
-    @Value("${spring.toss.secret-key}")
-    private String secretKey;
-
-    @Value("${spring.toss.api.confirm-url}")
-    private String confirmUrl;
-
-    private final RestTemplate tossRestTemplate;
+    private final TossFeignClient tossFeignClient;
 
     public TossConfirmResponse confirm(String paymentKey, String orderId, BigDecimal amount) {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(secretKey, "");
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> body = Map.of("paymentKey", paymentKey, "orderId", orderId, "amount", amount);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<TossConfirmResponse> response = tossRestTemplate.postForEntity(confirmUrl, request, TossConfirmResponse.class);
-            TossConfirmResponse responseBody = response.getBody();
-            if (responseBody == null) {
-                throw new TossNetworkException("토스 승인 응답 바디가 비어있습니다.");
-            }
-            return responseBody;
-        } catch (HttpClientErrorException e) {
-            // 4xx 승인 불가 확정
-            throw new TossClientException(e.getResponseBodyAsString());
-        } catch (ResourceAccessException e) {
-            // 타임아웃, 연결 실패
-            throw new TossNetworkException(e);
-        } catch(HttpServerErrorException e) {
-            // 5xx -> 토스 장애
-            throw new TossNetworkException(e);
-        }
+        Map<String, Object> body = Map.of(
+                "paymentKey", paymentKey,
+                "orderId", orderId,
+                "amount", amount
+        );
+        return tossFeignClient.confirm(body);
     }
 
     public void refund(String paymentKey, BigDecimal amount, String cancelReason) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(secretKey, "");
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
         Map<String, Object> body = Map.of(
                 "cancelReason", cancelReason,
                 "cancelAmount", amount
         );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        String cancelUrl = confirmUrl.replace("/confirm", "") + "/" + paymentKey + "/cancel";
-
-        try {
-            tossRestTemplate.postForEntity(cancelUrl, request, String.class);
-        } catch (HttpClientErrorException e) {
-            throw new TossClientException(e.getResponseBodyAsString());
-        } catch (ResourceAccessException | HttpServerErrorException e) {
-            throw new TossNetworkException(e);
-        }
+        tossFeignClient.refund(paymentKey, body);
     }
 
     public TossPaymentStatusResponse getPayment(String paymentKey) {
-
-        try {
-            return tossRestTemplate.getForObject(String.format("%s/%s", confirmUrl,paymentKey), TossPaymentStatusResponse.class);
-        } catch (ResourceAccessException  | HttpServerErrorException e) {
-            throw new TossNetworkException(e);
-        }
+        return tossFeignClient.getPayment(paymentKey);
     }
 }

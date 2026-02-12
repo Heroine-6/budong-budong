@@ -23,13 +23,13 @@ public class KakaoTokenService {
     private final RedisTemplate<String, String> redisTemplate;
     private final KakaoAuthClient kakaoAuthClient;
 
-    @Value("${kakao.client-id}")
+    @Value("${kakao.oauth.client-id}")
     private String clientId;
 
-    @Value("${kakao.client-secret}")
+    @Value("${kakao.oauth.client-secret}")
     private String clientSecret;
 
-    @Value("${kakao.redirect-uri}")
+    @Value("${kakao.oauth.redirect-uri}")
     private String redirectUri;
 
     /**

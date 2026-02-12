@@ -119,7 +119,7 @@ public class PaymentService {
         //금액 검증
         if (payment.getAmount().compareTo(request.amount()) != 0) {
             payment.makeFail(PaymentFailureReason.AMOUNT_MISMATCH);
-            saveLog(payment, prev, LogType.STATUS_CHANGE, "금액 불일치");
+            saveLog(payment, prev, PaymentStatus.FAIL ,LogType.STATUS_CHANGE, "금액 불일치");
             throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
@@ -129,11 +129,11 @@ public class PaymentService {
             tossResponse = tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
         } catch (TossClientException e) {
             payment.makeFail(PaymentFailureReason.INVALID_PAYMENT_INFO);
-            saveLog(payment, prev, LogType.TOSS_CLIENT_ERROR, e.getMessage());
+            saveLog(payment, prev, PaymentStatus.FAIL ,LogType.TOSS_CLIENT_ERROR, e.getMessage());
             return;
         } catch (TossNetworkException e) {
             makeVerifyingAndPublish(payment, request, PaymentFailureReason.PG_NETWORK_ERROR);
-            saveLog(payment, prev, LogType.TOSS_NETWORK_ERROR, e.getMessage());
+            saveLog(payment, prev, PaymentStatus.VERIFYING ,LogType.TOSS_NETWORK_ERROR, e.getMessage());
             return;
         }
 
@@ -144,7 +144,7 @@ public class PaymentService {
 
             finalizePayment(payment, request);
             payment.makeSuccess(request.paymentKey(), LocalDateTime.now(), methodType, methodDetail);
-            saveLog(payment, prev, LogType.PAYMENT_SUCCESS, null);
+            saveLog(payment, prev, PaymentStatus.SUCCESS ,LogType.PAYMENT_SUCCESS, null);
 
             // 결제 완료 알림
             applicationEventPublisher.publishEvent(new PaymentCompletedEvent(payment.getId(), payment.getUser().getId()));
@@ -155,7 +155,7 @@ public class PaymentService {
             }
         } catch (Exception e) {
             makeVerifyingAndPublish(payment, request, PaymentFailureReason.SERVER_CONFIRM_ERROR);
-            saveLog(payment, prev, LogType.STATUS_CHANGE, "서버 확인 오류: " + e.getMessage());
+            saveLog(payment, prev, PaymentStatus.VERIFYING ,LogType.STATUS_CHANGE, "서버 확인 오류: " + e.getMessage());
         }
     }
 
@@ -202,7 +202,7 @@ public class PaymentService {
 
         payment.requestRefund();
 
-        saveLog(payment, prev, LogType.MANUAL_REFUND_REQUESTED, null);
+        saveLog(payment, prev, PaymentStatus.REFUND_REQUESTED ,LogType.MANUAL_REFUND_REQUESTED, null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 
@@ -217,7 +217,7 @@ public class PaymentService {
 
         payment.requestRefund();
 
-        saveLog(payment, prev, LogType.REFUND_REQUESTED, null);
+        saveLog(payment, prev, PaymentStatus.REFUND_REQUESTED, LogType.REFUND_REQUESTED, null);
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 
@@ -230,7 +230,8 @@ public class PaymentService {
         paymentRepository.save(payment);
     }
 
-    private void saveLog(Payment payment, PaymentStatus prev, LogType type, String errorMessage) {
+    private void saveLog(Payment payment, PaymentStatus prev, PaymentStatus current, LogType type, String errorMessage) {
+        log.info("[결제 로그] paymentId={}, {} -> {}, type={}, error={}", payment.getId(), prev, current, type, errorMessage);
         paymentLogService.saveLog(payment.getId(), prev, payment.getStatus(), type, errorMessage);
     }
 }

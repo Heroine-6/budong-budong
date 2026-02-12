@@ -22,4 +22,9 @@ public class KakaoTokenResponse {
 
     @JsonProperty("refresh_token_expires_in")
     private Integer refreshTokenExpiresIn;
+
+    // Keep record-style accessor compatibility used in AuthService.
+    public String accessToken() {
+        return accessToken;
+    }
 }

@@ -30,4 +30,14 @@ public class PageController {
     public String signup() {
         return "forward:/signup.html";
     }
+
+    @GetMapping("/login/oauth2/code/kakao")
+    public String kakaoCallback() {
+        return "forward:/signin.html";
+    }
+
+    @GetMapping("/kakao-complete")
+    public String kakaoComplete() {
+        return "forward:/kakao-complete.html";
+    }
 }
