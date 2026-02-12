@@ -52,6 +52,9 @@ naver:
 kakao:
   map:
     rest-api-key: ${KAKAO_MAP_REST_API_KEY}
+  client-id: ${KAKAO_CLIENT_ID}
+  client-secret: ${KAKAO_CLIENT_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
 
 coolsms:
   api-key: ${COOLSMS_API_KEY}
