@@ -103,22 +103,6 @@ public class SecurityConfig {
         objectMapper.writeValue(response.getWriter(), body);
     }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring()
-                .requestMatchers(
-                        "/paymentRequest.html",
-                        "/success.html",
-                        "/fail.html",
-                        "/", "/index.html", "/budongbudong",
-                        "/search", "/search.html",
-                        "/signin", "/signin.html",
-                        "/signup", "/signup.html",
-                        "/payments.html",
-                        "/assets/**"
-                );
-    }
-
     private void commonAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
@@ -134,10 +118,27 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // Elasticsearch 동기화
-                .requestMatchers("api/v1/properties/sync").permitAll()
+                .requestMatchers("/api/v1/properties/sync").permitAll()
 
                 // 서버 health check
-                .requestMatchers("/actuator/**").permitAll();
+                .requestMatchers("/actuator/**").permitAll()
+
+                //html
+                .requestMatchers(
+                        "/paymentRequest.html",
+                        "/success.html",
+                        "/fail.html",
+                        "/",
+                        "/index.html",
+                        "/budongbudong",
+                        "/search",
+                        "/search.html",
+                        "/signin",
+                        "/signin.html",
+                        "/signup",
+                        "/signup.html",
+                        "/payments.html"
+                ).permitAll();
     }
 
     private void propertyAuth(
