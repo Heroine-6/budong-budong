@@ -39,7 +39,9 @@ public class UserService {
 
         kakaoTokenService.saveTokens(userId, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
 
+        String kakaoId = kakaoTokenService.getKakaoUserId(tokenResponse.getAccessToken());
+
         User user = userRepository.getByIdOrThrow(userId);
-        user.linkKakao(LoginType.KAKAO, String.valueOf(userId));
+        user.linkKakao(LoginType.KAKAO, kakaoId);
     }
 }

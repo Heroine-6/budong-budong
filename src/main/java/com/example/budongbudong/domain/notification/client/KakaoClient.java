@@ -3,9 +3,12 @@ package com.example.budongbudong.domain.notification.client;
 import com.example.budongbudong.domain.notification.dto.response.KakaoNotificationResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 
@@ -22,6 +25,11 @@ public interface KakaoClient {
     KakaoNotificationResponse sendToMeMessage(
             @RequestHeader(name = AUTHORIZATION) String accessToken,
             @RequestParam("template_object") String templateObjectJson
+    );
+
+    @GetMapping("/v2/user/me")
+    Map<String, Object> getUserInfo(
+            @RequestHeader(name = AUTHORIZATION) String accessToken
     );
 
 }

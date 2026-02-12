@@ -2,12 +2,14 @@ package com.example.budongbudong.domain.auth.service;
 
 import com.example.budongbudong.domain.auth.client.KakaoAuthClient;
 import com.example.budongbudong.domain.auth.dto.response.KakaoTokenResponse;
+import com.example.budongbudong.domain.notification.client.KakaoClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -22,6 +24,7 @@ public class KakaoTokenService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final KakaoAuthClient kakaoAuthClient;
+    private final KakaoClient kakaoClient;
 
     @Value("${kakao.oauth.client-id}")
     private String clientId;
@@ -79,6 +82,14 @@ public class KakaoTokenService {
         }
 
         return refreshAccessToken(userId);
+    }
+
+    /**
+     * 카카오 사용자 ID 조회
+     */
+    public String getKakaoUserId(String accessToken) {
+        Map<String, Object> userInfo = kakaoClient.getUserInfo("Bearer " + accessToken);
+        return String.valueOf(userInfo.get("id"));
     }
 
     /**
