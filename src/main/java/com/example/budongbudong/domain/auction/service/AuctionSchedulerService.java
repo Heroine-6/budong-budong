@@ -1,5 +1,8 @@
 package com.example.budongbudong.domain.auction.service;
 
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.enums.AuctionType;
 import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.event.AuctionEndingSoonEvent;
 import com.example.budongbudong.domain.auction.event.AuctionOpenEvent;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,13 +48,13 @@ public class AuctionSchedulerService {
         try {
             openScheduledAuctions(today);
         } catch (Exception e) {
-            log.error("[경매 시작] 실패 - 종료 처리로 넘어갑니다.",e);
+            log.error("[경매 시작] 실패 - 종료 처리로 넘어갑니다.", e);
         }
 
         try {
             closeOpenedAuctions(today);
         } catch (Exception e) {
-            log.error("[경매 종료] 실패",e);
+            log.error("[경매 종료] 실패", e);
         }
     }
 
@@ -130,5 +134,28 @@ public class AuctionSchedulerService {
         //벌크 연산은 영속성 컨텍스트 우회, 이후 조회 일관성을 위해 명시적으로 초기화
         entityManager.flush();
         entityManager.clear();
+    }
+
+    /**
+     * Open 상태의 네덜란드식 경매 감가 및 유찰 처리
+     * - 감가 대상 경매 조회
+     * - 시작 시각(자정) 기준 현재 시각까지의 경과 시간으로 현재가 산정
+     * - 현재가가 하한가 미만일 경우 유찰 처리
+     */
+    @Transactional
+    public void decreaseDutchAuctionPrice() {
+
+        List<Auction> openDutchAuctions = auctionRepository.findAllByStatusAndType(AuctionStatus.OPEN, AuctionType.DUTCH);
+
+        if (openDutchAuctions.isEmpty()) {
+            log.info("[Scheduling] 감가 및 유찰 대상 없음");
+            return;
+        }
+
+        long minutesElapsed = Duration.between(LocalDate.now().atStartOfDay(), LocalDateTime.now()).toMinutes();
+
+        openDutchAuctions.forEach(a -> a.recalculateCurrentPrice(minutesElapsed));
+
+        log.info("[Scheduling] 감가 및 유찰 처리 완료");
     }
 }
