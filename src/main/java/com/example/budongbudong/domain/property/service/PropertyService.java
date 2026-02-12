@@ -13,6 +13,7 @@ import com.example.budongbudong.domain.property.client.OffiClient;
 import com.example.budongbudong.domain.property.client.VillaClient;
 import com.example.budongbudong.domain.property.dto.cache.CachedPropertyListDto;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
+import com.example.budongbudong.domain.property.dto.request.PropertyLookupRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
 import com.example.budongbudong.domain.property.event.PropertyEventType;
 import com.example.budongbudong.domain.property.enums.PropertyType;
@@ -25,6 +26,7 @@ import com.example.budongbudong.domain.property.realdeal.client.NaverGeoResponse
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
 import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
+import com.example.budongbudong.domain.property.dto.response.PropertyLookupResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
 import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
@@ -192,15 +194,27 @@ public class PropertyService {
         propertyEventPublisher.publish(property.getId(), PropertyEventType.DELETED);
     }
 
+    @Transactional(readOnly = true)
+    public PropertyLookupResponse lookupProperty(PropertyLookupRequest request) {
+        CreateApiResponse apiInfo = fetchApiInfo(
+                request.type(), request.address(), request.dealYmd(), request.floor()
+        );
+        return PropertyLookupResponse.from(apiInfo);
+    }
+
     private CreateApiResponse fetchApiInfo(CreatePropertyRequest request) {
+        return fetchApiInfo(request.type(), request.address(), request.dealYmd(), request.floor());
+    }
+
+    private CreateApiResponse fetchApiInfo(PropertyType type, String address, String dealYmd, Integer floor) {
 
         // 주소에서 지역코드(LAWD_CD) 자동 추출
-        String lawdCd = lawdCodeService.getLawdCdFromAddress(request.address())
+        String lawdCd = lawdCodeService.getLawdCdFromAddress(address)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_ADDRESS));
-        log.info("추출된 법정동 코드: {} (주소: {})", lawdCd, request.address());
+        log.info("추출된 법정동 코드: {} (주소: {})", lawdCd, address);
 
         // PropertyType(아파트,빌라,오피스텔)에 따라 적절한 API 호출
-        AptResponse response = fetchFromApi(request.type(), lawdCd, request.dealYmd());
+        AptResponse response = fetchFromApi(type, lawdCd, dealYmd);
 
         // 전체 응답 중 필요한 값만 꺼내 저장
         List<AptItem> items = response.response().body().items().item();
@@ -210,10 +224,10 @@ public class PropertyService {
         }
 
         // 주소 + 층수로 필터링하여 정확한 매물 찾기
-        AptItem matchedItem = findMatchingItem(items, request.address(), request.floor());
+        AptItem matchedItem = findMatchingItem(items, address, floor);
 
         // aptMapper를 통해 필요한 형태의 값으로 변환하여 반환
-        return AptMapper.toCreateApiResponse(matchedItem, request.address());
+        return AptMapper.toCreateApiResponse(matchedItem, address);
     }
 
     // 외부 api에서 가져올 결과 값 최대 개수 (어떤 타입이든 500개씩 가져오기로 함. 많이 가져올 수록 느려짐 )
