@@ -1,4 +1,4 @@
-name: budongbudong
+version: "3.8"
 
 services:
   spring:
