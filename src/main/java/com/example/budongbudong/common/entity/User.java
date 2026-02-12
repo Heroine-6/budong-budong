@@ -78,6 +78,9 @@ public class User extends BaseEntity {
     }
 
     public void completeProfile(String phone, String address) {
+        if (phone == null || phone.isBlank() || address == null || address.isBlank()) {
+            throw new IllegalArgumentException("전화번호와 주소는 필수입니다.");
+        }
         this.phone = phone;
         this.address = address;
     }
@@ -85,6 +88,10 @@ public class User extends BaseEntity {
     public boolean isProfileComplete() {
         return phone != null && !phone.isBlank()
                 && address != null && !address.isBlank();
+    }
+
+    public boolean isKakaoUser() {
+        return loginType == LoginType.KAKAO;
     }
 
     public void updatePushAllowed() {
