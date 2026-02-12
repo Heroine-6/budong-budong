@@ -3,7 +3,6 @@ version: "3.8"
 services:
   spring:
     image: ${DOCKER_USERNAME}/budong-container:latest
-    container_name: spring
     ports:
       - "8080:8080"
     volumes:
@@ -14,7 +13,6 @@ services:
 
   alloy:
     image: grafana/alloy:latest
-    container_name: alloy
     environment:
       - LOKI_URL=${LOKI_URL}
       - SERVER_NAME=budongbudong
