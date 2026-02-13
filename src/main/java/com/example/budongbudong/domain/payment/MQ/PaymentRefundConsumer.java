@@ -36,12 +36,12 @@ public class PaymentRefundConsumer {
     @Transactional
     public void consume(RefundRequestedMQEvent event) {
 
-        if (event.getPaymentId() == null) {
+        if (event.paymentId() == null) {
             log.error("잘못된 refund MQ message: paymentId is null. drop message.");
             return; // ACK 처리됨
         }
 
-        Payment payment = paymentRepository.getByIdOrThrow(event.getPaymentId());
+        Payment payment = paymentRepository.getByIdOrThrow(event.paymentId());
 
         if (payment.getStatus() == PaymentStatus.REFUNDED) return;
 
