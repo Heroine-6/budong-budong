@@ -2,6 +2,7 @@ package com.example.budongbudong.domain.auction.controller;
 
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.common.utils.annotation.SecurityNotRequired;
 import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
 import com.example.budongbudong.domain.auction.dto.request.CreateDutchAuctionRequest;
 import com.example.budongbudong.domain.auction.dto.response.*;
@@ -44,6 +45,7 @@ public class AuctionController {
         return GlobalResponse.ok(response);
     }
 
+    @SecurityNotRequired
     @Operation(summary = "경매 입찰 정보 조회", description = "현재 최고 입찰가와 총 입찰자 수를 조회합니다. 로그인 불필요.")
     @GetMapping("/v1/{auctionId}/info")
     public ResponseEntity<GlobalResponse<AuctionInfoResponse>> getAuctionInfo(@PathVariable Long auctionId) {
@@ -53,6 +55,7 @@ public class AuctionController {
         return GlobalResponse.ok(response);
     }
 
+    @SecurityNotRequired
     @Operation(summary = "경매 경쟁 통계 조회", description = "총 입찰자 수, 입찰 횟수, 가격 상승 금액, 최근 입찰 시각 등 경쟁 통계를 조회합니다. 로그인 불필요.")
     @GetMapping("/v1/{auctionId}/statistics")
     public ResponseEntity<GlobalResponse<GetStatisticsResponse>> getAuctionStatistics(@PathVariable Long auctionId) {

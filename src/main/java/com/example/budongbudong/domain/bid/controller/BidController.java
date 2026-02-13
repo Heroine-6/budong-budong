@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.bid.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.common.utils.annotation.SecurityNotRequired;
 import com.example.budongbudong.domain.bid.MQ.BidPublisher;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
@@ -32,7 +33,7 @@ public class BidController {
     private final BidService bidService;
     private final BidPublisher bidPublisher;
 
-    @Operation(summary = "일반 입찰 (직접)", description = "경매에 직접 입찰합니다. 현재 최고가보다 높아야 하며 최소 입찰 단위를 준수해야 합니다. (GENERAL 권한 필요)")
+    @Operation(summary = "일반 입찰", description = "경매에 직접 입찰합니다. 현재 최고가보다 높아야 하며 최소 입찰 단위를 준수해야 합니다. (GENERAL 권한 필요)")
     @PostMapping("/v1/auctions/{auctionId}")
     public ResponseEntity<GlobalResponse<CreateBidResponse>> createBid(
             @Valid @RequestBody CreateBidRequest request,
@@ -45,6 +46,7 @@ public class BidController {
                 : GlobalResponse.created(response);
     }
 
+    @SecurityNotRequired
     @Operation(summary = "입찰 내역 조회", description = "해당 경매의 전체 입찰 내역을 최신순으로 조회합니다. 로그인 불필요.")
     @GetMapping("/v1/auctions/{auctionId}")
     public ResponseEntity<GlobalResponse<CustomPageResponse<ReadAllBidsResponse>>> readAllBids(

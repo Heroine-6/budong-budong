@@ -1,14 +1,19 @@
 package com.example.budongbudong.common.config;
 
+import com.example.budongbudong.common.utils.annotation.SecurityNotRequired;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.HandlerMethod;
 
+import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -53,5 +58,17 @@ public class SwaggerConfig {
                                 .description("로그인 후 발급받은 accessToken을 입력하세요. 'Bearer ' 접두사 없이 토큰만 입력하면 됩니다.")
                         )
                 );
+    }
+
+    @Bean
+    public OperationCustomizer customize() {
+        return (Operation operation, HandlerMethod handlerMethod) -> {
+            SecurityNotRequired annotation = handlerMethod.getMethodAnnotation(SecurityNotRequired.class);
+            // SecurityNotRequire 어노테이션있을시 스웨거 시큐리티 설정 삭제
+            if (annotation != null) {
+                operation.security(Collections.emptyList());
+            }
+            return operation;
+        };
     }
 }

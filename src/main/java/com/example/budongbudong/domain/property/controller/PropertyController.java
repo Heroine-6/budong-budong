@@ -5,6 +5,7 @@ import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.common.storage.PresignedUrlInfo;
+import com.example.budongbudong.common.utils.annotation.SecurityNotRequired;
 import com.example.budongbudong.domain.auction.enums.AuctionStatus;
 import com.example.budongbudong.domain.property.dto.condition.SearchPropertyCond;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
@@ -60,6 +61,7 @@ public class PropertyController {
         return GlobalResponse.created(null);
     }
 
+    @SecurityNotRequired
     @PostMapping("/v1/lookup")
     public ResponseEntity<GlobalResponse<PropertyLookupResponse>> lookupProperty(
             @Valid @RequestBody PropertyLookupRequest request
@@ -77,6 +79,7 @@ public class PropertyController {
         return GlobalResponse.ok(response);
     }
 
+    @SecurityNotRequired
     @Operation(summary = "매물 전체 목록 조회", description = "타입·경매 상태로 필터링하여 매물 목록을 조회합니다. 로그인 불필요.")
     @GetMapping
     public ResponseEntity<GlobalResponse<CustomSliceResponse<ReadAllPropertyResponse>>> getAllPropertyList(
@@ -111,6 +114,7 @@ public class PropertyController {
         return GlobalResponse.ok(response);
     }
 
+    @SecurityNotRequired
     @Operation(summary = "매물 단건 조회", description = "매물 ID로 상세 정보를 조회합니다. 로그인 불필요.")
     @GetMapping("/v1/{propertyId}")
     public ResponseEntity<GlobalResponse<ReadPropertyResponse>> getProperty(@PathVariable Long propertyId) {
@@ -140,6 +144,7 @@ public class PropertyController {
         return GlobalResponse.noContent();
     }
 
+    @SecurityNotRequired
     @Operation(summary = "Elasticsearch 동기화", description = "전체 매물 데이터를 Elasticsearch에 동기화합니다. (관리자용)")
     @PostMapping("/v1/sync")
     public ResponseEntity<GlobalResponse<Void>> syncAllProperties() {
