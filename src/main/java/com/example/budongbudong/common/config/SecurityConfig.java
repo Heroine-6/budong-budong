@@ -117,7 +117,7 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // Elasticsearch 동기화
-                .requestMatchers("/api/v1/properties/sync").permitAll()
+                .requestMatchers("/api/properties/v1/sync").permitAll()
 
                 // 서버 health check
                 .requestMatchers("/actuator/**").permitAll()
@@ -145,19 +145,19 @@ public class SecurityConfig {
     private void propertyAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.POST, "/api/v1/properties/lookup").permitAll()
+        auth.requestMatchers(HttpMethod.POST, "/api/properties/v1/lookup").permitAll()
 
-                .requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/properties/my")
+                .requestMatchers(HttpMethod.GET, "/api/properties/v1", "/api/properties/v1/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/properties/v1/my")
                 .hasRole(UserRole.SELLER.name())
 
-                .requestMatchers(HttpMethod.POST, "/api/v1/properties")
+                .requestMatchers(HttpMethod.POST, "/api/properties/v1")
                 .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/properties/*")
+                .requestMatchers(HttpMethod.PATCH, "/api/properties/v1/*")
                 .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/*")
+                .requestMatchers(HttpMethod.DELETE, "/api/properties/v1/*")
                 .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name());
     }
 
@@ -180,11 +180,11 @@ public class SecurityConfig {
     private void bidAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.GET, "/api/v1/bids/auctions/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/bids")
+        auth.requestMatchers(HttpMethod.GET, "/api/bids/v1/auctions/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/bids/v1")
                 .hasRole(UserRole.GENERAL.name())
 
-                .requestMatchers(HttpMethod.GET, "/api/v1/bids/my")
+                .requestMatchers(HttpMethod.GET, "/api/bids/v1/my")
                 .hasRole(UserRole.GENERAL.name());
     }
 
@@ -192,7 +192,7 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         // 실거래가 검색 API - 비로그인 허용
-        auth.requestMatchers(HttpMethod.GET, "/api/v2/real-deals/**").permitAll();
+        auth.requestMatchers(HttpMethod.GET, "/api/real-deals/v2/**").permitAll();
     }
 
     private void paymentAuth(
@@ -209,7 +209,7 @@ public class SecurityConfig {
     private void chatServerAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.GET, "/api/v2/internal/**")
+        auth.requestMatchers(HttpMethod.GET, "/api/internal/v2/**")
                 .hasRole(UserRole.GENERAL.name());
     }
 

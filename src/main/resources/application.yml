@@ -87,3 +87,9 @@ logging:
     tracer: TRACE
   slack:
     webhook: ${SLACK_WEBHOOK_URL}
+
+spring-doc:
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: method
+    doc-expansion: none

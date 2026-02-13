@@ -1,6 +1,7 @@
 package com.example.budongbudong.domain.property.realdeal;
 
 import com.example.budongbudong.common.response.GlobalResponse;
+import com.example.budongbudong.common.utils.annotation.SecurityNotRequired;
 import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
 import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchRequest;
 import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchResponse;
@@ -21,7 +22,7 @@ import java.math.BigDecimal;
  */
 @Tag(name = "실거래가", description = "실거래가 검색 API")
 @RestController
-@RequestMapping("/api/v2/real-deals")
+@RequestMapping("/api/real-deals")
 @RequiredArgsConstructor
 public class RealDealController {
 
@@ -33,8 +34,9 @@ public class RealDealController {
      * - lat/lon 입력 시: 좌표 기준 반경 검색
      * - 둘 다 입력 시: lat/lon 우선
      */
+    @SecurityNotRequired
     @Operation(summary = "주변 시세 검색", description = "주소 또는 좌표 기준으로 반경 내 실거래가를 조회합니다.")
-    @GetMapping("/nearby")
+    @GetMapping("/v2/nearby")
     public ResponseEntity<GlobalResponse<RealDealSearchResponse>> searchNearby(
             @ParameterObject @ModelAttribute RealDealSearchRequest request
     ) {
@@ -42,8 +44,9 @@ public class RealDealController {
         return GlobalResponse.ok(response);
     }
 
+    @SecurityNotRequired
     @Operation(summary = "입찰가 주변시세 비교", description = "경매 시작가·최고입찰가·희망입찰가 각각의 m²당 평단가를 주변 실거래 중앙값 평단가와 비교하여 시세 대비 비율(%)을 반환합니다.")
-    @GetMapping("/compare/{auctionId}")
+    @GetMapping("/v2/compare/{auctionId}")
     public ResponseEntity<GlobalResponse<MarketCompareResponse>> compareWithMarket(
             @PathVariable Long auctionId,
 
