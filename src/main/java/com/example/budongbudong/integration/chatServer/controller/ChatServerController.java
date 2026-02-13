@@ -7,16 +7,19 @@ import com.example.budongbudong.integration.chatServer.service.ChatServerService
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/internal/chat")
+@RequestMapping("/api/internal/chat")
 public class ChatServerController {
 
     private final ChatServerService chatServerService;
 
-    @GetMapping("/{propertyId}")
+    @GetMapping("/v2/{propertyId}")
     public ResponseEntity<GlobalResponse<ChatServerResponse>> getChatContext(@PathVariable Long propertyId, @AuthenticationPrincipal AuthUser authUser) {
 
         ChatServerResponse response = chatServerService.getChatContext(propertyId, authUser.getUserId());

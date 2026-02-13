@@ -6,12 +6,14 @@ import com.example.budongbudong.domain.auction.dto.request.CreateAuctionRequest;
 import com.example.budongbudong.domain.auction.dto.request.CreateDutchAuctionRequest;
 import com.example.budongbudong.domain.auction.dto.response.*;
 import com.example.budongbudong.domain.auction.service.AuctionService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "경매")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auctions")

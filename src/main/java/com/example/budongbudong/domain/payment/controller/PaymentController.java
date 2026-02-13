@@ -5,8 +5,11 @@ import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.request.PaymentRequest;
-import com.example.budongbudong.domain.payment.dto.response.*;
+import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
+import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
+import com.example.budongbudong.domain.payment.dto.response.ReadPaymentResponse;
 import com.example.budongbudong.domain.payment.service.PaymentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "결제")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/payments/v2")
@@ -50,16 +54,18 @@ public class PaymentController {
         return GlobalResponse.ok(slice);
     }
 
-   @GetMapping("/{paymentId}")
+    @GetMapping("/{paymentId}")
     public ResponseEntity<GlobalResponse<ReadPaymentResponse>> getPaymentDetail(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long paymentId
-   ) {
-       ReadPaymentResponse response= paymentService.getPaymentDetail(authUser.getUserId(), paymentId);
+    ) {
+        ReadPaymentResponse response = paymentService.getPaymentDetail(authUser.getUserId(), paymentId);
         return GlobalResponse.ok(response);
-   }
+    }
 
-   /** 재시도 까지 실패 후 사용자 요청 환불 */
+    /**
+     * 재시도 까지 실패 후 사용자 요청 환불
+     */
     @PostMapping("/{paymentId}/refund")
     public ResponseEntity<GlobalResponse<Void>> requestRefundByUser(
             @AuthenticationPrincipal AuthUser authUser,

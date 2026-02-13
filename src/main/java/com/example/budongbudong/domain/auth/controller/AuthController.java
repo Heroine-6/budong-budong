@@ -6,6 +6,7 @@ import com.example.budongbudong.domain.auth.dto.request.*;
 import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
 import com.example.budongbudong.domain.auth.service.AuthService;
 import com.example.budongbudong.domain.auth.service.SmsService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
+@Tag(name = "인증")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

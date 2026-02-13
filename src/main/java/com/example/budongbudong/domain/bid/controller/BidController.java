@@ -11,6 +11,7 @@ import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.service.BidService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "입찰")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/bids")
