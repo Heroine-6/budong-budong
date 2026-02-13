@@ -136,7 +136,9 @@ public class SecurityConfig {
                         "/signin.html",
                         "/signup",
                         "/signup.html",
-                        "/payments.html"
+                        "/payments.html",
+                        "/mypage",
+                        "/mypage.html"
                 ).permitAll();
     }
 

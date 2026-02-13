@@ -31,6 +31,11 @@ public class PageController {
         return "forward:/signup.html";
     }
 
+    @GetMapping("/mypage")
+    public String mypage() {
+        return "forward:/mypage.html";
+    }
+
     @GetMapping("/login/oauth2/code/kakao")
     public String kakaoCallback() {
         return "forward:/signin.html";
