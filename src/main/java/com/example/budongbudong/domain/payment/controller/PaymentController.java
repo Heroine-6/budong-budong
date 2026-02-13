@@ -5,9 +5,8 @@ import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
 import com.example.budongbudong.domain.payment.dto.request.PaymentRequest;
-import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
-import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
-import com.example.budongbudong.domain.payment.dto.response.ReadPaymentResponse;
+import com.example.budongbudong.domain.payment.dto.response.*;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
 import com.example.budongbudong.domain.payment.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +17,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "결제")
 @RestController
@@ -81,4 +82,25 @@ public class PaymentController {
         return GlobalResponse.noContent();
     }
 
+    @GetMapping("/auctions/{auctionId}/info")
+    public ResponseEntity<GlobalResponse<PaymentInfoResponse>> getPaymentInfo(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long auctionId,
+            @RequestParam PaymentType type
+    ) {
+
+        PaymentInfoResponse response = paymentService.getPaymentInfo(auctionId, authUser.getUserId(), type);
+
+        return GlobalResponse.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<GlobalResponse<List<MyPaymentListResponse>>> getMyRequiredPaymentsByType(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam PaymentType type
+    ) {
+        return GlobalResponse.ok(
+                paymentService.getMyRequiredPaymentsByType(authUser.getUserId(), type)
+        );
+    }
 }

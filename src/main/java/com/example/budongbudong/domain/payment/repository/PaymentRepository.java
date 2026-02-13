@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,8 +20,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
            from Payment p
            where p.auction.id = :auctionId
            and p.status = 'SUCCESS'
+           and p.type in :types
            """)
-    BigDecimal sumPaidAmountByAuctionId(Long auctionId);
+    BigDecimal sumPaidAmountByAuctionId(Long auctionId, List<PaymentType> types);
 
     Optional<Payment> findByOrderId(String orderId);
 
@@ -29,6 +31,17 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
     List<Payment> findAllByStatus(PaymentStatus paymentStatus);
 
     Optional<Payment> findByIdAndUserId(Long id, Long userId);
+
+    boolean existsByAuctionIdAndTypeAndStatus(Long id, PaymentType paymentType, PaymentStatus paymentStatus);
+
+    @Query("""
+            select p
+            from Payment p
+            where p.auction.id = :auctionId
+              and p.type = 'DOWN_PAYMENT'
+              and p.status = 'SUCCESS'
+        """)
+    Optional<Payment> findSuccessDownPayment(Long auctionId);
 
     default Payment getByOrderIdOrThrow(String orderId) {
         return findByOrderId(orderId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
@@ -40,6 +53,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
 
     default Payment getByIdAndUserIdOrThrow(Long id, Long userId) {
         return findByIdAndUserId(id,userId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+    }
+
+    default Payment getSuccessDownPayment(Long auctionId) {
+        return findSuccessDownPayment(auctionId).orElseThrow(() -> new CustomException(ErrorCode.DEPOSIT_REQUIRED_FIRST));
     }
 
 }

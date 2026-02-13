@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 /**
  * 결제 금액 계산 전용 컴포넌트
@@ -44,7 +45,10 @@ public class PaymentAmountCalculator {
 
     //낙찰가 - 지불한 금액
     private BigDecimal calculateBalance(Auction auction, AuctionWinner auctionWinner){
-        BigDecimal paidAmount = paymentRepository.sumPaidAmountByAuctionId(auction.getId());
+        BigDecimal paidAmount = paymentRepository.sumPaidAmountByAuctionId(
+                auction.getId(),
+                List.of(PaymentType.DEPOSIT, PaymentType.DOWN_PAYMENT)
+                );
         return auctionWinner.getPrice().subtract(paidAmount);
     }
 }
