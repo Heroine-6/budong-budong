@@ -4,6 +4,7 @@ import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.user.dto.response.UpdatePushAllowedResponse;
 import com.example.budongbudong.domain.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @Operation(summary = "푸시 알림 수신 동의 토글", description = "푸시 알림 수신 여부를 ON/OFF 전환합니다.")
     @PatchMapping("/v2/notifications")
     public ResponseEntity<GlobalResponse<UpdatePushAllowedResponse>> updatePushAllowed(
             @AuthenticationPrincipal AuthUser authUser
@@ -27,6 +29,7 @@ public class UserController {
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "카카오 계정 연동", description = "기존 일반 계정에 카카오 계정을 연동합니다. 카카오 인가 코드가 필요합니다.")
     @PostMapping("/v2/kakao/link")
     public ResponseEntity<GlobalResponse<Void>> linkKakao(
             @AuthenticationPrincipal AuthUser authUser,

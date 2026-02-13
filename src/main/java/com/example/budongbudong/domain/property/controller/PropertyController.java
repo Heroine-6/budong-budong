@@ -20,6 +20,7 @@ import com.example.budongbudong.domain.property.service.PropertyImagePresignServ
 import com.example.budongbudong.domain.property.service.PropertySearchService;
 import com.example.budongbudong.domain.property.service.PropertyService;
 import com.example.budongbudong.domain.property.service.PropertySyncService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,7 @@ public class PropertyController {
     private final PropertySyncService propertySyncService;
     private final PropertySearchService propertySearchService;
 
+    @Operation(summary = "매물 등록", description = "매물 정보와 이미지를 함께 등록합니다. (SELLER 권한 필요)")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GlobalResponse<Void>> createProperty(
             @Valid @ModelAttribute CreatePropertyRequest request,
@@ -55,7 +57,6 @@ public class PropertyController {
             @AuthenticationPrincipal AuthUser authUser
     ) {
         propertyService.createProperty(request, images, imageUrls, authUser.getUserId());
-
         return GlobalResponse.created(null);
     }
 
@@ -67,6 +68,7 @@ public class PropertyController {
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "이미지 업로드 Presigned URL 발급", description = "S3 직접 업로드를 위한 Presigned URL을 발급합니다.")
     @PostMapping("/v1/images/presign")
     public ResponseEntity<GlobalResponse<List<PresignedUrlInfo>>> issuePresignedUrls(
             @Valid @RequestBody PresignedUrlRequest request
@@ -75,6 +77,7 @@ public class PropertyController {
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "매물 전체 목록 조회", description = "타입·경매 상태로 필터링하여 매물 목록을 조회합니다. 로그인 불필요.")
     @GetMapping
     public ResponseEntity<GlobalResponse<CustomSliceResponse<ReadAllPropertyResponse>>> getAllPropertyList(
             @RequestParam(required = false) PropertyType type,
@@ -88,42 +91,34 @@ public class PropertyController {
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "매물 키워드 검색", description = "주소·이름 등 키워드로 매물을 검색합니다. 로그인 불필요.")
     @GetMapping("/v1/search")
     public ResponseEntity<GlobalResponse<CustomSliceResponse<SearchPropertyResponse>>> search(
             @ModelAttribute SearchPropertyCond cond,
-            @PageableDefault(
-                    page = 0,
-                    size = 10
-            )
-            Pageable pageable
+            @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
         CustomSliceResponse<SearchPropertyResponse> response = propertySearchService.search(cond, pageable);
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "내 매물 목록 조회", description = "로그인한 판매자 본인의 매물 목록을 조회합니다. (SELLER 권한 필요)")
     @GetMapping("/v1/my")
     public ResponseEntity<GlobalResponse<CustomPageResponse<ReadAllPropertyResponse>>> getMyPropertyList(
-            @PageableDefault(
-                    page = 0,
-                    size = 10,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal AuthUser authUser
     ) {
         CustomPageResponse<ReadAllPropertyResponse> response = propertyService.getMyPropertyList(authUser.getUserId(), pageable);
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "매물 단건 조회", description = "매물 ID로 상세 정보를 조회합니다. 로그인 불필요.")
     @GetMapping("/v1/{propertyId}")
     public ResponseEntity<GlobalResponse<ReadPropertyResponse>> getProperty(@PathVariable Long propertyId) {
-
         ReadPropertyResponse response = propertyService.getProperty(propertyId);
-
         return GlobalResponse.ok(response);
     }
 
+    @Operation(summary = "매물 수정", description = "매물 정보를 수정합니다. 본인 소유 매물만 가능합니다. (SELLER 권한 필요)")
     @PatchMapping("/v1/{propertyId}")
     public ResponseEntity<GlobalResponse<Void>> updateProperty(
             @Valid @RequestBody UpdatePropertyRequest request,
@@ -136,6 +131,7 @@ public class PropertyController {
         return GlobalResponse.noContent();
     }
 
+    @Operation(summary = "매물 삭제", description = "매물을 삭제합니다. 진행 중인 경매가 있으면 삭제 불가합니다. (SELLER 권한 필요)")
     @DeleteMapping("/v1/{propertyId}")
     public ResponseEntity<GlobalResponse<Void>> deleteProperty(@PathVariable Long propertyId, @AuthenticationPrincipal AuthUser authUser) {
 
@@ -144,6 +140,7 @@ public class PropertyController {
         return GlobalResponse.noContent();
     }
 
+    @Operation(summary = "Elasticsearch 동기화", description = "전체 매물 데이터를 Elasticsearch에 동기화합니다. (관리자용)")
     @PostMapping("/v1/sync")
     public ResponseEntity<GlobalResponse<Void>> syncAllProperties() {
 
