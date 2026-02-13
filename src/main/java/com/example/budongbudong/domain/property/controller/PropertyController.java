@@ -81,7 +81,7 @@ public class PropertyController {
 
     @SecurityNotRequired
     @Operation(summary = "매물 전체 목록 조회", description = "타입·경매 상태로 필터링하여 매물 목록을 조회합니다. 로그인 불필요.")
-    @GetMapping
+    @GetMapping("/v1")
     public ResponseEntity<GlobalResponse<CustomSliceResponse<ReadAllPropertyResponse>>> getAllPropertyList(
             @RequestParam(required = false) PropertyType type,
             @RequestParam(name = "status", required = false) AuctionStatus auctionStatus,
