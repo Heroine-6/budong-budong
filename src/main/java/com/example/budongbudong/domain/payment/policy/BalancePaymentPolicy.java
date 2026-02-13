@@ -14,6 +14,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 잔금 결제 정책
+ * 계약금 선납 여부 및 7일 기한 검증 로직 담당
+ */
 @Component
 @RequiredArgsConstructor
 public class BalancePaymentPolicy implements PaymentPolicy {
@@ -71,7 +75,7 @@ public class BalancePaymentPolicy implements PaymentPolicy {
         return new PaymentInfo(
                 remaining,
                 paidAmount,
-                null,   // 잔금은 rate 의미 없음
+                null,
                 dueAt
         );
     }

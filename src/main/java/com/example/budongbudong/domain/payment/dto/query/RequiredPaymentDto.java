@@ -13,9 +13,9 @@ public class RequiredPaymentDto {
     private final Long auctionId;
     private final String auctionName;
     private final BigDecimal finalPrice;
-    private final BigDecimal paidAmount; // null 가능
+    private final BigDecimal paidAmount;
     private final LocalDateTime winnerCreatedAt;
-    private final LocalDateTime downPaymentApprovedAt; // null 가능
+    private final LocalDateTime downPaymentApprovedAt;
 
     @QueryProjection
     public RequiredPaymentDto(

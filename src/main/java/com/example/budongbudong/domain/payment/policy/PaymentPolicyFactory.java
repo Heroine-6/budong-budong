@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * PaymentType 기반 정책 전략 선택 팩토리
+ */
 @Component
 public class PaymentPolicyFactory {
 

@@ -15,6 +15,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
+/**
+ * 계약금 결제 정책
+ * 10% 계산 및 24시간 기한 검증 로직 담당
+ */
 @Component
 @RequiredArgsConstructor
 public class DownPaymentPolicy implements PaymentPolicy {
