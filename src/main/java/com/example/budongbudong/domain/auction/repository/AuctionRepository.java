@@ -111,6 +111,18 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     }
 
     @Query("""
+                select a.startedAt
+                from Auction a
+                where a.id = :auctionId
+            """)
+    Optional<LocalDateTime> findStartedAtById(@Param("auctionId") Long auctionId);
+
+    default LocalDateTime getStartedAtOrThrow(Long auctionId) {
+        return findStartedAtById(auctionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUCTION_NOT_FOUND));
+    }
+
+    @Query("""
                 select a.id
                 from Auction a
                 where a.status = 'SCHEDULED'
@@ -161,4 +173,5 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Long> findEndingSoonAuctionIds(LocalDateTime today);
 
     List<Auction> findAllByStatusAndType(AuctionStatus status, AuctionType type);
+
 }

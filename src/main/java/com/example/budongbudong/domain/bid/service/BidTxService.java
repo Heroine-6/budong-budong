@@ -3,6 +3,10 @@ package com.example.budongbudong.domain.bid.service;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Bid;
 import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.domain.auction.enums.AuctionStatus;
+import com.example.budongbudong.domain.auction.event.AuctionClosedEvent;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
@@ -18,6 +22,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -72,6 +78,45 @@ public class BidTxService {
         log.info("[{}] SUCCESS auctionId={} price={}", th, auctionId, bidPrice);
 
         eventPublisher.publishEvent(new BidCreatedEvent(auctionId, userId));
+
+        return CreateBidResponse.from(savedBid);
+    }
+
+    /**
+     * 네덜란드식 경매 입찰 등록
+     * - 입찰가(현재가) 계산
+     * - 입찰 -> 경매 종료(이벤트 발행) -> (이벤트리스너)낙찰 처리
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public CreateBidResponse createDutchBid(Long auctionId, Long userId) {
+
+        User user = userRepository.getByIdOrThrow(userId);
+
+        Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
+
+        // 현재 시각 기준으로 가격 재계산
+        long minutesElapsed = Duration.between(auction.getStartedAt(), LocalDateTime.now()).toMinutes();
+        auction.recalculateCurrentPrice(minutesElapsed);
+
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new CustomException(ErrorCode.AUCTION_NOT_OPEN);
+        }
+
+        BigDecimal bidPrice = auction.getCurrentPrice();
+
+        Bid bid = new Bid(user, auction, bidPrice);
+        bid.markHighest();
+        bid.changeStatus(BidStatus.WINNING);
+
+        Bid savedBid = bidRepository.save(bid);
+
+        log.debug("[입찰] 성공 - auctionId={}, bidId={}", auctionId, bid.getId());
+
+        eventPublisher.publishEvent(new BidCreatedEvent(auctionId, bid.getId()));
+
+        // 경매 종료
+        auctionRepository.closeIfOpen(auctionId);
+        eventPublisher.publishEvent(new AuctionClosedEvent(auctionId));
 
         return CreateBidResponse.from(savedBid);
     }
