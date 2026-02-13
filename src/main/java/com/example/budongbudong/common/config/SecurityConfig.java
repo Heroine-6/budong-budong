@@ -209,7 +209,7 @@ public class SecurityConfig {
     private void chatServerAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.GET, "/api/internal/v2/**")
+        auth.requestMatchers(HttpMethod.GET, "/api/internal/chat/v2/**")
                 .hasRole(UserRole.GENERAL.name());
     }
 

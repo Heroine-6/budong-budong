@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "채팅")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/internal/chat")
+@RequestMapping("/api/internal/chat")
 public class ChatServerController {
 
     private final ChatServerService chatServerService;
 
     @Operation(summary = "채팅 컨텍스트 조회", description = "매물 채팅방 입장에 필요한 컨텍스트 정보를 반환합니다. (GENERAL 권한 필요)")
-    @GetMapping("/{propertyId}")
+    @GetMapping("/v2/{propertyId}")
     public ResponseEntity<GlobalResponse<ChatServerResponse>> getChatContext(
             @PathVariable Long propertyId,
             @AuthenticationPrincipal AuthUser authUser
