@@ -36,18 +36,16 @@ public class KakaoTokenService {
     private String redirectUri;
 
     /**
-     * 인가 코드로 카카오 토큰 발급 후 Redis 저장
+     * 인가 코드로 카카오 토큰 발급
      */
-    public KakaoTokenResponse issueToken(String authorizationCode) {
-        KakaoTokenResponse response = kakaoAuthClient.getToken(
+    public KakaoTokenResponse issueToken(String authorizationCode, String callbackUri) {
+        return kakaoAuthClient.getToken(
                 "authorization_code",
                 clientId,
-                redirectUri,
+                callbackUri != null ? callbackUri : redirectUri,
                 authorizationCode,
                 clientSecret
         );
-
-        return response;
     }
 
     /**

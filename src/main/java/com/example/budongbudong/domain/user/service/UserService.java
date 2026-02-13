@@ -34,8 +34,8 @@ public class UserService {
      * 카카오 계정 연동
      */
     @Transactional
-    public void linkKakao(Long userId, String authorizationCode) {
-        KakaoTokenResponse tokenResponse = kakaoTokenService.issueToken(authorizationCode);
+    public void linkKakao(Long userId, String authorizationCode, String redirectUri) {
+        KakaoTokenResponse tokenResponse = kakaoTokenService.issueToken(authorizationCode, redirectUri);
 
         kakaoTokenService.saveTokens(userId, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
 

@@ -28,9 +28,10 @@ public class UserController {
     @PostMapping("/kakao/link")
     public ResponseEntity<GlobalResponse<Void>> linkKakao(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestParam("code") String code
+            @RequestParam("code") String code,
+            @RequestParam(value = "redirectUri", required = false) String redirectUri
     ) {
-        userService.linkKakao(authUser.getUserId(), code);
+        userService.linkKakao(authUser.getUserId(), code, redirectUri);
 
         return GlobalResponse.ok(null);
     }
