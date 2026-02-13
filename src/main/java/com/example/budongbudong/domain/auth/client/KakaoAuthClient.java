@@ -17,4 +17,12 @@ public interface KakaoAuthClient {
             @RequestParam("code") String code,
             @RequestParam("client_secret") String clientSecret
     );
+
+    @PostMapping(value = "/oauth/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    KakaoTokenResponse refreshToken(
+            @RequestParam("grant_type") String grantType,
+            @RequestParam("client_id") String clientId,
+            @RequestParam("refresh_token") String refreshToken,
+            @RequestParam("client_secret") String clientSecret
+    );
 }

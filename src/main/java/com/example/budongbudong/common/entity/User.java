@@ -97,4 +97,9 @@ public class User extends BaseEntity {
     public void updatePushAllowed() {
         this.isPushAllowed = !this.isPushAllowed;
     }
+
+    public void linkKakao(LoginType loginType, String providerId) {
+        this.loginType = loginType;
+        this.providerId = providerId;
+    }
 }

@@ -7,9 +7,7 @@ import com.example.budongbudong.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users/v2")
@@ -25,5 +23,16 @@ public class UserController {
         UpdatePushAllowedResponse response = userService.updatePushAllowed(authUser.getUserId());
 
         return GlobalResponse.ok(response);
+    }
+
+    @PostMapping("/kakao/link")
+    public ResponseEntity<GlobalResponse<Void>> linkKakao(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam("code") String code,
+            @RequestParam(value = "redirectUri", required = false) String redirectUri
+    ) {
+        userService.linkKakao(authUser.getUserId(), code, redirectUri);
+
+        return GlobalResponse.ok(null);
     }
 }
