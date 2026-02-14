@@ -58,8 +58,18 @@ jobs:
         run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/budong-container
 
       - name: Create .env file
+        env:
+          APPLICATION_B64: ${{ secrets.APPLICATION_B64 }}
         run: |
-          echo "${{ secrets.APPLICATION_B64 }}" | base64 --decode > .env
+          # Support both real base64 secrets and plain-text .env secrets.
+          if printf '%s' "$APPLICATION_B64" | base64 --decode > .env 2>/dev/null; then
+            echo "Decoded APPLICATION_B64 with base64 --decode"
+          elif printf '%s' "$APPLICATION_B64" | base64 -d > .env 2>/dev/null; then
+            echo "Decoded APPLICATION_B64 with base64 -d"
+          else
+            printf '%s\n' "$APPLICATION_B64" > .env
+            echo "APPLICATION_B64 treated as plain text .env"
+          fi
           grep -q '^KAKAO_CLIENT_ID=' .env
           grep -q '^KAKAO_CLIENT_SECRET=' .env
           grep -q '^KAKAO_REDIRECT_URI=' .env
