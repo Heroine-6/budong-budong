@@ -10,6 +10,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Property 검색 전용 Elasticsearch Document
@@ -51,6 +52,9 @@ public class PropertySearchDocument {
     // --- 검색/정렬 ---
     @Field(type = FieldType.Long)
     private BigDecimal price;
+
+    @Field(type = FieldType.Date)
+    private LocalDateTime createdAt;
 
     // --- 경매 요약 (리스트용) ---
     @Field(type = FieldType.Object)
