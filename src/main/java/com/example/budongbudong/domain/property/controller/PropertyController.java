@@ -12,10 +12,7 @@ import com.example.budongbudong.domain.property.dto.request.CreatePropertyReques
 import com.example.budongbudong.domain.property.dto.request.PresignedUrlRequest;
 import com.example.budongbudong.domain.property.dto.request.PropertyLookupRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
-import com.example.budongbudong.domain.property.dto.response.PropertyLookupResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
-import com.example.budongbudong.domain.property.dto.response.SearchPropertyResponse;
+import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.service.PropertyImagePresignService;
 import com.example.budongbudong.domain.property.service.PropertySearchService;
@@ -87,9 +84,6 @@ public class PropertyController {
             @RequestParam(name = "status", required = false) AuctionStatus auctionStatus,
             Pageable pageable
     ) {
-        //TODO 전체 기능 구현 완료후 삭제 예정입니다.
-        log.info("alloy loki test log");
-        log.error("alloy loki error test");
         CustomSliceResponse<ReadAllPropertyResponse> response = propertyService.getAllPropertyList(type, auctionStatus, pageable);
         return GlobalResponse.ok(response);
     }
@@ -119,6 +113,14 @@ public class PropertyController {
     @GetMapping("/{propertyId}")
     public ResponseEntity<GlobalResponse<ReadPropertyResponse>> getProperty(@PathVariable Long propertyId) {
         ReadPropertyResponse response = propertyService.getProperty(propertyId);
+        return GlobalResponse.ok(response);
+    }
+
+    @SecurityNotRequired
+    @Operation(summary = "경매중인 매물 단건 조회", description = "매물 ID로 상세 정보를 조회합니다. 로그인 불필요.")
+    @GetMapping("/{propertyId}/auction")
+    public ResponseEntity<GlobalResponse<ReadAuctionPropertyResponse>> getAuctionProperty(@PathVariable Long propertyId) {
+        ReadAuctionPropertyResponse response = propertyService.getAuctionProperty(propertyId);
         return GlobalResponse.ok(response);
     }
 
