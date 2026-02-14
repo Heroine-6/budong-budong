@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @RequiredArgsConstructor
 public class SearchPropertyResponse {
@@ -15,6 +17,7 @@ public class SearchPropertyResponse {
     private final String name;
     private final String address;
     private final PropertyType type;
+    private final BigDecimal price;
     private final String thumbnailImage;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private final AuctionResponse auction;
@@ -26,6 +29,7 @@ public class SearchPropertyResponse {
                 document.getName(),
                 document.getAddress(),
                 document.getType(),
+                document.getPrice(),
                 document.getThumbnailImage(),
                 document.getAuction() != null
                         ? AuctionResponse.from(document.getAuction())
