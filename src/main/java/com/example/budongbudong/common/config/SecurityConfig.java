@@ -133,12 +133,14 @@ public class SecurityConfig {
                         "/search",
                         "/search.html",
                         "/signin",
-                        "/signin.html",
                         "/signup",
                         "/signup.html",
                         "/payments.html",
                         "/mypage",
-                        "/mypage.html"
+                        "/mypage.html",
+                        "/signin.html",
+                        "/api/auth/v2/kakao/**",
+                        "/api/auth/v2/kakao/complete"
                 ).permitAll();
     }
 
