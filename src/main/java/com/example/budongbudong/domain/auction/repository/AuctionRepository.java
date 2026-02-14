@@ -175,10 +175,11 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findAllByStatusAndType(AuctionStatus status, AuctionType type);
 
     @Query("""
-            select a from Auction a
+            select a
+            from Auction a
             join fetch a.property p
             where p.id = :propertyId
-            and a.status = 'OPEN'
+              and a.status = 'OPEN'
         """)
     Optional<Auction> findCurrentOpenAuction(@Param("propertyId") Long propertyId);
 
