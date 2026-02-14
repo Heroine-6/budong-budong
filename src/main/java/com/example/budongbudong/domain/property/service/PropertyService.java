@@ -15,6 +15,7 @@ import com.example.budongbudong.domain.property.dto.cache.CachedPropertyListDto;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
 import com.example.budongbudong.domain.property.dto.request.PropertyLookupRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
+import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.event.PropertyEventType;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.event.PropertyEventPublisher;
@@ -25,10 +26,6 @@ import com.example.budongbudong.domain.property.realdeal.client.NaverGeoClient;
 import com.example.budongbudong.domain.property.realdeal.client.NaverGeoResponse;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
-import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
-import com.example.budongbudong.domain.property.dto.response.PropertyLookupResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.propertyimage.service.PropertyImageService;
 import com.example.budongbudong.domain.user.repository.UserRepository;
@@ -160,6 +157,17 @@ public class PropertyService {
         AuctionStatus auctionStatus = auctionRepository.findStatusByPropertyIdOrNull(propertyId);
 
         return ReadPropertyResponse.from(property, auctionStatus);
+    }
+
+    @Transactional(readOnly = true)
+    public ReadAuctionPropertyResponse getAuctionProperty(Long propertyId) {
+
+        Property property = propertyRepository.getByIdWithImagesAndNotDeletedOrThrow(propertyId);
+
+        Auction auction = auctionRepository.getCurrentOpenAuctionOrThrow(propertyId);
+
+        return ReadAuctionPropertyResponse.from(property, auction);
+
     }
 
     @Transactional
