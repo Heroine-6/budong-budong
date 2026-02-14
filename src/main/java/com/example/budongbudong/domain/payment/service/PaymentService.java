@@ -1,19 +1,15 @@
 package com.example.budongbudong.domain.payment.service;
 
-import com.example.budongbudong.common.entity.Auction;
-import com.example.budongbudong.common.entity.Payment;
-import com.example.budongbudong.common.entity.User;
+import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomSliceResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.auctionwinner.repository.AuctionWinnerRepository;
 import com.example.budongbudong.domain.payment.MQ.PaymentReconfirmPublisher;
-import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
-import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
+import com.example.budongbudong.domain.payment.dto.query.*;
 import com.example.budongbudong.domain.payment.dto.request.PaymentConfirmRequest;
-import com.example.budongbudong.domain.payment.dto.response.PaymentTossReadyResponse;
-import com.example.budongbudong.domain.payment.dto.response.ReadAllPaymentResponse;
-import com.example.budongbudong.domain.payment.dto.response.ReadPaymentResponse;
+import com.example.budongbudong.domain.payment.dto.response.*;
 import com.example.budongbudong.domain.payment.enums.PaymentMethodType;
 import com.example.budongbudong.domain.payment.enums.PaymentStatus;
 import com.example.budongbudong.domain.payment.enums.PaymentType;
@@ -22,6 +18,7 @@ import com.example.budongbudong.domain.payment.event.PaymentRequestedEvent;
 import com.example.budongbudong.domain.payment.event.RefundRequestDomainEvent;
 import com.example.budongbudong.domain.payment.log.enums.LogType;
 import com.example.budongbudong.domain.payment.log.service.PaymentLogService;
+import com.example.budongbudong.domain.payment.policy.*;
 import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.payment.toss.client.TossPaymentClient;
 import com.example.budongbudong.domain.payment.toss.dto.response.TossConfirmResponse;
@@ -40,10 +37,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -58,6 +55,8 @@ public class PaymentService {
     private final TossPaymentClient tossPaymentClient;
     private final PaymentReconfirmPublisher reconfirmPublisher;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final AuctionWinnerRepository auctionWinnerRepository;
+    private final PaymentPolicyFactory factory;
 
     @Transactional
     public PaymentTossReadyResponse requestPayment(Long userId, Long auctionId, PaymentType type) {
@@ -221,6 +220,51 @@ public class PaymentService {
         applicationEventPublisher.publishEvent(new RefundRequestDomainEvent(paymentId));
     }
 
+    @Transactional(readOnly = true)
+    public PaymentInfoResponse getPaymentInfo(
+            Long auctionId,
+            Long userId,
+            PaymentType type
+    ) {
+
+        Auction auction = auctionRepository.getByIdOrThrow(auctionId);
+        AuctionWinner winner = auctionWinnerRepository.getAuctionWinnerOrThrow(auctionId);
+
+        PaymentPolicy policy = factory.get(type);
+
+        PaymentInfo info = policy.assembleInfo(auction, winner, userId);
+
+        return new PaymentInfoResponse(
+                auction.getId(),
+                auction.getProperty().getName(),
+                type,
+                winner.getPrice(),
+                info.payableAmount(),
+                info.alreadyPaidAmount(),
+                info.rate(),
+                auction.getStartedAt(),
+                winner.getCreatedAt(),
+                info.dueAt()
+        );
+    }
+
+    /**
+     * 계약금, 잔금 결제가 필요한 경매에 대한 결제 요청 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<MyPaymentListResponse> getMyRequiredPaymentsByType(Long userId, PaymentType type) {
+
+        if (type != PaymentType.DOWN_PAYMENT && type != PaymentType.BALANCE) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_TYPE);
+        }
+
+        List<RequiredPaymentDto> raws = paymentRepository.findRequiredPaymentsByUserId(userId, type);
+
+        return raws.stream()
+                .map(raw -> convertToResponse(raw, type))
+                .toList();
+    }
+
     /**
      * PG 승인 이후,서버가 결제 결과를 "확정"하는 단계
      * - 지금은 확정의 경계 역할만 한다.
@@ -234,4 +278,47 @@ public class PaymentService {
         log.info("[결제 로그] paymentId={}, {} -> {}, type={}, error={}", payment.getId(), prev, current, type, errorMessage);
         paymentLogService.saveLog(payment.getId(), prev, payment.getStatus(), type, errorMessage);
     }
+
+    /**
+     * 금액 계산용 메서드
+     */
+    private MyPaymentListResponse convertToResponse(RequiredPaymentDto dto, PaymentType type) {
+        BigDecimal paidAmount = dto.getPaidAmount() == null  ? BigDecimal.ZERO  : dto.getPaidAmount();
+
+        BigDecimal payableAmount;
+        LocalDateTime dueAt;
+
+        if (type == PaymentType.DOWN_PAYMENT) {
+
+            // 계약금 = 낙찰가의 10%
+            payableAmount = dto.getFinalPrice().multiply(BigDecimal.valueOf(0.1)).setScale(0, RoundingMode.DOWN);
+
+            // 낙찰 시점 + 24시간
+            dueAt = dto.getWinnerCreatedAt().plusHours(24);
+
+        } else {
+
+            // 잔금 = 낙찰가 - (보증금 + 계약금)
+            payableAmount = dto.getFinalPrice().subtract(paidAmount);
+
+            if (dto.getDownPaymentApprovedAt() == null) {
+                throw new CustomException(ErrorCode.DOWN_PAYMENT_REQUIRED_FIRST);
+            }
+
+            // 계약금 승인 시점 + 7일
+            dueAt = dto.getDownPaymentApprovedAt().plusDays(7);
+        }
+
+        boolean expired = LocalDateTime.now().isAfter(dueAt);
+
+        return new MyPaymentListResponse(
+                dto.getAuctionId(),
+                dto.getAuctionName(),
+                dto.getFinalPrice(),
+                payableAmount,
+                dueAt,
+                expired
+        );
+    }
+
 }
