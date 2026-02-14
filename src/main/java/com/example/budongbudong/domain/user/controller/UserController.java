@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.user.controller;
 import com.example.budongbudong.common.dto.AuthUser;
 import com.example.budongbudong.common.response.GlobalResponse;
 import com.example.budongbudong.domain.user.dto.response.UpdatePushAllowedResponse;
+import com.example.budongbudong.domain.user.dto.response.UserInfoResponse;
 import com.example.budongbudong.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,5 +40,15 @@ public class UserController {
         userService.linkKakao(authUser.getUserId(), code, redirectUri);
 
         return GlobalResponse.ok(null);
+    }
+
+    @Operation(summary = "내 프로필 조회", description = "로그인한 사용자의 이름, 전화번호, 주소를 조회합니다.")
+    @GetMapping("/v2/me")
+    public ResponseEntity<GlobalResponse<UserInfoResponse>> getUserInfo(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        UserInfoResponse response = userService.getUserInfo(authUser.getUserId());
+
+        return GlobalResponse.ok(response);
     }
 }
