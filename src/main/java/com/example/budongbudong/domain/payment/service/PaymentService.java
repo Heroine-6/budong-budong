@@ -283,11 +283,7 @@ public class PaymentService {
      * 금액 계산용 메서드
      */
     private MyPaymentListResponse convertToResponse(RequiredPaymentDto dto, PaymentType type) {
-        log.info("현재 type = {}", type);
-        BigDecimal paidAmount =
-                dto.getPaidAmount() == null
-                        ? BigDecimal.ZERO
-                        : dto.getPaidAmount();
+        BigDecimal paidAmount = dto.getPaidAmount() == null  ? BigDecimal.ZERO  : dto.getPaidAmount();
 
         BigDecimal payableAmount;
         LocalDateTime dueAt;
@@ -295,9 +291,7 @@ public class PaymentService {
         if (type == PaymentType.DOWN_PAYMENT) {
 
             // 계약금 = 낙찰가의 10%
-            payableAmount = dto.getFinalPrice()
-                    .multiply(BigDecimal.valueOf(0.1))
-                    .setScale(0, RoundingMode.DOWN);
+            payableAmount = dto.getFinalPrice().multiply(BigDecimal.valueOf(0.1)).setScale(0, RoundingMode.DOWN);
 
             // 낙찰 시점 + 24시간
             dueAt = dto.getWinnerCreatedAt().plusHours(24);
