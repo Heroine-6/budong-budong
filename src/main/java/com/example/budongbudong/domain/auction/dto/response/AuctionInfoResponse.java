@@ -7,10 +7,20 @@ import com.example.budongbudong.domain.auction.enums.AuctionType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record AuctionInfoResponse(AuctionType type, AuctionStatus status, Long propertyId, BigDecimal startPrice,
-                                  BigDecimal minBidIncrement, BigDecimal highestPrice, int totalBidders,
-                                  LocalDateTime startedAt, LocalDateTime endedAt, BigDecimal currentPrice,
-                                  BigDecimal endPrice, BigDecimal decreasePrice) {
+public record AuctionInfoResponse(
+        AuctionType type,
+        AuctionStatus status,
+        Long propertyId,
+        BigDecimal startPrice,
+        BigDecimal minBidIncrement,
+        BigDecimal highestPrice,
+        int totalBidders,
+        LocalDateTime startedAt,
+        LocalDateTime endedAt,
+        BigDecimal currentPrice,
+        BigDecimal endPrice,
+        BigDecimal decreasePrice
+) {
     public static AuctionInfoResponse from(
             Auction auction,
             BigDecimal highestPrice,
