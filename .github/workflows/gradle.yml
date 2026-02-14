@@ -58,7 +58,11 @@ jobs:
         run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/budong-container
 
       - name: Create .env file
-        run: echo "${{ secrets.APPLICATION_B64 }}" > .env
+        run: |
+          echo "${{ secrets.APPLICATION_B64 }}" | base64 --decode > .env
+          grep -q '^KAKAO_CLIENT_ID=' .env
+          grep -q '^KAKAO_CLIENT_SECRET=' .env
+          grep -q '^KAKAO_REDIRECT_URI=' .env
 
       - name: Docker Compose Down
         run: sudo docker-compose -p budong down
