@@ -4,6 +4,7 @@ import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.domain.auth.dto.response.KakaoTokenResponse;
 import com.example.budongbudong.domain.auth.service.KakaoTokenService;
 import com.example.budongbudong.domain.user.dto.response.UpdatePushAllowedResponse;
+import com.example.budongbudong.domain.user.dto.response.UserInfoResponse;
 import com.example.budongbudong.domain.user.enums.LoginType;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,5 +44,13 @@ public class UserService {
 
         User user = userRepository.getByIdOrThrow(userId);
         user.linkKakao(LoginType.KAKAO, kakaoId);
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponse getUserInfo(Long userId) {
+
+        User user = userRepository.getByIdOrThrow(userId);
+
+        return UserInfoResponse.from(user);
     }
 }

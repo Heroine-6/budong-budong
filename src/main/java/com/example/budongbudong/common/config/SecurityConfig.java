@@ -228,6 +228,8 @@ public class SecurityConfig {
         auth.requestMatchers(HttpMethod.PATCH, "/api/users/v2/notifications")
                 .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/users/v2/kakao/link")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/users/v2/me")
                 .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name());
     }
 }
