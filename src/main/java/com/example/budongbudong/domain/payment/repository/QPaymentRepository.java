@@ -1,7 +1,7 @@
 package com.example.budongbudong.domain.payment.repository;
 
-import com.example.budongbudong.domain.payment.dto.query.ReadAllPaymentDto;
-import com.example.budongbudong.domain.payment.dto.query.ReadPaymentDetailDto;
+import com.example.budongbudong.domain.payment.dto.query.*;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
@@ -15,4 +15,6 @@ public interface QPaymentRepository {
     Optional<ReadPaymentDetailDto> findDetailById(Long paymentId);
 
     List<Long> findDepositPaymentIdsByAuctionIdAndNotWinnerUserId(Long auctionId, Long winnerUserId);
+
+    List<RequiredPaymentDto> findRequiredPaymentsByUserId(Long userId, PaymentType type);
 }
