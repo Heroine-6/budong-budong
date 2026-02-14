@@ -138,6 +138,7 @@ public class SecurityConfig {
                         "/payments.html",
                         "/mypage",
                         "/mypage.html",
+                        "/signin.html",
                         "/api/auth/v2/kakao/**",
                         "/api/auth/v2/kakao/complete"
                 ).permitAll();
