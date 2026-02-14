@@ -149,7 +149,7 @@ public class SecurityConfig {
     ) {
         auth.requestMatchers(HttpMethod.POST, "/api/properties/v1/lookup").permitAll()
 
-                .requestMatchers(HttpMethod.GET, "/api/properties/v1", "/api/properties/v1/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/properties/v1", "/api/properties/v1/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/properties/v1/my")
                 .hasRole(UserRole.SELLER.name())
 
