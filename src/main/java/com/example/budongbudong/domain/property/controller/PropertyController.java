@@ -90,11 +90,11 @@ public class PropertyController {
 
     @Operation(summary = "매물 키워드 검색", description = "주소·이름 등 키워드로 매물을 검색합니다. 로그인 불필요.")
     @GetMapping("/search")
-    public ResponseEntity<GlobalResponse<CustomSliceResponse<SearchPropertyResponse>>> search(
+    public ResponseEntity<GlobalResponse<CustomPageResponse<SearchPropertyResponse>>> search(
             @ModelAttribute SearchPropertyCond cond,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        CustomSliceResponse<SearchPropertyResponse> response = propertySearchService.search(cond, pageable);
+        CustomPageResponse<SearchPropertyResponse> response = propertySearchService.search(cond, pageable);
         return GlobalResponse.ok(response);
     }
 
