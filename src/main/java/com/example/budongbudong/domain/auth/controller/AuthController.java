@@ -90,7 +90,7 @@ public class AuthController {
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody KakaoProfileCompleteRequest request
     ) {
-        authService.completeProfile(authUser.getUserId(), request.phone(), request.address());
+        authService.completeProfile(authUser.getUserId(), request.name(), request.phone(), request.address());
 
         return GlobalResponse.ok(null);
     }
