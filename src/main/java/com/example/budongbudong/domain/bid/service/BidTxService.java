@@ -13,6 +13,9 @@ import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.event.BidCreatedEvent;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
+import com.example.budongbudong.domain.payment.enums.PaymentStatus;
+import com.example.budongbudong.domain.payment.enums.PaymentType;
+import com.example.budongbudong.domain.payment.repository.PaymentRepository;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ public class BidTxService {
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final PaymentRepository paymentRepository;
 
     /**
      * 입찰 등록 - Create
@@ -46,6 +50,9 @@ public class BidTxService {
         User user = userRepository.getByIdOrThrow(userId);
 
         Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
+
+        //가장 먼저 보증금 납부 여부 확인
+        validateDeposit(user, auction);
 
         BigDecimal bidPrice = request.getPrice();
         BigDecimal currentMaxPrice = bidRepository.findMaxPriceByAuctionId(auctionId);
@@ -94,6 +101,9 @@ public class BidTxService {
 
         Auction auction = auctionRepository.getOpenAuctionOrThrow(auctionId);
 
+        //가장 먼저 보증금 납부 여부 확인
+        validateDeposit(user, auction);
+
         // 현재 시각 기준으로 가격 재계산
         long minutesElapsed = Duration.between(auction.getStartedAt(), LocalDateTime.now()).toMinutes();
         auction.recalculateCurrentPrice(minutesElapsed);
@@ -120,4 +130,13 @@ public class BidTxService {
 
         return CreateBidResponse.from(savedBid);
     }
+
+    private void validateDeposit(User user, Auction auction) {
+        boolean hasDeposit = paymentRepository.existsByUserAndAuctionAndTypeAndStatus(user, auction, PaymentType.DEPOSIT, PaymentStatus.SUCCESS);
+
+        if (!hasDeposit) {
+            throw new CustomException(ErrorCode.DEPOSIT_REQUIRED);
+        }
+    }
+
 }
