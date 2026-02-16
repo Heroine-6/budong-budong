@@ -25,7 +25,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
 
     Optional<Payment> findByOrderId(String orderId);
 
-    Optional<Payment> findByAuctionAndTypeAndStatus(Auction auction, PaymentType paymentType, PaymentStatus paymentStatus);
+    Optional<Payment> findByUserAndAuctionAndTypeAndStatus(User user, Auction auction, PaymentType paymentType, PaymentStatus paymentStatus);
 
     List<Payment> findAllByStatus(PaymentStatus paymentStatus);
 

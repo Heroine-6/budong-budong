@@ -64,12 +64,12 @@ public class PaymentService {
         Auction auction = auctionRepository.getAuctionWithPropertyOrTrow(auctionId);
         User user = userRepository.getByIdOrThrow(userId);
 
-        paymentRepository.findByAuctionAndTypeAndStatus(auction, type, PaymentStatus.SUCCESS)
+        paymentRepository.findByUserAndAuctionAndTypeAndStatus(user, auction, type, PaymentStatus.SUCCESS)
                 .ifPresent(p -> {
                     throw new CustomException(ErrorCode.ALREADY_PAID);
                 });
 
-        Optional<Payment> inProgressPayment = paymentRepository.findByAuctionAndTypeAndStatus(auction, type, PaymentStatus.IN_PROGRESS);
+        Optional<Payment> inProgressPayment = paymentRepository.findByUserAndAuctionAndTypeAndStatus(user, auction, type, PaymentStatus.IN_PROGRESS);
         if (inProgressPayment.isPresent()) {
             return PaymentTossReadyResponse.from(inProgressPayment.get());
         }
