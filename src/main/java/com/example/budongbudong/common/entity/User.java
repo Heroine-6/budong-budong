@@ -77,16 +77,15 @@ public class User extends BaseEntity {
         return user;
     }
 
-    public void completeProfile(String phone, String address) {
-        if (phone == null || phone.isBlank() || address == null || address.isBlank()) {
-            throw new IllegalArgumentException("전화번호와 주소는 필수입니다.");
-        }
+    public void completeProfile(String name, String phone, String address) {
+        this.name = name;
         this.phone = phone;
         this.address = address;
     }
 
     public boolean isProfileComplete() {
-        return phone != null && !phone.isBlank()
+        return name != null && !name.isBlank()
+                && phone != null && !phone.isBlank()
                 && address != null && !address.isBlank();
     }
 

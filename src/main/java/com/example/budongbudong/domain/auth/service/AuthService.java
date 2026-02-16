@@ -161,9 +161,9 @@ public class AuthService {
     }
 
     @Transactional
-    public void completeProfile(Long userId, String phone, String address) {
+    public void completeProfile(Long userId, String name, String phone, String address) {
         User user = userRepository.getByIdOrThrow(userId);
-        user.completeProfile(phone, address);
+        user.completeProfile(name, phone, address);
     }
 
     private AuthResponse generateAndSaveToken(User user) {
