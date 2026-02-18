@@ -182,5 +182,11 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, isProfileComplete);
     }
 
+    @Transactional(readOnly = true)
+    public void verifyEmail(String email) {
+        
+        userRepository.validateEmailNotExists(email);
+
+    }
 }
 

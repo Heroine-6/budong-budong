@@ -25,6 +25,16 @@ public class AuthController {
     private final SmsService smsService;
 
     @SecurityNotRequired
+    @Operation(summary = "이메일 중복 확인", description = "회원가입 전 이메일 중복 검사를 진행합니다.")
+    @PostMapping("/v1/verify-email")
+    public ResponseEntity<GlobalResponse<Void>> verifyEmail(@RequestBody EmailVerifyRequest request) {
+
+        authService.verifyEmail(request.email());
+
+        return GlobalResponse.ok(null);
+    }
+
+    @SecurityNotRequired
     @Operation(summary = "SMS 인증번호 발송", description = "회원가입 전 휴대폰 번호로 인증번호를 발송합니다.")
     @PostMapping("/v1/send")
     public ResponseEntity<GlobalResponse<Void>> sendAuthCode(@RequestBody SmsSendRequest request) {
