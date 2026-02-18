@@ -106,7 +106,15 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/v1/signup", "/api/auth/v1/signin", "/api/auth/v1/refresh", "/api/auth/v1/send", "/api/auth/v1/verify", "/api/auth/v2/kakao").permitAll()
+                .requestMatchers(
+                        "/api/auth/v1/signup",
+                        "/api/auth/v1/signin",
+                        "/api/auth/v1/refresh",
+                        "/api/auth/v1/send",
+                        "/api/auth/v1/verify",
+                        "/api/auth/v1/verify-email",
+                        "/api/auth/v2/kakao"
+                ).permitAll()
                 .requestMatchers("/uploads/**").permitAll()
 
                 // Swagger / OpenAPI 허용
