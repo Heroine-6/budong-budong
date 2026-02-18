@@ -61,6 +61,7 @@ public enum ErrorCode {
     DOWN_PAYMENT_REQUIRED_FIRST(400, "계약금이 먼저 결제되어야 합니다."),
     DEPOSIT_REQUIRED_FIRST(400, "입찰금이 먼저 결제되어야 합니다."),
     INVALID_PAYMENT_TYPE(400, "잘못된 결제 유형입니다."),
+    DEPOSIT_REQUIRED(400, "보증금 결제가 먼저 필요합니다"),
 
     //------500-----------------------
     ELASTICSEARCH_ERROR(500, "검색 서비스에 일시적인 문제가 발생했습니다."),

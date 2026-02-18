@@ -24,12 +24,16 @@ public class PaymentAmountCalculator {
 
     public BigDecimal calculate(Auction auction, PaymentType type){
 
-        AuctionWinner auctionWinner = auctionWinnerRepository.getAuctionWinnerOrThrow(auction.getId());
-
         return switch (type) {
             case DEPOSIT -> calculateDeposit(auction);
-            case DOWN_PAYMENT -> calculateDownPayment(auctionWinner);
-            case BALANCE -> calculateBalance(auction, auctionWinner);
+            case DOWN_PAYMENT -> {
+                AuctionWinner auctionWinner = auctionWinnerRepository.getAuctionWinnerOrThrow(auction.getId());
+                yield calculateDownPayment(auctionWinner);
+            }
+            case BALANCE -> {
+                AuctionWinner auctionWinner = auctionWinnerRepository.getAuctionWinnerOrThrow(auction.getId());
+                yield calculateBalance(auction, auctionWinner);
+            }
         };
     }
 

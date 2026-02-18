@@ -1,7 +1,6 @@
 package com.example.budongbudong.domain.payment.repository;
 
-import com.example.budongbudong.common.entity.Auction;
-import com.example.budongbudong.common.entity.Payment;
+import com.example.budongbudong.common.entity.*;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.domain.payment.enums.*;
@@ -26,7 +25,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
 
     Optional<Payment> findByOrderId(String orderId);
 
-    Optional<Payment> findByAuctionAndTypeAndStatus(Auction auction, PaymentType paymentType, PaymentStatus paymentStatus);
+    Optional<Payment> findByUserAndAuctionAndTypeAndStatus(User user, Auction auction, PaymentType paymentType, PaymentStatus paymentStatus);
 
     List<Payment> findAllByStatus(PaymentStatus paymentStatus);
 
@@ -42,6 +41,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, QPaymen
               and p.status = 'SUCCESS'
         """)
     Optional<Payment> findSuccessDownPayment(Long auctionId);
+
+    boolean existsByUserAndAuctionAndTypeAndStatus(User user, Auction auction, PaymentType type, PaymentStatus status);
 
     default Payment getByOrderIdOrThrow(String orderId) {
         return findByOrderId(orderId).orElseThrow(()-> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));

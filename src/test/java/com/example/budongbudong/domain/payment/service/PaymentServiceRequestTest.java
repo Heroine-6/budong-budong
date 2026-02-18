@@ -71,7 +71,7 @@ class PaymentServiceRequestTest {
 
         //stub
         //성공한 결제 있음
-        when(paymentRepository.findByAuctionAndTypeAndStatus(auction, PaymentType.DEPOSIT, PaymentStatus.SUCCESS))
+        when(paymentRepository.findByUserAndAuctionAndTypeAndStatus(user, auction, PaymentType.DEPOSIT, PaymentStatus.SUCCESS))
                 .thenReturn(Optional.of(successPayment));
 
         //when&then
@@ -91,10 +91,10 @@ class PaymentServiceRequestTest {
 
         //stub
         //성공한 결제는 없음
-        when(paymentRepository.findByAuctionAndTypeAndStatus(auction, PaymentType.DEPOSIT, PaymentStatus.SUCCESS)).
+        when(paymentRepository.findByUserAndAuctionAndTypeAndStatus(user,auction, PaymentType.DEPOSIT, PaymentStatus.SUCCESS)).
                 thenReturn(Optional.empty());
         //진행 중인 결제는 있음
-        when(paymentRepository.findByAuctionAndTypeAndStatus(auction, PaymentType.DEPOSIT, PaymentStatus.IN_PROGRESS))
+        when(paymentRepository.findByUserAndAuctionAndTypeAndStatus(user,auction, PaymentType.DEPOSIT, PaymentStatus.IN_PROGRESS))
                 .thenReturn(Optional.of(inprogressPayment));
 
         //when
