@@ -18,7 +18,7 @@ import java.util.Optional;
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
-    Optional<Auction> findByPropertyId(Long propertyId);
+    Optional<Auction> findTopByPropertyIdOrderByCreatedAtDesc(Long propertyId);
 
     boolean existsByPropertyIdAndStatusNotIn(Long propertyId, Iterable<AuctionStatus> statuses);
 
@@ -37,7 +37,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     }
 
     default void getByPropertyIdOrThrowIfExists(Long propertyId) {
-        Auction auction = findByPropertyId(propertyId).orElse(null);
+        Auction auction = findTopByPropertyIdOrderByCreatedAtDesc(propertyId).orElse(null);
 
         if (auction != null && auction.getStatus() != AuctionStatus.CANCELLED) {
             throw new CustomException(ErrorCode.AUCTION_ALREADY_EXISTS);
@@ -45,7 +45,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     }
 
     default Auction findByPropertyIdOrThrowIfExists(Long propertyId) {
-        return findByPropertyId(propertyId).orElse(null);
+        return findTopByPropertyIdOrderByCreatedAtDesc(propertyId).orElse(null);
     }
 
     default Auction getOpenAuctionOrThrow(Long auctionId) {
@@ -67,7 +67,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     }
 
     default Auction findByPropertyIdOrNull(Long propertyId) {
-        return findByPropertyId(propertyId).orElse(null);
+        return findTopByPropertyIdOrderByCreatedAtDesc(propertyId).orElse(null);
     }
 
     default AuctionStatus findStatusByPropertyIdOrNull(Long propertyId) {
@@ -175,12 +175,12 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findAllByStatusAndType(AuctionStatus status, AuctionType type);
 
     @Query("""
-            select a
-            from Auction a
-            join fetch a.property p
-            where p.id = :propertyId
-              and a.status = 'OPEN'
-        """)
+                select a
+                from Auction a
+                join fetch a.property p
+                where p.id = :propertyId
+                  and a.status = 'OPEN'
+            """)
     Optional<Auction> findCurrentOpenAuction(@Param("propertyId") Long propertyId);
 
     default Auction getCurrentOpenAuctionOrThrow(Long propertyId) {
