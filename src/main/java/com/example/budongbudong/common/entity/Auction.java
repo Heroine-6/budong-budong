@@ -110,7 +110,7 @@ public class Auction extends BaseEntity {
 
     private static BigDecimal calculateDecreasePrice(BigDecimal startPrice, int decreaseRate) {
         // 시작가 기준 감가율(%)에 해당하는 감가 금액
-        BigDecimal rate = BigDecimal.valueOf(decreaseRate).divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
+        BigDecimal rate = BigDecimal.valueOf(decreaseRate).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
 
         return startPrice.multiply(rate);
     }
