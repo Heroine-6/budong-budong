@@ -7,6 +7,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @Table(name = "users")
@@ -23,13 +25,13 @@ public class User extends BaseEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
-    @Column(name = "phone", nullable = false)
+    @Column(name = "phone")
     private String phone;
 
-    @Column(name = "address", nullable = false)
+    @Column(name = "address")
     private String address;
 
     @Column(name = "role", nullable = false)
@@ -62,5 +64,41 @@ public class User extends BaseEntity {
         user.address = address;
         user.role = role;
         return user;
+    }
+
+    public static User createKakaoUser(String email, String kakaoId) {
+        User user = new User();
+        user.email = email;
+        user.name = "카카오유저";
+        user.password = UUID.randomUUID().toString();
+        user.loginType = LoginType.KAKAO;
+        user.providerId = kakaoId;
+        user.role = UserRole.GENERAL;
+        return user;
+    }
+
+    public void completeProfile(String name, String phone, String address) {
+        this.name = name;
+        this.phone = phone;
+        this.address = address;
+    }
+
+    public boolean isProfileComplete() {
+        return name != null && !name.isBlank()
+                && phone != null && !phone.isBlank()
+                && address != null && !address.isBlank();
+    }
+
+    public boolean isKakaoUser() {
+        return loginType == LoginType.KAKAO;
+    }
+
+    public void updatePushAllowed() {
+        this.isPushAllowed = !this.isPushAllowed;
+    }
+
+    public void linkKakao(LoginType loginType, String providerId) {
+        this.loginType = loginType;
+        this.providerId = providerId;
     }
 }

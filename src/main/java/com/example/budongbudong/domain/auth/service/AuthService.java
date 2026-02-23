@@ -4,14 +4,20 @@ import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.utils.JwtUtil;
+import com.example.budongbudong.domain.auth.client.KakaoApiClient;
+import com.example.budongbudong.domain.auth.client.KakaoAuthClient;
 import com.example.budongbudong.domain.auth.dto.request.ReissueAccessTokenRequest;
 import com.example.budongbudong.domain.auth.dto.request.SignInRequest;
 import com.example.budongbudong.domain.auth.dto.request.SignUpRequest;
 import com.example.budongbudong.domain.auth.dto.response.AuthResponse;
+import com.example.budongbudong.domain.auth.dto.response.KakaoTokenResponse;
+import com.example.budongbudong.domain.auth.dto.response.KakaoUserInfoResponse;
+import com.example.budongbudong.domain.user.enums.LoginType;
 import com.example.budongbudong.domain.user.enums.UserRole;
 import com.example.budongbudong.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +36,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
+    private final KakaoAuthClient kakaoAuthClient;
+    private final KakaoApiClient kakaoApiClient;
+
+    @Value("${kakao.oauth.client-id}")
+    private String kakaoClientId;
+
+    @Value("${kakao.oauth.redirect-uri}")
+    private String kakaoRedirectUri;
+
+    @Value("${kakao.oauth.client-secret}")
+    private String kakaoClientSecret;
 
     @Transactional
     public AuthResponse signUp(SignUpRequest request) {
@@ -117,7 +134,43 @@ public class AuthService {
         return generateAndSaveToken(user);
     }
 
+    @Transactional
+    public AuthResponse kakaoLogin(String code) {
+        KakaoTokenResponse tokenResponse = kakaoAuthClient.getToken(
+                "authorization_code", kakaoClientId, kakaoRedirectUri, code, kakaoClientSecret
+        );
+
+        KakaoUserInfoResponse userInfo = kakaoApiClient.getUserInfo(
+                "Bearer " + tokenResponse.accessToken()
+        );
+
+        String kakaoId = String.valueOf(userInfo.id());
+        String email = userInfo.getEmail();
+
+        if (email == null || email.isBlank()) {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        User user = userRepository.findByLoginTypeAndProviderId(LoginType.KAKAO, kakaoId)
+                .orElseGet(() -> {
+                    User newUser = User.createKakaoUser(email, kakaoId);
+                    return userRepository.save(newUser);
+                });
+
+        return generateAndSaveToken(user, user.isProfileComplete());
+    }
+
+    @Transactional
+    public void completeProfile(Long userId, String name, String phone, String address) {
+        User user = userRepository.getByIdOrThrow(userId);
+        user.completeProfile(name, phone, address);
+    }
+
     private AuthResponse generateAndSaveToken(User user) {
+        return generateAndSaveToken(user, true);
+    }
+
+    private AuthResponse generateAndSaveToken(User user, boolean isProfileComplete) {
 
         String refreshTokenKey = REFRESH_TOKEN_PREFIX + user.getId();
 
@@ -126,8 +179,14 @@ public class AuthService {
 
         redisTemplate.opsForValue().set(refreshTokenKey, refreshToken.substring(7), 14, TimeUnit.DAYS);
 
-        return new AuthResponse(accessToken, refreshToken);
+        return new AuthResponse(accessToken, refreshToken, isProfileComplete);
     }
 
+    @Transactional(readOnly = true)
+    public void verifyEmail(String email) {
+        
+        userRepository.validateEmailNotExists(email);
+
+    }
 }
 

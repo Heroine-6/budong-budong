@@ -35,4 +35,16 @@ public class AuctionFixture {
                 .build();
     }
 
+    public static Auction openDutchAuction(Property property, LocalDateTime startedAt) {
+        Auction auction = Auction.createDutch(
+                property,
+                BigDecimal.valueOf(100_000_000),
+                BigDecimal.valueOf(50_000_000),
+                10,
+                startedAt
+        );
+        auction.updateStatus(AuctionStatus.OPEN);
+        return auction;
+    }
+
 }

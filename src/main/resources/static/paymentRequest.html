@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>결제 요청</title>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #e4ebf5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            width: 380px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            padding: 28px 24px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .deposit {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .contract {
+            background: #4f46e5;
+            color: #ffffff;
+        }
+
+        .balance {
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .login-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .login-section.logged-in {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+
+        .login-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .login-status {
+            font-size: 13px;
+            color: #16a34a;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 8px;
+            outline: none;
+        }
+
+        .login-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #059669;
+            color: #fff;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover { background: #047857; }
+        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .logout-btn {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #fff;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .logout-btn:hover { background: #f3f4f6; }
+
+        .login-error {
+            font-size: 12px;
+            color: #dc2626;
+            margin-top: 4px;
+        }
+
+        .hidden { display: none !important; }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="title">결제 테스트</div>
+    <div class="subtitle">경매 결제 프로세스를 테스트합니다</div>
+
+    <!-- 로그인 섹션 -->
+    <div class="login-section" id="loginSection">
+        <!-- 로그인 폼 -->
+        <div id="loginForm">
+            <div class="login-label">로그인</div>
+            <input type="email" class="login-input" id="email" placeholder="이메일" />
+            <input type="password" class="login-input" id="password" placeholder="비밀번호" />
+            <button class="login-btn" id="loginBtn" onclick="login()">로그인</button>
+            <div class="login-error hidden" id="loginError"></div>
+        </div>
+
+        <!-- 로그인 상태 -->
+        <div id="loggedInInfo" class="hidden">
+            <div class="login-status" id="userInfo"></div>
+            <button class="logout-btn" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <button class="pay-button deposit" onclick="pay('DEPOSIT')">
+        입찰 보증금 결제
+    </button>
+
+    <button class="pay-button contract" onclick="pay('DOWN_PAYMENT')">
+        계약금 결제
+    </button>
+
+    <button class="pay-button balance" onclick="pay('BALANCE')">
+        잔금 결제
+    </button>
+
+    <button class="pay-button" style="background:#6b7280;color:#fff;margin-top:4px;" onclick="location.href='/payments.html'">
+        결제 내역 보기
+    </button>
+
+    <div class="footer">
+        Toss Payments · Test Mode
+    </div>
+</div>
+
+<script>
+    const clientKey = "test_ck_E92LAa5PVbqvvxYaZPPz37YmpXyJ";
+    const auctionId = 4;
+
+    function getToken() {
+        return localStorage.getItem("accessToken") || "";
+    }
+
+    function updateLoginUI() {
+        const token = getToken();
+        const loginForm = document.getElementById("loginForm");
+        const loggedInInfo = document.getElementById("loggedInInfo");
+        const loginSection = document.getElementById("loginSection");
+
+        if (token) {
+            loginForm.classList.add("hidden");
+            loggedInInfo.classList.remove("hidden");
+            loginSection.classList.add("logged-in");
+
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const role = payload.userRole || "UNKNOWN";
+                const email = payload.userEmail || "";
+                document.getElementById("userInfo").textContent = email + " (" + role + ") 로그인됨";
+            } catch (e) {
+                document.getElementById("userInfo").textContent = "로그인됨";
+            }
+        } else {
+            loginForm.classList.remove("hidden");
+            loggedInInfo.classList.add("hidden");
+            loginSection.classList.remove("logged-in");
+        }
+    }
+
+    async function login() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const errorEl = document.getElementById("loginError");
+        const btn = document.getElementById("loginBtn");
+
+        errorEl.classList.add("hidden");
+
+        if (!email || !password) {
+            errorEl.textContent = "이메일과 비밀번호를 입력해 주세요.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "로그인 중...";
+
+        try {
+            const res = await fetch("/api/auth/v1/signin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const json = await res.json();
+
+            if (!json.success) {
+                errorEl.textContent = json.message || "로그인 실패";
+                errorEl.classList.remove("hidden");
+                return;
+            }
+
+            let at = json.data.accessToken;
+            if (at.startsWith("Bearer ")) at = at.substring(7);
+            localStorage.setItem("accessToken", at);
+
+            if (json.data.refreshToken) {
+                let rt = json.data.refreshToken;
+                if (rt.startsWith("Bearer ")) rt = rt.substring(7);
+                localStorage.setItem("refreshToken", rt);
+            }
+
+            updateLoginUI();
+        } catch (e) {
+            errorEl.textContent = "네트워크 오류";
+            errorEl.classList.remove("hidden");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "로그인";
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        updateLoginUI();
+    }
+
+    // 페이지 로드 시 로그인 상태 표시
+    updateLoginUI();
+
+    async function pay(type) {
+        const accessToken = getToken();
+        if (!accessToken) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+        try {
+            const response = await fetch(`/api/payments/v2/auctions/${auctionId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + accessToken
+                },
+                body: JSON.stringify({ type })
+            });
+
+            const json = await response.json();
+
+            if (!json.success) {
+                alert(json.message ?? "결제 요청 실패");
+                return;
+            }
+
+            const { orderId, amount, orderName } = json.data;
+
+            const tossPayments = TossPayments(clientKey);
+            await tossPayments.requestPayment("CARD", {
+                orderId,
+                amount,
+                orderName,
+                successUrl: "http://54.180.175.183:8080/success.html",
+                failUrl: "http://54.180.175.183:8080/fail.html"
+            });
+
+        } catch (e) {
+            console.error(e);
+            alert("결제 중 오류 발생");
+        }
+    }
+</script>
+
+</body>
+</html>

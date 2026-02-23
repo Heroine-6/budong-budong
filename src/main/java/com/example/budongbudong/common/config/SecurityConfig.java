@@ -52,6 +52,11 @@ public class SecurityConfig {
                     propertyAuth(auth);
                     auctionAuth(auth);
                     bidAuth(auth);
+                    realDealAuth(auth);
+                    paymentAuth(auth);
+                    chatServerAuth(auth);
+                    notificationAuth(auth);
+                    userAuth(auth);
                     auth.anyRequest().authenticated();
                 })
                 .exceptionHandling(ex -> ex
@@ -101,65 +106,138 @@ public class SecurityConfig {
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/signin", "/api/v1/auth/refresh", "/api/v1/auth/send", "/api/v1/auth/verify").permitAll()
+                .requestMatchers(
+                        "/api/auth/v1/signup",
+                        "/api/auth/v1/signin",
+                        "/api/auth/v1/refresh",
+                        "/api/auth/v1/send",
+                        "/api/auth/v1/verify",
+                        "/api/auth/v1/verify-email",
+                        "/api/auth/v2/kakao"
+                ).permitAll()
                 .requestMatchers("/uploads/**").permitAll()
 
                 // Swagger / OpenAPI 허용
                 .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**"
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
                 ).permitAll()
 
                 // Elasticsearch 동기화
-                .requestMatchers("api/v1/properties/sync").permitAll()
+                .requestMatchers("/api/properties/v1/sync").permitAll()
 
                 // 서버 health check
-                .requestMatchers("/actuator/**").permitAll();
+                .requestMatchers("/actuator/**").permitAll()
+
+                //html
+                .requestMatchers(
+                        "/paymentRequest.html",
+                        "/success.html",
+                        "/fail.html",
+                        "/",
+                        "/index.html",
+                        "/budongbudong",
+                        "/search",
+                        "/search.html",
+                        "/signin",
+                        "/signup",
+                        "/signup.html",
+                        "/payments.html",
+                        "/mypage",
+                        "/mypage.html",
+                        "/signin.html",
+                        "/api/auth/v2/kakao/**",
+                        "/api/auth/v2/kakao/complete"
+                ).permitAll();
     }
 
     private void propertyAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/*").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/v1/properties/my")
-            .hasRole(UserRole.SELLER.name())
+        auth.requestMatchers(HttpMethod.POST, "/api/properties/v1/lookup").permitAll()
 
-            .requestMatchers(HttpMethod.POST, "/api/v1/properties")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/properties/v1", "/api/properties/v1/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/properties/v1/my")
+                .hasRole(UserRole.SELLER.name())
 
-            .requestMatchers(HttpMethod.PATCH, "/api/v1/properties/*")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/properties/v1")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/properties/*")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name());
+                .requestMatchers(HttpMethod.PATCH, "/api/properties/v1/*")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+
+                .requestMatchers(HttpMethod.DELETE, "/api/properties/v1/*")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name());
     }
 
     private void auctionAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.POST, "/api/v1/auctions")
-            .hasRole(UserRole.SELLER.name())
+        auth.requestMatchers(HttpMethod.POST, "/api/auctions/v1", "/api/auctions/v3/dutch")
+                .hasRole(UserRole.SELLER.name())
 
-            .requestMatchers(HttpMethod.PATCH, "/api/v1/auctions/*")
-            .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PATCH, "/api/auctions/v1*")
+                .hasAnyRole(UserRole.SELLER.name(), UserRole.ADMIN.name())
 
-            .requestMatchers(
-                    HttpMethod.GET,
-                    "/api/v1/auctions/*/statistics",
-                    "/api/v1/auctions/*/info"
-            ).permitAll();
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/auctions/v1/*/statistics",
+                        "/api/auctions/v1/*/info"
+                ).permitAll();
     }
 
     private void bidAuth(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
     ) {
-        auth.requestMatchers(HttpMethod.GET, "/api/v1/bids/auctions/**").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/v1/bids")
-            .hasRole(UserRole.GENERAL.name())
+        auth.requestMatchers(HttpMethod.GET, "/api/bids/v1/auctions/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/bids/v1")
+                .hasRole(UserRole.GENERAL.name())
 
-            .requestMatchers(HttpMethod.GET, "/api/v1/bids/my")
-            .hasRole(UserRole.GENERAL.name());
+                .requestMatchers(HttpMethod.GET, "/api/bids/v1/my")
+                .hasRole(UserRole.GENERAL.name());
     }
 
+    private void realDealAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        // 실거래가 검색 API - 비로그인 허용
+        auth.requestMatchers(HttpMethod.GET, "/api/real-deals/v2/**").permitAll();
+    }
+
+    private void paymentAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.POST, "/api/payments/v2/auctions/**")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/payments/v2", "/api/payments/v2/*")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/payments/v2/*/refund")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.ADMIN.name());
+    }
+
+    private void chatServerAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.GET, "/api/internal/chat/v2/**")
+                .hasRole(UserRole.GENERAL.name());
+    }
+
+    private void notificationAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.GET, "/api/notifications/v2/my")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name());
+    }
+
+    private void userAuth(
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth
+    ) {
+        auth.requestMatchers(HttpMethod.PATCH, "/api/users/v2/notifications")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/users/v2/kakao/link")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/users/v2/me")
+                .hasAnyRole(UserRole.GENERAL.name(), UserRole.SELLER.name(), UserRole.ADMIN.name());
+    }
 }

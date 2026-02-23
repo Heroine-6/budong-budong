@@ -9,21 +9,29 @@ public enum ErrorCode {
     AUCTION_ALREADY_EXISTS(409, "이미 경매가 진행중인 매물입니다."),
     AUCTION_INVALID_STATUS_FOR_CANCEL(409, "경매 시작 전 상태에서만 경매를 취소할 수 있습니다."),
     BID_LOCK_TIMEOUT(409, "입찰 요청이 몰려 잠시 후 다시 시도해주세요."),
+    ALREADY_PAID(409, "이미 처리된 결제 입니다."),
+    PAYMENT_EXPIRED(409, "결제 기한이 만료되었습니다."),
 
     //------404-----------------------
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다."),
     AUCTION_NOT_FOUND(404, "존재하지 않는 경매입니다."),
     PROPERTY_NOT_FOUND(404, "존재하지 않는 매물입니다."),
     EXTERNAL_API_FAILED(404, "해당 정보가 없습니다."),
+    AUCTION_WINNER_NOT_FOUND(404, "존재하지 않는 경매 낙찰입니다."),
+    PAYMENT_NOT_FOUND(404, "존재하지 않는 결제 이력입니다."),
+    NOTIFICATION_NOT_FOUND(404, "존재하지 않는 알림입니다."),
+    USER_NOTIFICATION_NOT_FOUND(404, "존재하지 않는 사용자 알림입니다."),
 
     //------403-----------------------
     USER_NOT_MATCH(403, "소유자만 접근 가능합니다."),
-    PASSWORD_NOT_MATCH(403, "비밀번호가 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다"),
     AUCTION_NOT_OPEN(403, "현재 입찰이 불가능한 경매입니다."),
+    SELLER_NOT_MATCH(403, "판매자 정보가 올바르지 않습니다."),
+    ONLY_CAN_PAY_BIDDER(403, "낙찰자만 결제가 가능합니다"),
 
     //------401-----------------------
     LOGIN_REQUIRED(401, "로그인한 유저만 사용할 수 있는 기능입니다"),
+    PASSWORD_NOT_MATCH(401, "비밀번호가 일치하지 않습니다."),
     LOGIN_UNAUTHORIZED(401, "아이디 또는 비밀번호가 올바르지 않습니다."),
     SMS_VERIFICATION_REQUIRED(401, "휴대전화 인증을 먼저 완료해주세요."),
     TOKEN_EXPIRED(401, "Token이 만료되었습니다."),
@@ -44,9 +52,21 @@ public enum ErrorCode {
     SMS_CODE_EXPIRED(400, "인증번호가 만료되었습니다."),
     SMS_CODE_MISMATCH(400, "인증번호가 올바르지 않습니다."),
     S3_NOT_CONFIGURED(400, "S3 설정이 필요합니다."),
-
+    PAYMENT_AMOUNT_MISMATCH(400, "결제 금액이 일치하지 않습니다."),
+    ONLY_CAN_REFUND_DEPOSIT(400, "보증금만 환불 가능합니다."),
+    INVALID_REFUND_STATUS(400, "환불 가능한 상태가 아닙니다."),
+    SUCCESS_BUT_PAYMENT_METHOD_NULL(400, "SUCCESS이나 결제 수단이 비어있습니다."),
+    SUCCESS_BUT_METHOD_DETAIL_NULL(400, "SUCCESS이나 결제 수단 상세(예.카드번호) 비어있습니다"),
+    ONLY_CAN_DO_CLOSED_AUCTION(400, "종료된 경매만 결제가 가능합니다"),
+    DOWN_PAYMENT_REQUIRED_FIRST(400, "계약금이 먼저 결제되어야 합니다."),
+    DEPOSIT_REQUIRED_FIRST(400, "입찰금이 먼저 결제되어야 합니다."),
+    INVALID_PAYMENT_TYPE(400, "잘못된 결제 유형입니다."),
+    DEPOSIT_REQUIRED(400, "보증금 결제가 먼저 필요합니다"),
 
     //------500-----------------------
+    ELASTICSEARCH_ERROR(500, "검색 서비스에 일시적인 문제가 발생했습니다."),
+    GEOCODING_FAILED(500, "지오코딩에 실패했습니다."),
+    DEAL_COLLECT_FAILED(500, "실거래 데이터 수집에 실패했습니다."),
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
     FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
     SMS_SEND_FAILED(500, "인증번호 전송에 실패했습니다."),

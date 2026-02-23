@@ -4,26 +4,21 @@ import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
 import com.example.budongbudong.common.response.CustomPageResponse;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.bid.dto.request.CreateBidMessageRequest;
 import com.example.budongbudong.domain.bid.dto.request.CreateBidRequest;
-import com.example.budongbudong.domain.bid.dto.response.CreateBidMessageResponse;
 import com.example.budongbudong.domain.bid.dto.response.CreateBidResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadAllBidsResponse;
 import com.example.budongbudong.domain.bid.dto.response.ReadMyBidsResponse;
-import com.example.budongbudong.domain.bid.enums.BidStatus;
 import com.example.budongbudong.domain.bid.repository.BidRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
@@ -36,12 +31,6 @@ public class BidService {
     private final AuctionRepository auctionRepository;
     private final RedissonClient redissonClient;
     private final BidTxService bidTxService;
-    private final RabbitTemplate rabbitTemplate;
-
-    @Value("${rabbitmq.exchange.name}")
-    private String exchangeName;
-    @Value("${rabbitmq.routing.key}")
-    private String routingKey;
 
     /**
      * 입찰 등록 - Lock
@@ -112,23 +101,60 @@ public class BidService {
     }
 
     /**
-     * Queue 로 입찰 메세지 발행
+     * 네덜란드 경매 입찰 등록 - Lock
+     * - 피크타임에 따른 대기 시간 지정: 하락 시각 ± 5분
      */
-    public CreateBidMessageResponse publishBid(CreateBidRequest request, Long auctionId, Long userId) {
+    public CreateBidResponse createDutchBid(Long auctionId, Long userId) {
 
-        CreateBidMessageRequest messageRequest = CreateBidMessageRequest.from(auctionId, userId, request);
-        rabbitTemplate.convertAndSend(exchangeName, routingKey, messageRequest);
+        long t0 = System.currentTimeMillis();
+        String th = Thread.currentThread().getName();
 
-        return CreateBidMessageResponse.from(BidStatus.PLACED, "입찰 요청 완료");
-    }
+        LocalDateTime startedAt = auctionRepository.getStartedAtOrThrow(auctionId);
+        LocalDateTime now = LocalDateTime.now();
 
-    /**
-     * Queue에 발행된 입찰 메시지 구독
-     */
-    @RabbitListener(queues = "${rabbitmq.queue.name}")
-    public void receiveCreateBidMessage(CreateBidMessageRequest request) {
+        long decreaseIntervalMinutes = 30;
 
-        createBid(request.getCreateBidRequest(), request.getAuctionId(), request.getUserId());
+        long minutesElapsed = Duration.between(startedAt, now).toMinutes();
 
+        // 가장 최근 감가 시각 계산
+        long lastDecreaseStep = minutesElapsed / decreaseIntervalMinutes;
+        LocalDateTime lastDecreaseTime = startedAt.plusMinutes(lastDecreaseStep * decreaseIntervalMinutes);
+        LocalDateTime nextDecreaseTime = lastDecreaseTime.plusMinutes(decreaseIntervalMinutes);
+
+        // 피크 타임
+        long peakWindow = 5;
+        boolean isPeakTime = now.isBefore(lastDecreaseTime.plusMinutes(peakWindow));
+        boolean isNextPeak = now.isBefore(nextDecreaseTime.minusMinutes(peakWindow));
+
+        long waitTime = (isPeakTime || isNextPeak) ? 2L : 0L;
+
+        String lockKey = "lock:auction:" + auctionId;
+        RLock lock = redissonClient.getFairLock(lockKey);
+
+        boolean acquired = false;
+
+        try {
+            log.info("[{}] t={} TRY_LOCK auctionId={}", th, System.currentTimeMillis(), auctionId);
+
+            acquired = lock.tryLock(waitTime, -1, TimeUnit.SECONDS);
+
+            if (!acquired) {
+                log.info("[{}] LOCK_FAILED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+                throw new CustomException(ErrorCode.BID_LOCK_TIMEOUT);
+            }
+
+            log.info("[{}] LOCK_ACQUIRED auctionId={} waited={}ms", th, auctionId, System.currentTimeMillis() - t0);
+
+            return bidTxService.createDutchBid(auctionId, userId);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CustomException(ErrorCode.BID_LOCK_FAILED);
+
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 }

@@ -1,13 +1,15 @@
 package com.example.budongbudong.common.entity;
 
-import com.example.budongbudong.domain.payment.enums.PaymentStatus;
-import com.example.budongbudong.domain.payment.enums.PaymentType;
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.domain.payment.enums.*;
+import com.example.budongbudong.domain.payment.toss.enums.PaymentFailureReason;
+import com.example.budongbudong.domain.payment.toss.enums.TossPaymentStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,18 +30,18 @@ public class Payment extends BaseEntity {
     @JoinColumn(name = "auction_id", nullable = false)
     private Auction auction;
 
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
-    private PaymentStatus status = PaymentStatus.PENDING;
+    private PaymentStatus status = PaymentStatus.READY;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable = false, columnDefinition = "varchar(30)")
     @Enumerated(EnumType.STRING)
     private PaymentType type;
 
     @Column(name = "order_name", nullable = false)
     private String orderName;
 
-    @Column(name = "payment_key", nullable = false)
+    @Column(name = "payment_key")
     private String paymentKey;
 
     @Column(name = "amount", nullable = false)
@@ -50,4 +52,146 @@ public class Payment extends BaseEntity {
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
+
+    @Column(name = "failure_reason", columnDefinition = "varchar(50)")
+    @Enumerated(EnumType.STRING)
+    private PaymentFailureReason failureReason;
+
+    @Column(name="verifying_started_at")
+    private LocalDateTime verifyingStartedAt;
+
+    @Column(name = "payment_method_type", columnDefinition = "varchar(50)")
+    @Enumerated(EnumType.STRING)
+    private PaymentMethodType paymentMethodType;
+
+    @Column(name = "method_detail")
+    private String methodDetail;
+
+    @Column(name = "verify_retry_count", nullable = false)
+    private int verifyRetryCount = 0;
+
+    @Column(name = "refund_retry_count", nullable = false)
+    private int refundRetryCount = 0;
+
+    @Builder
+    public Payment(User user, Auction auction, PaymentType type, String orderName, BigDecimal amount, String orderId) {
+        this.user = user;
+        this.auction = auction;
+        this.status = PaymentStatus.READY;
+        this.type = type;
+        this.orderName = orderName;
+        this.amount = amount;
+        this.orderId = orderId;
+    }
+
+    public void makeSuccess(String paymentKey, LocalDateTime approvedAt,
+                            PaymentMethodType paymentMethodType, String methodDetail) {
+        this.paymentKey = paymentKey;
+        this.approvedAt = approvedAt;
+        this.status = PaymentStatus.SUCCESS;
+        this.failureReason = null;
+        if (paymentMethodType != null) {
+            this.paymentMethodType = paymentMethodType;
+        }
+        if (methodDetail != null) {
+            this.methodDetail = methodDetail;
+        }
+    }
+
+    public void makeFail(PaymentFailureReason failureReason) {
+        this.status = PaymentStatus.FAIL;
+        this.failureReason = failureReason;
+    }
+
+    /**
+     * 승인 결과 미확정 상태 처리
+     * - PG 장애 또는 네트워크 오류 시 사용
+     * - 배치 재확인 대상
+     */
+    public void makeVerifying(PaymentFailureReason failureReason, String paymentKey) {
+        this.status = PaymentStatus.VERIFYING;
+        this.failureReason = failureReason;
+        this.paymentKey = paymentKey;
+        if(this.verifyingStartedAt == null) {
+            this.verifyingStartedAt = LocalDateTime.now();
+        }
+    }
+
+    public void makeInProgress(String paymentKey) {
+        if(this.status != PaymentStatus.READY) return;
+        this.status = PaymentStatus.IN_PROGRESS;
+        this.paymentKey = paymentKey;
+    }
+
+    public void finalizeByTossStatus(TossPaymentStatus status,
+                                     PaymentMethodType paymentMethodType, String methodDetail) {
+        if(this.status != PaymentStatus.VERIFYING) return;
+
+        switch (status) {
+            case SUCCESS -> {
+                validateSuccessFields(paymentMethodType, methodDetail);
+                makeSuccess(this.paymentKey, LocalDateTime.now(), paymentMethodType, methodDetail);
+            }
+            case FAIL -> makeFail(PaymentFailureReason.UNKNOWN);
+            case UNKNOWN -> {
+                //그대로 VERIFYING 유지
+            }
+        }
+    }
+
+    /**
+     * 결제가 최종 확정 상태인지 여부
+     * MQ 중복 및 재전송에 대한 멱등성 보장
+     */
+    public boolean isFinalized() {
+        return status == PaymentStatus.SUCCESS || status == PaymentStatus.FAIL
+                || status == PaymentStatus.REFUND_REQUESTED || status == PaymentStatus.REFUNDED;
+    }
+
+    public boolean isVerifiedTimeout(Duration limit) {
+        return verifyingStartedAt != null && verifyingStartedAt.isBefore(LocalDateTime.now().minus(limit));
+    }
+
+    /* --- 환불 --- */
+    public void requestRefund() {
+        if(this.type != PaymentType.DEPOSIT) {
+            throw new CustomException(ErrorCode.ONLY_CAN_REFUND_DEPOSIT);
+        }
+
+        if (this.status != PaymentStatus.SUCCESS) {
+            throw new CustomException(ErrorCode.INVALID_REFUND_STATUS);
+        }
+        this.status = PaymentStatus.REFUND_REQUESTED;
+    }
+
+    public void makeRefunded() {
+        if(this.status != PaymentStatus.REFUND_REQUESTED) return;
+        this.status = PaymentStatus.REFUNDED;
+    }
+
+    private void validateSuccessFields (PaymentMethodType paymentMethodType, String methodDetail) {
+
+        if (paymentMethodType == null) {
+            throw new CustomException(ErrorCode.SUCCESS_BUT_PAYMENT_METHOD_NULL);
+        }
+        if (methodDetail == null) {
+            throw new CustomException(ErrorCode.SUCCESS_BUT_METHOD_DETAIL_NULL);
+        }
+    }
+    /* --- 재시도 관리 --- */
+    public void incrementVerifyRetryCount() {
+        this.verifyRetryCount++;
+    }
+
+    public void incrementRefundRetryCount() {
+        this.refundRetryCount++;
+    }
+
+    public boolean isVerifyRetryExceeded(int maxRetry) {
+        return this.verifyRetryCount >= maxRetry;
+    }
+
+    public boolean isRefundRetryExceeded(int maxRetry) {
+        return this.refundRetryCount >= maxRetry;
+    }
 }

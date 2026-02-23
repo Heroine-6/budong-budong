@@ -6,7 +6,6 @@ import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * QueryDSL 조회 전용 DTO
@@ -24,8 +23,6 @@ public class ReadAllPropertyDto {
     private final Long auctionId;
     private final BigDecimal startPrice;
     private final AuctionStatus status;
-    private final LocalDateTime startedAt;
-    private final LocalDateTime endedAt;
     private final String thumbnailUrl;
 
     /**
@@ -49,8 +46,6 @@ public class ReadAllPropertyDto {
             Long auctionId,
             BigDecimal startPrice,
             AuctionStatus status,
-            LocalDateTime startedAt,
-            LocalDateTime endedAt,
             String thumbnailUrl
 
     ) {
@@ -64,8 +59,6 @@ public class ReadAllPropertyDto {
         this.auctionId = auctionId;
         this.startPrice = startPrice;
         this.status = status;
-        this.startedAt = startedAt;
-        this.endedAt = endedAt;
         this.thumbnailUrl = thumbnailUrl;
     }
 }

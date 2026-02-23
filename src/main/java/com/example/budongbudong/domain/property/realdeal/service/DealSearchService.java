@@ -1,0 +1,270 @@
+package com.example.budongbudong.domain.property.realdeal.service;
+
+import co.elastic.clients.elasticsearch._types.GeoDistanceType;
+import co.elastic.clients.elasticsearch._types.ScriptSortType;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import com.example.budongbudong.common.entity.Auction;
+import com.example.budongbudong.common.entity.Property;
+import com.example.budongbudong.common.exception.CustomException;
+import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.domain.auction.repository.AuctionRepository;
+import com.example.budongbudong.domain.bid.repository.BidRepository;
+import com.example.budongbudong.domain.property.enums.PropertyType;
+import com.example.budongbudong.domain.property.realdeal.dto.MarketCompareResponse;
+import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchRequest;
+import com.example.budongbudong.domain.property.realdeal.dto.RealDealSearchResponse;
+import com.example.budongbudong.domain.property.realdeal.enums.DealSortType;
+import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoResponse;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoResponse;
+import com.example.budongbudong.domain.property.realdeal.document.RealDealDocument;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * 실거래가 검색 서비스
+ * - 주소 → 지오코딩 → 좌표 기반 반경 검색 (ES geo_distance)
+ * - 지오코딩: 네이버 우선, 카카오 fallback
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class DealSearchService {
+
+    private final ElasticsearchOperations elasticsearchOperations;
+    private final NaverGeoClient naverGeoClient;
+    private final KakaoGeoClient kakaoGeoClient;
+    private final AuctionRepository auctionRepository;
+    private final BidRepository bidRepository;
+
+    public RealDealSearchResponse searchNearby(RealDealSearchRequest request) {
+        request.validate();
+
+        SearchHits<RealDealDocument> searchHits;
+
+        if (request.getLat() != null && request.getLon() != null) {
+            searchHits = findNearby(
+                    request.getLat(), request.getLon(), request.getDistanceKm(), request.getSize(),
+                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
+                    request.getPropertyType(), request.getSortType()
+            );
+        } else if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            searchHits = findByAddress(
+                    request.getAddress(), request.getDistanceKm(), request.getSize(),
+                    request.getMinArea(), request.getMaxArea(), request.getMinPrice(), request.getMaxPrice(),
+                    request.getPropertyType(), request.getSortType()
+            );
+        } else {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        return RealDealSearchResponse.of(searchHits.getTotalHits(), deals);
+    }
+
+    public SearchHits<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size) {
+        return findNearby(lat, lon, distanceKm, size, null, null, null, null, null, DealSortType.DISTANCE);
+    }
+
+    public SearchHits<RealDealDocument> findNearby(double lat, double lon, double distanceKm, int size,
+                                             BigDecimal minArea, BigDecimal maxArea,
+                                             BigDecimal minPrice, BigDecimal maxPrice,
+                                             PropertyType propertyType, DealSortType sortType) {
+        BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
+        addGeoDistanceFilter(boolBuilder, lat, lon, distanceKm);
+        addPropertyTypeFilter(boolBuilder, propertyType);
+        addRangeFilter(boolBuilder, "exclusiveArea", minArea, maxArea);
+        addRangeFilter(boolBuilder, "dealAmount", minPrice, maxPrice);
+
+        NativeQueryBuilder queryBuilder = NativeQuery.builder()
+                .withQuery(q -> q.bool(boolBuilder.build()))
+                .withPageable(PageRequest.of(0, size));
+
+        applySort(queryBuilder, sortType, lat, lon);
+
+        return elasticsearchOperations.search(queryBuilder.build(), RealDealDocument.class);
+    }
+
+    /**
+     * 특정 좌표 기준 반경 1km 내 실거래 데이터 조회 (기본값)
+     */
+    public SearchHits<RealDealDocument> findNearby(double lat, double lon) {
+        return findNearby(lat, lon, 1.0, 100);
+    }
+
+    /**
+     * 주소 입력으로 실거래 데이터 검색
+     * - 네이버 지오코딩 → 카카오 fallback → 좌표 기반 반경 검색
+     *
+     * @param address 검색할 주소
+     * @param distanceKm 반경 (km)
+     * @param size 조회 건수
+     * @return 반경 내 실거래 목록
+     */
+    public SearchHits<RealDealDocument> findByAddress(String address, double distanceKm, int size,
+                                                BigDecimal minArea, BigDecimal maxArea,
+                                                BigDecimal minPrice, BigDecimal maxPrice,
+                                                PropertyType propertyType, DealSortType sortType) {
+        double[] coords = geocode(address);
+        double lat = coords[0];
+        double lon = coords[1];
+
+        log.info("[주소 검색] {} → 좌표({}, {}) → 반경 {}km 검색", address, lat, lon, distanceKm);
+        return findNearby(lat, lon, distanceKm, size, minArea, maxArea, minPrice, maxPrice, propertyType, sortType);
+    }
+
+    /**
+     * 주소 입력으로 실거래 데이터 검색 (기본값: 1km, 100건)
+     */
+    public SearchHits<RealDealDocument> findByAddress(String address) {
+        return findByAddress(address, 1.0, 100, null, null, null, null, null, DealSortType.DISTANCE);
+    }
+
+    /**
+     * 경매 입찰가 vs 주변 시세 비교
+     * @param inputPrice 사용자가 입력한 희망 입찰가 (nullable)
+     */
+    public MarketCompareResponse compareWithAuction(Long auctionId, double distanceKm, int size,
+                                                    BigDecimal inputPrice) {
+        Auction auction = auctionRepository.getAuctionWithPropertyOrTrow(auctionId);
+        Property property = auction.getProperty();
+
+        BigDecimal highestBidPrice = bidRepository.getHighestPriceOrStartPrice(
+                auctionId, auction.getStartPrice()
+        );
+
+        double lat;
+        double lon;
+        if (property.getLatitude() != null && property.getLongitude() != null) {
+            lat = property.getLatitude().doubleValue();
+            lon = property.getLongitude().doubleValue();
+        } else if (property.getAddress() != null && !property.getAddress().isBlank()) {
+            double[] coords = geocode(property.getAddress());
+            lat = coords[0];
+            lon = coords[1];
+        } else {
+            throw new CustomException(ErrorCode.INVALID_REQUEST);
+        }
+
+        SearchHits<RealDealDocument> searchHits = findNearby(
+                lat, lon, distanceKm, size,
+                null, null, null, null,
+                property.getType(), DealSortType.DISTANCE
+        );
+
+        long totalCount = searchHits.getTotalHits();
+        List<RealDealDocument> deals = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        return MarketCompareResponse.of(
+                auction.getStartPrice(), highestBidPrice,
+                property.getPrivateArea(), inputPrice,
+                totalCount, deals
+        );
+    }
+
+    private void addGeoDistanceFilter(BoolQuery.Builder builder, double lat, double lon, double distanceKm) {
+        builder.filter(f -> f
+                .geoDistance(g -> g
+                        .field("location")
+                        .distance(distanceKm + "km")
+                        .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
+                        .distanceType(GeoDistanceType.Arc)
+                )
+        );
+    }
+
+    private void addPropertyTypeFilter(BoolQuery.Builder builder, PropertyType propertyType) {
+        if (propertyType == null) return;
+        builder.filter(f -> f
+                .term(t -> t.field("propertyType").value(propertyType.name()))
+        );
+    }
+
+    private void addRangeFilter(BoolQuery.Builder builder, String field, BigDecimal min, BigDecimal max) {
+        if (min == null && max == null) return;
+        builder.filter(f -> f
+                .range(r -> r
+                        .number(n -> {
+                            n.field(field);
+                            if (min != null) n.gte(min.doubleValue());
+                            if (max != null) n.lte(max.doubleValue());
+                            return n;
+                        })
+                )
+        );
+    }
+
+    private void applySort(NativeQueryBuilder queryBuilder, DealSortType sortType, double lat, double lon) {
+        if (sortType == DealSortType.PRICE_PER_AREA_ASC || sortType == DealSortType.PRICE_PER_AREA_DESC) {
+            SortOrder order = sortType == DealSortType.PRICE_PER_AREA_ASC ? SortOrder.Asc : SortOrder.Desc;
+            String fallback = sortType == DealSortType.PRICE_PER_AREA_ASC ? "Long.MAX_VALUE" : "0";
+            String scriptSource = "doc['exclusiveArea'].size()==0 || doc['exclusiveArea'].value==0 ? "
+                    + fallback + " : doc['dealAmount'].value / doc['exclusiveArea'].value";
+            queryBuilder.withSort(s -> s
+                    .script(sc -> sc
+                            .type(ScriptSortType.Number)
+                            .script(script -> script.source(scriptSource))
+                            .order(order)
+                    )
+            );
+        } else {
+            queryBuilder.withSort(s -> s
+                    .geoDistance(g -> g
+                            .field("location")
+                            .location(loc -> loc.latlon(ll -> ll.lat(lat).lon(lon)))
+                            .order(SortOrder.Asc)
+                    )
+            );
+        }
+    }
+
+    /**
+     * 주소 → 좌표 변환 (네이버 우선, 카카오 fallback)
+     * @return [lat, lon]
+     */
+    private double[] geocode(String address) {
+        // 네이버 지오코딩 시도
+        try {
+            NaverGeoResponse naverResponse = naverGeoClient.geocode(address);
+            if (naverResponse.hasResult()) {
+                NaverGeoResponse.Address addr = naverResponse.addresses().get(0);
+                log.info("[지오코딩] 네이버 성공: {}", address);
+                return new double[]{Double.parseDouble(addr.y()), Double.parseDouble(addr.x())};
+            }
+        } catch (Exception e) {
+            log.warn("[지오코딩] 네이버 실패: {} - {}", address, e.getMessage());
+        }
+
+        // 카카오 fallback
+        try {
+            KakaoGeoResponse kakaoResponse = kakaoGeoClient.geocode(address);
+            if (kakaoResponse.hasResult()) {
+                KakaoGeoResponse.Document doc = kakaoResponse.documents().get(0);
+                log.info("[지오코딩] 카카오 성공: {}", address);
+                return new double[]{Double.parseDouble(doc.y()), Double.parseDouble(doc.x())};
+            }
+        } catch (Exception e) {
+            log.warn("[지오코딩] 카카오 실패: {} - {}", address, e.getMessage());
+        }
+
+        throw new CustomException(ErrorCode.GEOCODING_FAILED);
+    }
+}

@@ -11,28 +11,36 @@ import com.example.budongbudong.domain.property.client.AptClient;
 import com.example.budongbudong.domain.property.client.AptItem;
 import com.example.budongbudong.domain.property.client.OffiClient;
 import com.example.budongbudong.domain.property.client.VillaClient;
+import com.example.budongbudong.domain.property.dto.cache.CachedPropertyListDto;
 import com.example.budongbudong.domain.property.dto.request.CreatePropertyRequest;
+import com.example.budongbudong.domain.property.dto.request.PropertyLookupRequest;
 import com.example.budongbudong.domain.property.dto.request.UpdatePropertyRequest;
+import com.example.budongbudong.domain.property.dto.response.*;
 import com.example.budongbudong.domain.property.event.PropertyEventType;
 import com.example.budongbudong.domain.property.enums.PropertyType;
 import com.example.budongbudong.domain.property.event.PropertyEventPublisher;
 import com.example.budongbudong.domain.property.lawdcode.LawdCodeService;
+import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.KakaoGeoResponse;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoClient;
+import com.example.budongbudong.domain.property.realdeal.client.NaverGeoResponse;
 import com.example.budongbudong.domain.property.client.AptMapper;
 import com.example.budongbudong.domain.property.client.AptResponse;
-import com.example.budongbudong.domain.property.dto.response.CreateApiResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadAllPropertyResponse;
-import com.example.budongbudong.domain.property.dto.response.ReadPropertyResponse;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.propertyimage.service.PropertyImageService;
 import com.example.budongbudong.domain.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -50,6 +58,10 @@ public class PropertyService {
     private final VillaClient villaClient;
     private final LawdCodeService lawdCodeService;
     private final PropertyEventPublisher propertyEventPublisher;
+    private final NaverGeoClient naverGeoClient;
+    private final KakaoGeoClient kakaoGeoClient;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${external.api.service-key}")
     private String serviceKey;
@@ -67,6 +79,9 @@ public class PropertyService {
 
         // 외부 API에서 받은 값 엔티티에 저장
         property.applyApiInfo(apiInfo);
+
+        // 지오코딩으로 좌표 추출 (네이버 → 카카오 fallback)
+        applyGeoCode(property, request.address());
 
         // DB에 저장
         propertyRepository.save(property);
@@ -90,10 +105,41 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList( Pageable pageable) {
+    public CustomSliceResponse<ReadAllPropertyResponse> getAllPropertyList(
+            PropertyType type,
+            AuctionStatus auctionStatus,
+            Pageable pageable
+    ) {
 
-        Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(pageable);
-        return CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
+        String cacheKey = generateCacheKey(type, auctionStatus, pageable);
+
+        String cache = redisTemplate.opsForValue().get(cacheKey);
+        if (cache != null) {
+            try{
+                CachedPropertyListDto dto = objectMapper.readValue(cache, CachedPropertyListDto.class);
+                log.info("[REDIS][HIT] {}", cacheKey);
+
+                return dto.toResponse(pageable);
+            } catch (Exception e){
+                //캐시가 깨지면 DB조회
+                log.warn("[REDIS][DESERIALIZE_FAIL] key={}", cacheKey, e);
+            }
+        } else {
+            log.info("[REDIS][MISS] {}", cacheKey);
+        }
+        Slice<ReadAllPropertyResponse> slice = propertyRepository.findPropertyList(type, auctionStatus,pageable);
+        CustomSliceResponse<ReadAllPropertyResponse> response = CustomSliceResponse.from(slice.getContent(), pageable.getPageSize(), pageable.getPageNumber(), slice.hasNext());
+
+        try{
+            CachedPropertyListDto dto = CachedPropertyListDto.from(slice);
+            String json = objectMapper.writeValueAsString(dto);
+
+            redisTemplate.opsForValue().set(cacheKey, json, Duration.ofSeconds(20)); //TTL 20
+        }catch (Exception e){
+            // 로직에 영향 없음
+
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +157,17 @@ public class PropertyService {
         AuctionStatus auctionStatus = auctionRepository.findStatusByPropertyIdOrNull(propertyId);
 
         return ReadPropertyResponse.from(property, auctionStatus);
+    }
+
+    @Transactional(readOnly = true)
+    public ReadAuctionPropertyResponse getAuctionProperty(Long propertyId) {
+
+        Property property = propertyRepository.getByIdWithImagesAndNotDeletedOrThrow(propertyId);
+
+        Auction auction = auctionRepository.getCurrentOpenAuctionOrThrow(propertyId);
+
+        return ReadAuctionPropertyResponse.from(property, auction);
+
     }
 
     @Transactional
@@ -145,15 +202,27 @@ public class PropertyService {
         propertyEventPublisher.publish(property.getId(), PropertyEventType.DELETED);
     }
 
+    @Transactional(readOnly = true)
+    public PropertyLookupResponse lookupProperty(PropertyLookupRequest request) {
+        CreateApiResponse apiInfo = fetchApiInfo(
+                request.type(), request.address(), request.dealYmd(), request.floor()
+        );
+        return PropertyLookupResponse.from(apiInfo);
+    }
+
     private CreateApiResponse fetchApiInfo(CreatePropertyRequest request) {
+        return fetchApiInfo(request.type(), request.address(), request.dealYmd(), request.floor());
+    }
+
+    private CreateApiResponse fetchApiInfo(PropertyType type, String address, String dealYmd, Integer floor) {
 
         // 주소에서 지역코드(LAWD_CD) 자동 추출
-        String lawdCd = lawdCodeService.getLawdCdFromAddress(request.address())
+        String lawdCd = lawdCodeService.getLawdCdFromAddress(address)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_ADDRESS));
-        log.info("추출된 법정동 코드: {} (주소: {})", lawdCd, request.address());
+        log.info("추출된 법정동 코드: {} (주소: {})", lawdCd, address);
 
         // PropertyType(아파트,빌라,오피스텔)에 따라 적절한 API 호출
-        AptResponse response = fetchFromApi(request.type(), lawdCd, request.dealYmd());
+        AptResponse response = fetchFromApi(type, lawdCd, dealYmd);
 
         // 전체 응답 중 필요한 값만 꺼내 저장
         List<AptItem> items = response.response().body().items().item();
@@ -163,10 +232,10 @@ public class PropertyService {
         }
 
         // 주소 + 층수로 필터링하여 정확한 매물 찾기
-        AptItem matchedItem = findMatchingItem(items, request.address(), request.floor());
+        AptItem matchedItem = findMatchingItem(items, address, floor);
 
         // aptMapper를 통해 필요한 형태의 값으로 변환하여 반환
-        return AptMapper.toCreateApiResponse(matchedItem, request.address());
+        return AptMapper.toCreateApiResponse(matchedItem, address);
     }
 
     // 외부 api에서 가져올 결과 값 최대 개수 (어떤 타입이든 500개씩 가져오기로 함. 많이 가져올 수록 느려짐 )
@@ -238,5 +307,61 @@ public class PropertyService {
                 || address.contains(" " + jibun + "-")
                 || address.contains(" " + jibun + " ");
     }
+
+    /**
+     * 주소를 기반으로 지오코딩하여 좌표 적용
+     * - 네이버 API 우선 사용, 실패 시 카카오 API fallback
+     * - 둘 다 실패해도 매물 등록은 진행 (좌표만 null)
+     */
+    private void applyGeoCode(Property property, String address) {
+        try {
+            // 1. 네이버 지오코딩 시도
+            NaverGeoResponse naverResponse = naverGeoClient.geocode(address);
+            if (naverResponse.hasResult()) {
+                NaverGeoResponse.Address addr = naverResponse.addresses().get(0);
+                property.applyGeoCode(
+                        new BigDecimal(addr.y()),  // 위도
+                        new BigDecimal(addr.x())   // 경도
+                );
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("네이버 지오코딩 실패: {} - {}", address, e.getMessage());
+        }
+
+        try {
+            // 2. 카카오 지오코딩 fallback
+            KakaoGeoResponse kakaoResponse = kakaoGeoClient.geocode(address);
+            if (kakaoResponse.hasResult()) {
+                KakaoGeoResponse.Document doc = kakaoResponse.documents().get(0);
+                property.applyGeoCode(
+                        new BigDecimal(doc.y()),  // 위도
+                        new BigDecimal(doc.x())   // 경도
+                );
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("카카오 지오코딩 실패: {} - {}", address, e.getMessage());
+        }
+
+        // 둘 다 실패 시 좌표 없이 진행 (null 유지)
+        log.warn("지오코딩 실패 - 좌표 없이 매물 등록: {}", address);
+    }
+
+    // 메인 매물 조회 캐시 키 생성 메서드
+    private String generateCacheKey(
+            PropertyType type,
+            AuctionStatus status,
+            Pageable pageable
+    ) {
+        return String.format(
+                "home:property:list:type=%s:status=%s:page=%d:size=%d",
+                type != null ? type.name() : "ALL",
+                status != null ? status.name() : "ALL",
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
+    }
+
 
 }

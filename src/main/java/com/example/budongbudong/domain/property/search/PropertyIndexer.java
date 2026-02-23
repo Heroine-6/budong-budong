@@ -3,8 +3,8 @@ package com.example.budongbudong.domain.property.search;
 import com.example.budongbudong.common.entity.Auction;
 import com.example.budongbudong.common.entity.Property;
 import com.example.budongbudong.domain.auction.repository.AuctionRepository;
-import com.example.budongbudong.domain.property.document.AuctionSummary;
-import com.example.budongbudong.domain.property.document.PropertySearchDocument;
+import com.example.budongbudong.domain.property.search.document.AuctionSummary;
+import com.example.budongbudong.domain.property.search.document.PropertySearchDocument;
 import com.example.budongbudong.domain.property.repository.PropertyRepository;
 import com.example.budongbudong.domain.property.repository.PropertySearchRepository;
 import com.example.budongbudong.domain.propertyimage.repository.PropertyImageRepository;
@@ -48,9 +48,6 @@ public class PropertyIndexer {
                         .migrateDate(property.getMigrateDate())
 
                         // 응답 전용 필드 (검색/필터 대상 아님)
-                        .description(property.getDescription())
-                        .supplyArea(property.getSupplyArea())
-                        .privateArea(property.getPrivateArea())
                         .thumbnailImage(thumbnailImage)
 
                         // 검색/정렬용 필드

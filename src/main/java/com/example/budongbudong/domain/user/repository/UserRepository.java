@@ -3,6 +3,7 @@ package com.example.budongbudong.domain.user.repository;
 import com.example.budongbudong.common.entity.User;
 import com.example.budongbudong.common.exception.CustomException;
 import com.example.budongbudong.common.exception.ErrorCode;
+import com.example.budongbudong.domain.user.enums.LoginType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -10,6 +11,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String userEmail);
+
+    Optional<User> findByLoginTypeAndProviderId(LoginType loginType, String providerId);
 
     Optional<User> findByEmail(String userEmail);
 

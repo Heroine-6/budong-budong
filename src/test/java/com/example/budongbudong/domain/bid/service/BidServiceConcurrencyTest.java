@@ -100,7 +100,7 @@ class BidServiceConcurrencyTest {
                 .build();
         propertyRepository.save(property);
 
-        Auction auction = Auction.create(
+        Auction auction = Auction.createEnglish(
                 property,
                 BigDecimal.valueOf(1_000L),
                 LocalDateTime.now(),

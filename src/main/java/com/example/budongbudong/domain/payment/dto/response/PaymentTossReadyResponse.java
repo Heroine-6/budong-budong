@@ -1,0 +1,26 @@
+package com.example.budongbudong.domain.payment.dto.response;
+
+import com.example.budongbudong.common.entity.Payment;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
+
+/**
+ * 토스 결제창 호출용 DTO
+ */
+@Getter
+@RequiredArgsConstructor
+public class PaymentTossReadyResponse {
+    private final String orderId;
+    private final BigDecimal amount;
+    private final String orderName;
+
+    public static PaymentTossReadyResponse from(Payment payment) {
+        return new PaymentTossReadyResponse(
+                payment.getOrderId(),
+                payment.getAmount(),
+                payment.getOrderName()
+        );
+    }
+}
